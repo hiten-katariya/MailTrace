@@ -1,19 +1,18 @@
 import React from 'react';
-import { Server, ArrowDown, Clock, Globe, ArrowRight } from 'lucide-react';
+import { Server, ArrowDown, Clock, Globe } from 'lucide-react';
 import { RelayHop } from '../../types/case';
 import { ProtocolBadge } from './ProtocolBadge';
 import { CopyableText } from './CopyableText';
 
 interface RelayHopNodeProps {
   hop: RelayHop;
-  isFirst: boolean;
+  isFirst?: boolean;
   isLast: boolean;
   isEarliestOrigin?: boolean;
 }
 
 export const RelayHopNode: React.FC<RelayHopNodeProps> = ({
   hop,
-  isFirst,
   isLast,
   isEarliestOrigin = false,
 }) => {

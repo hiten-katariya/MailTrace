@@ -2,27 +2,20 @@ import React from 'react';
 import {
   X,
   Printer,
-  Download,
-  ShieldAlert,
-  ShieldCheck,
   Hash,
-  Clock,
-  User,
-  CheckCircle2,
   FileCheck,
 } from 'lucide-react';
-import { CaseDetail, CaseHeaders, CaseContent, CaseOrigin, CaseCorrelation } from '../../types/case';
-import { ScoreBadge } from '../common/ScoreBadge';
+import { CaseDetail, CaseOrigin } from '../../types/case';
 import { formatUtcDateTime } from '../../lib/formatters';
 
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
   caseDetail: CaseDetail;
-  headers?: CaseHeaders;
-  content?: CaseContent;
+  headers?: any;
+  content?: any;
   origin?: CaseOrigin;
-  correlation?: CaseCorrelation;
+  correlation?: any;
   analystName?: string;
 }
 
@@ -30,10 +23,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   isOpen,
   onClose,
   caseDetail,
-  headers,
-  content,
   origin,
-  correlation,
   analystName = 'Alex Rivera (Analyst-01, Cyber Incident Response)',
 }) => {
   if (!isOpen) return null;

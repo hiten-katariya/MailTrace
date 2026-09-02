@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { uploadCase } from '../mocks/api';
 import { Dropzone } from '../components/upload/Dropzone';
 import { PipelineProgress } from '../components/upload/PipelineProgress';
-import { Upload, Shield, RefreshCw } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { IngestResponse } from '../types/api';
 
 interface UploadPageProps {
@@ -57,7 +57,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onCaseCreated }) => {
           <div className="text-center">
             <button
               onClick={() => setIngestResult(null)}
-              className="text-xs font-mono text-slate-400 hover:text-cyan-300 underline"
+              className="text-xs font-mono text-slate-400 hover:text-cyan-300 underline cursor-pointer"
             >
               ← Submit Another .EML File
             </button>

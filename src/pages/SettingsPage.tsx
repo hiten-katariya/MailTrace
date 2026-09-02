@@ -1,0 +1,211 @@
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getRetentionSettings, updateRetentionSettings, getAuditLogs } from '../mocks/api';
+import { Sliders, Lock, CheckCircle2, UserCheck } from 'lucide-react';
+import { EvidenceCard } from '../components/common/EvidenceCard';
+import { formatUtcDateTime } from '../lib/formatters';
+
+export const SettingsPage: React.FC = () => {
+  const queryClient = useQueryClient();
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const { data: settings } = useQuery({
+    queryKey: ['settings-retention'],
+    queryFn: getRetentionSettings,
+  });
+
+  const { data: auditData } = useQuery({
+    queryKey: ['audit-logs'],
+    queryFn: () => getAuditLogs(),
+  });
+
+  const [retentionDays, setRetentionDays] = useState<number>(settings?.retention_days || 90);
+  const [autoPurge, setAutoPurge] = useState<boolean>(settings?.auto_purge ?? true);
+  const [maskPii, setMaskPii] = useState<boolean>(settings?.mask_pii ?? true);
+
+  const updateMutation = useMutation({
+    mutationFn: updateRetentionSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings-retention'] });
+      queryClient.invalidateQueries({ queryKey: ['audit-logs'] });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    },
+  });
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateMutation.mutate({
+      retention_days: retentionDays,
+      auto_purge: autoPurge,
+      mask_pii: maskPii,
+    });
+  };
+
+  const auditLogs = auditData?.logs || [];
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      {/* Header */}
+      <div className="pb-2 border-b border-soc-border">
+        <h1 className="text-xl font-bold font-mono text-slate-100 flex items-center gap-2">
+          <Sliders className="w-5 h-5 text-cyan-400" />
+          <span>PRIVACY, COMPLIANCE & AUDIT TRAIL</span>
+        </h1>
+        <p className="text-xs text-soc-text-dim mt-0.5">
+          Configure evidence preservation limits, automated GDPR PII masking, and review immutable forensic chain-of-custody logs.
+        </p>
+      </div>
+
+      {/* Settings Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Retention & Privacy Safeguards */}
+        <EvidenceCard
+          title="Retention & Evidence Preservation Controls"
+          subtitle="Legal compliance and data sanitization rules for stored cases"
+        >
+          <form onSubmit={handleSave} className="space-y-4 text-xs font-mono">
+            {/* Retention Slider */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-slate-300">Derived Data Retention Period:</span>
+                <span className="text-cyan-300 font-bold">{retentionDays} Days</span>
+              </div>
+              <input
+                type="range"
+                min={30}
+                max={365}
+                step={15}
+                value={retentionDays}
+                onChange={(e) => setRetentionDays(Number(e.target.value))}
+                className="w-full accent-cyan-400 bg-slate-800 cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+                <span>30 Days (Fast Triage)</span>
+                <span>90 Days (Standard)</span>
+                <span>365 Days (Long-term)</span>
+              </div>
+            </div>
+
+            {/* PII Masking Switch */}
+            <div className="flex items-center justify-between p-3 rounded bg-soc-inset border border-soc-border">
+              <div>
+                <span className="text-slate-200 font-semibold block">Automatic PII Masking</span>
+                <span className="text-[11px] text-slate-400 font-sans block mt-0.5">
+                  Mask personal email addresses and names in exported reports & dashboard
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={maskPii}
+                onChange={(e) => setMaskPii(e.target.checked)}
+                className="w-4 h-4 accent-cyan-400 cursor-pointer"
+              />
+            </div>
+
+            {/* Auto Purge Switch */}
+            <div className="flex items-center justify-between p-3 rounded bg-soc-inset border border-soc-border">
+              <div>
+                <span className="text-slate-200 font-semibold block">Automated Purge Daemon</span>
+                <span className="text-[11px] text-slate-400 font-sans block mt-0.5">
+                  Purge derived analysis rows past retention period (Raw hashes preserved)
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={autoPurge}
+                onChange={(e) => setAutoPurge(e.target.checked)}
+                className="w-4 h-4 accent-cyan-400 cursor-pointer"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="submit"
+                disabled={updateMutation.isPending}
+                className="px-4 py-2 rounded bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold transition-colors shadow-soc-subtle"
+              >
+                {updateMutation.isPending ? 'Saving Policies...' : 'Update Retention Policies'}
+              </button>
+
+              {saveSuccess && (
+                <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-mono">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Policies updated & audited</span>
+                </div>
+              )}
+            </div>
+          </form>
+        </EvidenceCard>
+
+        {/* Chain of Custody Standard Banner */}
+        <EvidenceCard
+          title="Evidence Integrity & Legal Standard"
+          subtitle="FR7 Compliance by Design Architecture"
+        >
+          <div className="space-y-3 text-xs font-sans text-slate-300 leading-relaxed">
+            <div className="p-3 rounded bg-soc-inset border border-soc-border flex items-start gap-2.5">
+              <Lock className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+              <div>
+                <strong className="font-mono text-slate-200 block text-xs">Immutable Raw File Vault</strong>
+                Raw .eml emails are saved write-once in a partitioned object vault with cryptographic SHA-256 validation computed prior to parsing.
+              </div>
+            </div>
+
+            <div className="p-3 rounded bg-soc-inset border border-soc-border flex items-start gap-2.5">
+              <UserCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <strong className="font-mono text-slate-200 block text-xs">Analyst Accountability</strong>
+                All case views, forensic PDF exports, and annotation actions write an immutable row to the PostgreSQL audit ledger.
+              </div>
+            </div>
+          </div>
+        </EvidenceCard>
+      </div>
+
+      {/* Forensic Audit Log Table */}
+      <EvidenceCard
+        title="Forensic Audit Trail & Chain of Custody Log"
+        subtitle="Chronological ledger of analyst access, export actions, and policy modifications"
+        badge={
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 border border-cyan-500/30">
+            {auditLogs.length} AUDIT EVENTS
+          </span>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse font-mono text-xs">
+            <thead>
+              <tr className="bg-soc-subtle border-b border-soc-border text-[11px] text-soc-text-dim uppercase tracking-wider">
+                <th className="py-2.5 px-3 w-44">UTC Timestamp</th>
+                <th className="py-2.5 px-3 w-48">Analyst / Actor</th>
+                <th className="py-2.5 px-3 w-32">Action Type</th>
+                <th className="py-2.5 px-3">Audit Details</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-soc-border/70">
+              {auditLogs.map((log) => (
+                <tr key={log.id} className="hover:bg-soc-hover/60 transition-colors">
+                  <td className="py-2.5 px-3 text-slate-400 text-[11px]">
+                    {formatUtcDateTime(log.timestamp)}
+                  </td>
+                  <td className="py-2.5 px-3 text-cyan-300 font-semibold">
+                    {log.user}
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                      {log.action}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-3 text-slate-200 font-sans text-[11px]">
+                    {log.details}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </EvidenceCard>
+    </div>
+  );
+};

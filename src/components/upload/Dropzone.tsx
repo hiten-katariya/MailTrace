@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, FileCode, CheckCircle2, ShieldAlert, Zap, FileText } from 'lucide-react';
+import { Upload, FileCode, Zap } from 'lucide-react';
 
 interface DropzoneProps {
   onFileSelected: (file: { name: string; size?: number; sampleType?: 'phishing' | 'bec' | 'spoof' | 'clean' }) => void;

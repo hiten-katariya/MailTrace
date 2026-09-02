@@ -1,17 +1,13 @@
 import React from 'react';
 import {
   Layers,
-  ShieldAlert,
-  Link,
   ExternalLink,
   Network,
-  Share2,
   AlertCircle,
   Hash,
 } from 'lucide-react';
 import { CaseCorrelation } from '../../types/case';
 import { EvidenceCard } from '../common/EvidenceCard';
-import { ConfidenceTag } from '../common/ConfidenceTag';
 import { CopyableText } from '../common/CopyableText';
 
 interface CorrelationTabProps {

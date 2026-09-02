@@ -1,18 +1,11 @@
 import React from 'react';
 import {
-  Server,
   AlertTriangle,
-  ShieldCheck,
-  ShieldAlert,
-  Terminal,
-  Activity,
-  ArrowDown,
 } from 'lucide-react';
 import { CaseHeaders } from '../../types/case';
 import { EvidenceCard } from '../common/EvidenceCard';
 import { RelayHopNode } from '../common/RelayHopNode';
 import { ProtocolBadge } from '../common/ProtocolBadge';
-import { CopyableText } from '../common/CopyableText';
 
 interface HeaderTraceTabProps {
   headers: CaseHeaders;

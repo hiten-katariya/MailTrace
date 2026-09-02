@@ -5,7 +5,6 @@ import {
   Clock,
   User,
   Hash,
-  Share2,
   AlertOctagon,
 } from 'lucide-react';
 import { CaseDetail } from '../../types/case';

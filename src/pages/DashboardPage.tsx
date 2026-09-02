@@ -4,7 +4,7 @@ import { getCases, getCampaigns } from '../mocks/api';
 import { SummaryStrip } from '../components/dashboard/SummaryStrip';
 import { ThreatCharts } from '../components/dashboard/ThreatCharts';
 import { CaseTable } from '../components/dashboard/CaseTable';
-import { ShieldAlert, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 interface DashboardPageProps {
   onSelectCase: (caseId: string) => void;

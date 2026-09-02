@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import {
   ShieldAlert,
-  Radio,
   Upload,
   Layers,
   Sliders,
   LogOut,
   Bell,
   LayoutDashboard,
-  ExternalLink,
-  ChevronDown,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getAlerts } from '../../mocks/api';

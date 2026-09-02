@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getCampaigns, getCampaignById } from '../mocks/api';
 import { CampaignCard } from '../components/campaign/CampaignCard';
 import { CampaignClusterTimeline } from '../components/campaign/CampaignClusterTimeline';
-import { Layers, RefreshCw, Network } from 'lucide-react';
+import { Layers, RefreshCw } from 'lucide-react';
 
 interface CampaignPageProps {
   initialCampaignId?: string;

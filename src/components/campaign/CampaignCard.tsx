@@ -1,9 +1,8 @@
 import React from 'react';
-import { Layers, Network, Clock, ShieldAlert, ArrowRight, Server, Hash } from 'lucide-react';
+import { Network, Clock, ArrowRight } from 'lucide-react';
 import { CampaignSummary } from '../../types/campaign';
 import { RiskChip } from '../common/RiskChip';
-import { ScoreBadge } from '../common/ScoreBadge';
-import { formatTimeAgo, formatUtcDateTime } from '../../lib/formatters';
+import { formatTimeAgo } from '../../lib/formatters';
 
 interface CampaignCardProps {
   campaign: CampaignSummary;

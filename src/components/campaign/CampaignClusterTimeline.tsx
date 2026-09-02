@@ -1,13 +1,10 @@
 import React from 'react';
 import {
   Layers,
-  Network,
-  Clock,
-  ExternalLink,
   Server,
   Globe,
+  Network,
   Link,
-  ShieldAlert,
   Hash,
   ArrowRight,
 } from 'lucide-react';

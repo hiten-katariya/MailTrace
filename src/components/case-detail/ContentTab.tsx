@@ -1,11 +1,5 @@
 import React from 'react';
 import {
-  MessageSquare,
-  AlertTriangle,
-  Link,
-  ShieldAlert,
-  ShieldCheck,
-  ExternalLink,
   Flame,
   UserX,
   DollarSign,
@@ -13,7 +7,6 @@ import {
 import { CaseContent } from '../../types/case';
 import { EvidenceCard } from '../common/EvidenceCard';
 import { RiskChip } from '../common/RiskChip';
-import { CopyableText } from '../common/CopyableText';
 
 interface ContentTabProps {
   content: CaseContent;

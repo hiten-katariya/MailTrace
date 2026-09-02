@@ -1,13 +1,8 @@
 import React from 'react';
 import {
-  CheckCircle2,
   AlertTriangle,
-  ShieldCheck,
   ShieldAlert,
   ArrowRight,
-  Info,
-  Sliders,
-  FileSearch,
 } from 'lucide-react';
 import { CaseDetail, CaseHeaders, CaseContent, CaseOrigin } from '../../types/case';
 import { EvidenceCard } from '../common/EvidenceCard';
@@ -24,7 +19,6 @@ interface OverviewTabProps {
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({
   caseDetail,
-  headers,
   content,
   origin,
   onNavigateTab,

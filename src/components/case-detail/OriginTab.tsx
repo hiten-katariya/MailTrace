@@ -2,20 +2,12 @@ import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import {
-  Globe,
-  MapPin,
-  Server,
-  ShieldAlert,
-  ShieldCheck,
-  Calendar,
-  Building,
   CheckCircle,
   XCircle,
   Radio,
 } from 'lucide-react';
 import { CaseOrigin } from '../../types/case';
 import { EvidenceCard } from '../common/EvidenceCard';
-import { ConfidenceTag } from '../common/ConfidenceTag';
 import { CopyableText } from '../common/CopyableText';
 
 // Custom SVG map marker for dark SOC theme

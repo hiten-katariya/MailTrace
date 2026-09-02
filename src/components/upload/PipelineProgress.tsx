@@ -142,7 +142,6 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
         {steps.map((step, idx) => {
           const isDone = activeStep > idx;
           const isCurrent = activeStep === idx;
-          const isPending = activeStep < idx;
 
           return (
             <div
