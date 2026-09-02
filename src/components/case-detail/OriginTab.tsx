@@ -1,6 +1,20 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
+
+// Helper to invalidate size and smoothly pan
+const MapController: React.FC<{ center: [number, number] }> = ({ center }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.invalidateSize();
+    map.setView(center, map.getZoom());
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [center, map]);
+  return null;
+};
 import {
   CheckCircle,
   XCircle,
@@ -52,14 +66,16 @@ export const OriginTab: React.FC<OriginTabProps> = ({ origin }) => {
       >
         <div className="h-64 w-full rounded overflow-hidden border border-slate-800/60 relative z-0">
           <MapContainer
+            key={`map-${lat}-${lng}`}
             center={[lat, lng]}
             zoom={5}
             scrollWheelZoom={false}
             style={{ height: '100%', width: '100%' }}
           >
+            <MapController center={[lat, lng]} />
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             
             {/* Confidence Boundary Circle */}

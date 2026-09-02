@@ -60,10 +60,42 @@ export interface RetentionSettings {
 }
 
 export interface AuditLogEntry {
-  id: string;
+  id: string | number;
   timestamp: string;
   user: string;
-  action: 'view' | 'export_report' | 'annotate' | 'upload' | 'change_retention';
+  action: string;
   case_id?: string;
   details: string;
+}
+
+export interface ScoreBracket {
+  range: string;
+  count: number;
+  color: string;
+}
+
+export interface RiskCategoryCount {
+  category: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface DetectionTrendDay {
+  date: string;
+  phishing: number;
+  bec: number;
+  suspicious: number;
+  legitimate: number;
+}
+
+export interface CasesStatsResponse {
+  total_cases: number;
+  high_risk_cases: number;
+  suspicious_cases: number;
+  legitimate_cases: number;
+  average_score: number;
+  by_risk_category: RiskCategoryCount[];
+  score_brackets: ScoreBracket[];
+  detection_trends: DetectionTrendDay[];
 }

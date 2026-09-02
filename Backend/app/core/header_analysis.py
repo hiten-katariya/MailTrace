@@ -103,8 +103,7 @@ def parse_received_headers(raw_headers: Dict[str, Any]) -> List[Dict[str, Any]]:
         delay_ms = 0
         if prev_timestamp and ts_dt:
             delta = (ts_dt - prev_timestamp).total_seconds()
-            if delta > 0:
-                delay_ms = int(delta * 1000)
+            delay_ms = int(delta * 1000)
 
         prev_timestamp = ts_dt
 
@@ -123,6 +122,9 @@ def parse_received_headers(raw_headers: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     return relay_hops
 
+from functools import lru_cache
+
+@lru_cache(maxsize=2048)
 def query_dns_txt(domain: str) -> List[str]:
     records = []
     try:
@@ -283,10 +285,13 @@ def analyze_email_headers(
     if not dkim_sig and sender_domain and any(brand in sender_domain for brand in ["paypal", "microsoft", "google", "apple", "amazon", "bank", "okta"]):
         anomalies.append(f"Cryptographic signature missing on claimed enterprise domain '@{sender_domain}'")
 
-    # Out-of-order relay delays (> 60s)
+    # Out-of-order relay timestamps and delays (> 60s)
     for hop in relay_chain:
-        if (hop.get("delay_ms") or 0) > 60000:
-            anomalies.append(f"Unusual relay latency delay detected at hop #{hop['hop']} (+{(hop['delay_ms']//1000)}s)")
+        delay = hop.get("delay_ms") or 0
+        if delay < -5000:
+            anomalies.append(f"Out-of-order Received timestamp anomaly: hop #{hop['hop']} timestamp occurs before previous relay hop")
+        elif delay > 60000:
+            anomalies.append(f"Unusual relay latency delay detected at hop #{hop['hop']} (+{(delay//1000)}s)")
 
     return HeaderAnalysisResult(
         spf_result=spf_res,

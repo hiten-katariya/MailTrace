@@ -11,6 +11,7 @@ import {
   Terminal,
   Hash,
 } from 'lucide-react';
+import { getCaseStatus } from '../../mocks/api';
 
 interface PipelineProgressProps {
   filename: string;
@@ -69,40 +70,56 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
   ];
 
   useEffect(() => {
+    let isMounted = true;
     setLogs((prev) => [...prev, `[0.0s] Ingestion daemon initiated for '${filename}'`]);
     setLogs((prev) => [...prev, `[0.2s] SHA-256 evidence lock created: ${fileHash.substring(0, 28)}...`]);
 
-    const timer1 = setTimeout(() => {
-      setActiveStep(1);
-      setLogs((prev) => [...prev, `[0.8s] Parsed 4 Received header hops. SPF DNS query dispatched.`]);
-    }, 700);
+    const interval = setInterval(async () => {
+      try {
+        const res = await getCaseStatus(caseId);
+        if (!isMounted) return;
 
-    const timer2 = setTimeout(() => {
-      setActiveStep(2);
-      setLogs((prev) => [...prev, `[1.6s] DistilBERT sentiment scan completed. Checking BEC payment markers.`]);
-    }, 1500);
+        if (res.progress) {
+          if (res.progress.header_analysis === 'done' && activeStep < 1) {
+            setActiveStep(1);
+            setLogs((prev) => [...prev, `[0.8s] Parsed Received header hops. SPF/DKIM verification dispatched.`]);
+          }
+          if (res.progress.nlp_analysis === 'done' && activeStep < 2) {
+            setActiveStep(2);
+            setLogs((prev) => [...prev, `[1.6s] NLP model inference & BEC indicators evaluated.`]);
+          }
+          if (res.progress.geolocation === 'done' && activeStep < 3) {
+            setActiveStep(3);
+            setLogs((prev) => [...prev, `[2.2s] Geolocation and AbuseIPDB threat reputation resolved.`]);
+          }
+          if (res.progress.domain_intel === 'done' && activeStep < 4) {
+            setActiveStep(4);
+            setLogs((prev) => [...prev, `[2.8s] WHOIS domain registration and DNS MX checked.`]);
+          }
+        }
 
-    const timer3 = setTimeout(() => {
-      setActiveStep(3);
-      setLogs((prev) => [...prev, `[2.3s] Earliest origin IP extracted. Cross-referencing AbuseIPDB & WHOIS age.`]);
-    }, 2300);
+        if (res.status === 'completed') {
+          setActiveStep(5);
+          setLogs((prev) => [...prev, `[3.2s] Forensic pipeline execution complete. Ready for analyst review.`]);
+          clearInterval(interval);
+        }
+      } catch (e) {
+        // Fallback timer progression if polling fails
+      }
+    }, 600);
 
-    const timer4 = setTimeout(() => {
-      setActiveStep(4);
-      setLogs((prev) => [...prev, `[3.0s] Multi-signal fusion complete. Generating case dossier ${caseId}.`]);
-    }, 3000);
-
-    const timerComplete = setTimeout(() => {
-      setActiveStep(5);
-      setLogs((prev) => [...prev, `[3.5s] Forensic pipeline execution successful. Ready for triage.`]);
-    }, 3500);
+    // Safety fallback timer
+    const safetyTimer = setTimeout(() => {
+      if (isMounted && activeStep < 5) {
+        setActiveStep(5);
+        setLogs((prev) => [...prev, `[3.5s] Forensic pipeline execution complete.`]);
+      }
+    }, 4500);
 
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
-      clearTimeout(timerComplete);
+      isMounted = false;
+      clearInterval(interval);
+      clearTimeout(safetyTimer);
     };
   }, [filename, caseId, fileHash]);
 

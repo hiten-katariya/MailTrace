@@ -1,6 +1,8 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Terminal, ShieldAlert, CheckCircle2, Globe, FileCode, Radio } from 'lucide-react';
 import { EvidenceCard } from '../common/EvidenceCard';
+import { getAlerts } from '../../mocks/api';
 
 interface ActivityEventItem {
   id: string;
@@ -11,7 +13,7 @@ interface ActivityEventItem {
   caseId: string;
 }
 
-const MOCK_EVENTS: ActivityEventItem[] = [
+const FALLBACK_EVENTS: ActivityEventItem[] = [
   {
     id: 'evt-1',
     time: '14:22:14 UTC',
@@ -36,22 +38,6 @@ const MOCK_EVENTS: ActivityEventItem[] = [
     detail: 'IP 185.220.101.5 matched AbuseIPDB Tor Exit list (88% confidence)',
     caseId: 'c8f2a1e4',
   },
-  {
-    id: 'evt-4',
-    time: '14:22:11 UTC',
-    type: 'spf_fail',
-    title: 'SPF & DMARC ALIGNMENT FAILED',
-    detail: 'Header From differs from authenticated relay domain',
-    caseId: 'c8f2a1e4',
-  },
-  {
-    id: 'evt-5',
-    time: '14:22:10 UTC',
-    type: 'ingest',
-    title: 'MIME EVIDENCE INGESTED & HASHED',
-    detail: 'SHA-256 evidence lock created for incoming .eml payload',
-    caseId: 'c8f2a1e4',
-  },
 ];
 
 interface LiveActivityStreamProps {
@@ -59,6 +45,25 @@ interface LiveActivityStreamProps {
 }
 
 export const LiveActivityStream: React.FC<LiveActivityStreamProps> = ({ onSelectCase }) => {
+  const { data: alertsData } = useQuery({
+    queryKey: ['alerts'],
+    queryFn: getAlerts,
+    refetchInterval: 5000,
+  });
+
+  const alerts = alertsData?.alerts || [];
+  const events: ActivityEventItem[] =
+    alerts.length > 0
+      ? alerts.map((a) => ({
+          id: a.alert_id,
+          time: new Date(a.triggered_at).toLocaleTimeString() + ' UTC',
+          type: 'alert',
+          title: `${a.risk_category.toUpperCase()} ALERT (SCORE: ${a.fraud_score})`,
+          detail: `${a.subject} — Sender: ${a.sender}`,
+          caseId: a.case_id,
+        }))
+      : FALLBACK_EVENTS;
+
   const getEventBadge = (type: string) => {
     switch (type) {
       case 'alert':
@@ -87,7 +92,7 @@ export const LiveActivityStream: React.FC<LiveActivityStreamProps> = ({ onSelect
       }
     >
       <div className="space-y-2">
-        {MOCK_EVENTS.map((event) => {
+        {events.map((event) => {
           const badge = getEventBadge(event.type);
           return (
             <div

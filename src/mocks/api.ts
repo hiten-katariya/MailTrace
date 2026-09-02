@@ -6,6 +6,7 @@ import {
   AlertItem,
   RetentionSettings,
   AuditLogEntry,
+  CasesStatsResponse,
 } from '../types/api';
 import {
   CaseDetail,
@@ -155,12 +156,16 @@ export async function getCaseById(caseId: string): Promise<CaseDetail> {
     }
   }
 
-  await delay(100);
-  const found = casesStore.find((c) => c.detail.case_id === caseId);
-  if (!found) {
-    throw new Error(`Case with ID ${caseId} not found`);
+  await delay(80);
+  const found = casesStore.find((c) => c.detail.case_id === caseId) || MOCK_CASES.find((c) => c.detail.case_id === caseId);
+  if (found) {
+    return found.detail;
   }
-  return found.detail;
+  return {
+    ...MOCK_CASES[0].detail,
+    case_id: caseId,
+    subject: `Case ${caseId.substring(0, 8)}`,
+  };
 }
 
 /**
@@ -178,12 +183,9 @@ export async function getCaseHeaders(caseId: string): Promise<CaseHeaders> {
     }
   }
 
-  await delay(100);
-  const found = casesStore.find((c) => c.detail.case_id === caseId);
-  if (!found) {
-    throw new Error(`Case headers for ID ${caseId} not found`);
-  }
-  return found.headers;
+  await delay(80);
+  const found = casesStore.find((c) => c.detail.case_id === caseId) || MOCK_CASES.find((c) => c.detail.case_id === caseId);
+  return found ? found.headers : MOCK_CASES[0].headers;
 }
 
 /**
@@ -201,12 +203,9 @@ export async function getCaseContent(caseId: string): Promise<CaseContent> {
     }
   }
 
-  await delay(100);
-  const found = casesStore.find((c) => c.detail.case_id === caseId);
-  if (!found) {
-    throw new Error(`Case content for ID ${caseId} not found`);
-  }
-  return found.content;
+  await delay(80);
+  const found = casesStore.find((c) => c.detail.case_id === caseId) || MOCK_CASES.find((c) => c.detail.case_id === caseId);
+  return found ? found.content : MOCK_CASES[0].content;
 }
 
 /**
@@ -224,12 +223,9 @@ export async function getCaseOrigin(caseId: string): Promise<CaseOrigin> {
     }
   }
 
-  await delay(100);
-  const found = casesStore.find((c) => c.detail.case_id === caseId);
-  if (!found) {
-    throw new Error(`Case origin for ID ${caseId} not found`);
-  }
-  return found.origin;
+  await delay(80);
+  const found = casesStore.find((c) => c.detail.case_id === caseId) || MOCK_CASES.find((c) => c.detail.case_id === caseId);
+  return found ? found.origin : MOCK_CASES[0].origin;
 }
 
 /**
@@ -437,6 +433,74 @@ export async function getAlerts(): Promise<{ alerts: AlertItem[] }> {
 }
 
 /**
+ * GET /cases/stats
+ */
+export async function getCasesStats(): Promise<CasesStatsResponse> {
+  if (!USE_MOCKS) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/cases/stats`);
+      if (resp.ok) {
+        return await resp.json();
+      }
+    } catch (e) {
+      console.warn('Backend /cases/stats unavailable, using fallback stats:', e);
+    }
+  }
+
+  await delay(100);
+  const total = casesStore.length || 1;
+  const phishingCount = casesStore.filter((c) => c.detail.risk_category === 'phishing').length;
+  const becCount = casesStore.filter((c) => c.detail.risk_category === 'bec').length;
+  const suspiciousCount = casesStore.filter((c) => c.detail.risk_category === 'suspicious').length;
+  const legitCount = casesStore.filter((c) => c.detail.risk_category === 'legitimate').length;
+  const highRisk = phishingCount + becCount;
+  const avgScore = Math.round(casesStore.reduce((acc, c) => acc + c.detail.fraud_score, 0) / total);
+
+  return {
+    total_cases: total,
+    high_risk_cases: highRisk,
+    suspicious_cases: suspiciousCount,
+    legitimate_cases: legitCount,
+    average_score: avgScore,
+    by_risk_category: [
+      { category: 'phishing', count: phishingCount, percentage: Math.round((phishingCount / total) * 100), color: '#EF4444' },
+      { category: 'bec', count: becCount, percentage: Math.round((becCount / total) * 100), color: '#F43F5E' },
+      { category: 'suspicious', count: suspiciousCount, percentage: Math.round((suspiciousCount / total) * 100), color: '#F59E0B' },
+      { category: 'legitimate', count: legitCount, percentage: Math.round((legitCount / total) * 100), color: '#10B981' },
+    ],
+    score_brackets: [
+      { range: '0–20', count: casesStore.filter((c) => c.detail.fraud_score <= 20).length, color: '#10B981' },
+      { range: '21–40', count: casesStore.filter((c) => c.detail.fraud_score > 20 && c.detail.fraud_score <= 40).length, color: '#28C7E8' },
+      { range: '41–60', count: casesStore.filter((c) => c.detail.fraud_score > 40 && c.detail.fraud_score <= 60).length, color: '#F59E0B' },
+      { range: '61–80', count: casesStore.filter((c) => c.detail.fraud_score > 60 && c.detail.fraud_score <= 80).length, color: '#F97316' },
+      { range: '81–100', count: casesStore.filter((c) => c.detail.fraud_score > 80).length, color: '#EF4444' },
+    ],
+    detection_trends: [
+      { date: '2026-08-30', phishing: 4, bec: 1, suspicious: 2, legitimate: 8 },
+      { date: '2026-08-31', phishing: 6, bec: 2, suspicious: 4, legitimate: 11 },
+      { date: '2026-09-01', phishing: 7, bec: 2, suspicious: 5, legitimate: 14 },
+      { date: '2026-09-02', phishing: 8, bec: 3, suspicious: 4, legitimate: 12 },
+    ],
+  };
+}
+
+/**
+ * GET /cases/{case_id}/report?format=pdf|json
+ */
+export async function getCaseReport(caseId: string, format: 'pdf' | 'json' = 'json'): Promise<any> {
+  const url = `${API_BASE_URL}/cases/${caseId}/report?format=${format}`;
+  if (format === 'pdf') {
+    window.open(url, '_blank');
+    return { status: 'opened' };
+  }
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    throw new Error(`Failed to fetch report for case ${caseId}`);
+  }
+  return await resp.json();
+}
+
+/**
  * GET /settings/retention
  */
 export async function getRetentionSettings(): Promise<RetentionSettings> {
@@ -457,6 +521,28 @@ export async function updateRetentionSettings(settings: Partial<RetentionSetting
  * GET /audit-log
  */
 export async function getAuditLogs(caseId?: string): Promise<{ logs: AuditLogEntry[] }> {
+  if (!USE_MOCKS) {
+    try {
+      const url = caseId ? `${API_BASE_URL}/audit-log?case_id=${caseId}` : `${API_BASE_URL}/audit-log`;
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const data = await resp.json();
+        return {
+          logs: (data.logs || []).map((l: any) => ({
+            id: l.id,
+            timestamp: l.timestamp,
+            user: l.username,
+            action: l.action,
+            case_id: l.case_id,
+            details: l.details || '',
+          })),
+        };
+      }
+    } catch (e) {
+      console.warn('Backend /audit-log unavailable, using mock audit log:', e);
+    }
+  }
+
   await delay(100);
   if (caseId) {
     return { logs: auditStore.filter((l) => l.case_id === caseId) };

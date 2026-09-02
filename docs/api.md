@@ -103,14 +103,59 @@ List cases with pagination and filtering — powers the dashboard case list.
   "cases": [
     {
       "case_id": "c8f2a1e4-...",
-      "subject": "Urgent: Invoice payment update",
-      "sender": "billing@paypa1-secure.com",
-      "received_at": "2026-09-01T14:22:00Z",
+      "subject": "URGENT: Verify Your Microsoft 365 Account",
+      "sender": "security@m365-security-alerts.com",
+      "received_at": "2026-09-02T10:15:00Z",
       "fraud_score": 87,
       "risk_category": "phishing",
       "spf": "fail",
       "dkim": "fail",
       "dmarc": "fail"
+    }
+  ]
+}
+```
+
+---
+
+### `GET /cases/stats`
+Aggregated dataset telemetry and risk distribution statistics for dashboard analytics and Recharts visualizations.
+
+**Response 200:**
+```json
+{
+  "total_cases": 142,
+  "high_risk_cases": 48,
+  "suspicious_cases": 35,
+  "legitimate_cases": 59,
+  "average_score": 52.4,
+  "by_risk_category": [
+    { "category": "phishing", "count": 38, "percentage": 27, "color": "#EF4444" },
+    { "category": "bec", "count": 10, "percentage": 7, "color": "#F43F5E" },
+    { "category": "suspicious", "count": 35, "percentage": 25, "color": "#F59E0B" },
+    { "category": "legitimate", "count": 59, "percentage": 41, "color": "#10B981" }
+  ],
+  "score_brackets": [
+    { "range": "0–20", "count": 42, "color": "#10B981" },
+    { "range": "21–40", "count": 17, "color": "#28C7E8" },
+    { "range": "41–60", "count": 35, "color": "#F59E0B" },
+    { "range": "61–80", "count": 30, "color": "#F97316" },
+    { "range": "81–100", "count": 18, "color": "#EF4444" }
+  ],
+  "detection_trends": [
+    {
+      "date": "2026-08-31",
+      "phishing": 6,
+      "bec": 2,
+      "suspicious": 4,
+      "legitimate": 11
+    },
+    {
+      "date": "2026-09-01",
+      "phishing": 7,
+      "bec": 2,
+      "suspicious": 5,
+      "legitimate": 14
     }
   ]
 }

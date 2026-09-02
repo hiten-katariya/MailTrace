@@ -56,7 +56,7 @@ class IngestResponse(BaseModel):
 class CaseStatusResponse(BaseModel):
     case_id: str
     status: str  # 'processing', 'completed', 'failed'
-    progress: Dict[str, str] = Field(
+    progress: Dict[str, Any] = Field(
         default_factory=lambda: {
             "header_analysis": "pending",
             "nlp_analysis": "pending",

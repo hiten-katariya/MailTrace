@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     RAW_EML_STORAGE_DIR: str = "backend/storage/raw_emls"
     ML_MODEL_PATH: str = "backend/models/phishing_classifier.joblib"
     
+    # Alerting
+    ALERT_THRESHOLD: int = 70
+    
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"]
     

@@ -38,12 +38,20 @@ def train_model():
     )
     print(f"[+] Train set: {len(X_train)} samples | Test set: {len(X_test)} samples")
 
+    from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+    custom_stopwords = list(ENGLISH_STOP_WORDS.union({
+        "enron", "dmdx", "handyboard", "linguistics", "9fans", "ra", "houston",
+        "kaminski", "skilling", "vince", "shirley", "ect", "diet", "pills", "cialis",
+        "viagra", "vicodin", "xanax", "valium", "2001", "2000", "1999", "1998", "1997",
+        "mike", "john", "hb", "eol", "pm", "ur", "kent"
+    }))
+
     # Construct Pipeline
     pipeline = Pipeline([
         ("tfidf", TfidfVectorizer(
             max_features=12000,
             ngram_range=(1, 2),
-            stop_words="english",
+            stop_words=custom_stopwords,
             sublinear_tf=True,
             strip_accents="unicode",
         )),

@@ -1,0 +1,10 @@
+Received: from unauthorized-server.net [198.51.100.77] by mx.destination.org; Wed, 02 Sep 2026 14:00:00 +0000
+From: "Security Center" <alerts@paypal.com>
+To: <victim@destination.org>
+Subject: Immediate Account Verification Needed
+Date: Wed, 02 Sep 2026 14:00:00 +0000
+Message-ID: <dmarc-fail-alert-99@paypal.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Unauthorized attempt on your PayPal account. Please confirm your credentials.

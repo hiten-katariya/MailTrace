@@ -145,6 +145,24 @@ async def execute_case_pipeline(case_id: str, parsed_email: ParsedEmail, raw_eml
             )
             db.add(db_geo)
 
+            # Persist / Update IP Reputation Cache
+            existing_cache = await db.execute(select(IPReputationCache).where(IPReputationCache.ip == origin_ip))
+            cache_row = existing_cache.scalar_one_or_none()
+            if not cache_row:
+                cache_row = IPReputationCache(
+                    ip=origin_ip,
+                    abuse_score=ip_rep_res.abuse_score,
+                    is_vpn_tor=ip_rep_res.is_vpn_tor,
+                    flag_source=ip_rep_res.flag_source,
+                    isp=ip_rep_res.isp or geo_res.isp,
+                )
+                db.add(cache_row)
+            else:
+                cache_row.abuse_score = ip_rep_res.abuse_score
+                cache_row.is_vpn_tor = ip_rep_res.is_vpn_tor
+                cache_row.flag_source = ip_rep_res.flag_source
+                cache_row.isp = ip_rep_res.isp or geo_res.isp
+
             progress["geolocation"] = "done"
             progress["domain_intel"] = "in_progress"
             case.pipeline_progress = progress

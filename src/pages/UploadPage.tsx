@@ -27,6 +27,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onCaseCreated }) => {
     name: string;
     size?: number;
     sampleType?: 'phishing' | 'bec' | 'spoof' | 'clean';
+    file?: File;
   }) => {
     uploadMutation.mutate(fileInfo);
   };

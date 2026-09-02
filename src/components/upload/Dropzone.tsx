@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Upload, FileCode, Zap, Shield, Hash, ArrowUpRight } from 'lucide-react';
 
 interface DropzoneProps {
-  onFileSelected: (file: { name: string; size?: number; sampleType?: 'phishing' | 'bec' | 'spoof' | 'clean' }) => void;
+  onFileSelected: (file: { name: string; size?: number; sampleType?: 'phishing' | 'bec' | 'spoof' | 'clean'; file?: File }) => void;
   isProcessing: boolean;
 }
 
@@ -26,6 +26,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({ onFileSelected, isProcessing
       onFileSelected({
         name: file.name,
         size: file.size,
+        file: file,
       });
     }
   };
@@ -36,6 +37,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({ onFileSelected, isProcessing
       onFileSelected({
         name: file.name,
         size: file.size,
+        file: file,
       });
     }
   };

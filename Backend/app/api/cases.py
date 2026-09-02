@@ -1,16 +1,18 @@
 import os
 from datetime import datetime, timezone
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Query, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Query, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, asc, or_
 from sqlalchemy.orm import selectinload
+from collections import defaultdict
 
+from backend.app.config import settings
 from backend.app.database import get_db
 from backend.app.models.case import Case
 from backend.app.models.header import Headers, RelayHop
 from backend.app.models.content import NLPFinding, URLFinding
-from backend.app.models.origin import Geolocation, DomainIntel
+from backend.app.models.origin import Geolocation, DomainIntel, IPReputationCache
 from backend.app.models.audit import AuditLog
 
 from backend.app.schemas.case import (
@@ -30,9 +32,17 @@ from backend.app.schemas.header import (
 )
 from backend.app.schemas.content import CaseContent, URLFindingSchema
 from backend.app.schemas.origin import CaseOrigin, GeolocationSchema, DomainIntelSchema
+from backend.app.schemas.stats import (
+    CasesStatsResponse,
+    ScoreBracketSchema,
+    RiskCategoryCountSchema,
+    DetectionTrendDaySchema,
+)
+from backend.app.schemas.report import CaseReportJSONResponse
 
 from backend.app.core.ingestion import parse_raw_email
 from backend.app.core.pipeline import execute_case_pipeline
+from backend.app.core.reporting import generate_pdf_report, build_json_report
 
 router = APIRouter(tags=["Cases & Ingestion"])
 
@@ -62,7 +72,9 @@ async def upload_case(
             sender_domain=parsed.sender_domain,
             recipient=parsed.recipient,
             received_at=parsed.received_at,
-            status="processing",
+            status="pending",
+            fraud_score=0,
+            risk_category="legitimate",
             pipeline_progress={
                 "header_analysis": "pending",
                 "nlp_analysis": "pending",
@@ -75,7 +87,7 @@ async def upload_case(
         await db.commit()
         await db.refresh(case)
 
-        # Launch background pipeline orchestrator
+        # Trigger background processing pipeline
         background_tasks.add_task(execute_case_pipeline, case.id, parsed, content_bytes)
 
         # Audit log
@@ -101,6 +113,7 @@ async def upload_case(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse and ingest .eml: {str(e)}")
 
+
 # =======================================================
 # 2. Polling Status: GET /cases/{id}/status
 # =======================================================
@@ -117,8 +130,126 @@ async def get_case_status(case_id: str, db: AsyncSession = Depends(get_db)):
         progress=case.pipeline_progress or {},
     )
 
+
 # =======================================================
-# 3. Case List Queue: GET /cases
+# 3. Dashboard Statistics: GET /cases/stats
+# =======================================================
+@router.get("/cases/stats", response_model=CasesStatsResponse)
+async def get_cases_stats(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Case))
+    all_cases = result.scalars().all()
+
+    total = len(all_cases)
+    if total == 0:
+        return CasesStatsResponse(
+            total_cases=0,
+            high_risk_cases=0,
+            suspicious_cases=0,
+            legitimate_cases=0,
+            average_score=0.0,
+            by_risk_category=[
+                RiskCategoryCountSchema(category="phishing", count=0, percentage=0, color="#EF4444"),
+                RiskCategoryCountSchema(category="bec", count=0, percentage=0, color="#F43F5E"),
+                RiskCategoryCountSchema(category="suspicious", count=0, percentage=0, color="#F59E0B"),
+                RiskCategoryCountSchema(category="legitimate", count=0, percentage=0, color="#10B981"),
+            ],
+            score_brackets=[
+                ScoreBracketSchema(range="0–20", count=0, color="#10B981"),
+                ScoreBracketSchema(range="21–40", count=0, color="#28C7E8"),
+                ScoreBracketSchema(range="41–60", count=0, color="#F59E0B"),
+                ScoreBracketSchema(range="61–80", count=0, color="#F97316"),
+                ScoreBracketSchema(range="81–100", count=0, color="#EF4444"),
+            ],
+            detection_trends=[],
+        )
+
+    phishing_count = sum(1 for c in all_cases if c.risk_category == "phishing")
+    bec_count = sum(1 for c in all_cases if c.risk_category == "bec")
+    suspicious_count = sum(1 for c in all_cases if c.risk_category == "suspicious")
+    legit_count = sum(1 for c in all_cases if c.risk_category == "legitimate")
+    high_risk = phishing_count + bec_count
+
+    avg_score = round(sum((c.fraud_score or 0) for c in all_cases) / total, 1)
+
+    # Score distribution histogram brackets
+    b1 = sum(1 for c in all_cases if (c.fraud_score or 0) <= 20)
+    b2 = sum(1 for c in all_cases if 20 < (c.fraud_score or 0) <= 40)
+    b3 = sum(1 for c in all_cases if 40 < (c.fraud_score or 0) <= 60)
+    b4 = sum(1 for c in all_cases if 60 < (c.fraud_score or 0) <= 80)
+    b5 = sum(1 for c in all_cases if (c.fraud_score or 0) > 80)
+
+    score_brackets = [
+        ScoreBracketSchema(range="0–20", count=b1, color="#10B981"),
+        ScoreBracketSchema(range="21–40", count=b2, color="#28C7E8"),
+        ScoreBracketSchema(range="41–60", count=b3, color="#F59E0B"),
+        ScoreBracketSchema(range="61–80", count=b4, color="#F97316"),
+        ScoreBracketSchema(range="81–100", count=b5, color="#EF4444"),
+    ]
+
+    by_risk_category = [
+        RiskCategoryCountSchema(
+            category="phishing",
+            count=phishing_count,
+            percentage=round((phishing_count / total) * 100),
+            color="#EF4444",
+        ),
+        RiskCategoryCountSchema(
+            category="bec",
+            count=bec_count,
+            percentage=round((bec_count / total) * 100),
+            color="#F43F5E",
+        ),
+        RiskCategoryCountSchema(
+            category="suspicious",
+            count=suspicious_count,
+            percentage=round((suspicious_count / total) * 100),
+            color="#F59E0B",
+        ),
+        RiskCategoryCountSchema(
+            category="legitimate",
+            count=legit_count,
+            percentage=round((legit_count / total) * 100),
+            color="#10B981",
+        ),
+    ]
+
+    # Daily detection trends
+    daily_stats = defaultdict(lambda: {"phishing": 0, "bec": 0, "suspicious": 0, "legitimate": 0})
+    for c in all_cases:
+        if c.received_at:
+            day_str = c.received_at.strftime("%Y-%m-%d")
+            cat = c.risk_category or "legitimate"
+            if cat in daily_stats[day_str]:
+                daily_stats[day_str][cat] += 1
+            else:
+                daily_stats[day_str]["legitimate"] += 1
+
+    sorted_days = sorted(daily_stats.keys())
+    trends = [
+        DetectionTrendDaySchema(
+            date=d,
+            phishing=daily_stats[d]["phishing"],
+            bec=daily_stats[d]["bec"],
+            suspicious=daily_stats[d]["suspicious"],
+            legitimate=daily_stats[d]["legitimate"],
+        )
+        for d in sorted_days
+    ]
+
+    return CasesStatsResponse(
+        total_cases=total,
+        high_risk_cases=high_risk,
+        suspicious_cases=suspicious_count,
+        legitimate_cases=legit_count,
+        average_score=avg_score,
+        by_risk_category=by_risk_category,
+        score_brackets=score_brackets,
+        detection_trends=trends,
+    )
+
+
+# =======================================================
+# 4. Case List Queue: GET /cases
 # =======================================================
 @router.get("/cases", response_model=CasesResponse)
 async def list_cases(
@@ -133,7 +264,7 @@ async def list_cases(
 ):
     query = select(Case).options(selectinload(Case.headers))
 
-    # Search filter
+    # Search filter (PostgreSQL ILIKE & full-text match across subject, sender, id, sender_domain)
     if search and search.strip():
         term = f"%{search.strip().lower()}%"
         query = query.where(
@@ -181,17 +312,19 @@ async def list_cases(
         dkim_val = c.headers.dkim_result if c.headers else "none"
         dmarc_val = c.headers.dmarc_result if c.headers else "none"
 
-        case_summaries.append(CaseSummary(
-            case_id=c.id,
-            subject=c.subject,
-            sender=c.sender,
-            received_at=c.received_at.isoformat(),
-            fraud_score=c.fraud_score or 0,
-            risk_category=c.risk_category or "legitimate",
-            spf=spf_val,
-            dkim=dkim_val,
-            dmarc=dmarc_val,
-        ))
+        case_summaries.append(
+            CaseSummary(
+                case_id=c.id,
+                subject=c.subject,
+                sender=c.sender,
+                received_at=c.received_at.isoformat(),
+                fraud_score=c.fraud_score or 0,
+                risk_category=c.risk_category or "legitimate",
+                spf=spf_val,
+                dkim=dkim_val,
+                dmarc=dmarc_val,
+            )
+        )
 
     return CasesResponse(
         total=total_count,
@@ -200,8 +333,9 @@ async def list_cases(
         cases=case_summaries,
     )
 
+
 # =======================================================
-# 4. Full Case Detail: GET /cases/{id}
+# 5. Full Case Detail: GET /cases/{id}
 # =======================================================
 @router.get("/cases/{case_id}", response_model=CaseDetail)
 async def get_case_detail(case_id: str, db: AsyncSession = Depends(get_db)):
@@ -214,16 +348,28 @@ async def get_case_detail(case_id: str, db: AsyncSession = Depends(get_db)):
     if not case:
         raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
 
+    # Record audit log for case view
+    audit_entry = AuditLog(
+        username="analyst",
+        action="view_case",
+        case_id=case.id,
+        details=f"Viewed case dossier {case_id}",
+    )
+    db.add(audit_entry)
+    await db.commit()
+
     breakdown = []
     if case.score_breakdown:
         for s in case.score_breakdown:
-            breakdown.append(ScoreSignal(
-                signal=s.get("signal", "Unknown Signal"),
-                weight=s.get("weight", 0),
-                contribution=s.get("contribution", 0),
-                reason=s.get("reason"),
-                sourceModule=s.get("sourceModule", "fusion"),
-            ))
+            breakdown.append(
+                ScoreSignal(
+                    signal=s.get("signal", "Unknown Signal"),
+                    weight=s.get("weight", 0),
+                    contribution=s.get("contribution", 0),
+                    reason=s.get("reason"),
+                    sourceModule=s.get("sourceModule", "fusion"),
+                )
+            )
 
     spf_val = case.headers.spf_result if case.headers else "none"
     dkim_val = case.headers.dkim_result if case.headers else "none"
@@ -245,8 +391,171 @@ async def get_case_detail(case_id: str, db: AsyncSession = Depends(get_db)):
         dmarc=dmarc_val,
     )
 
+
 # =======================================================
-# 5. Case Headers & Relay Trace: GET /cases/{id}/headers
+# 6. Forensic Report Export: GET /cases/{id}/report
+# =======================================================
+@router.get("/cases/{case_id}/report")
+async def get_case_report(
+    case_id: str,
+    format: str = Query("json", pattern="^(pdf|json)$"),
+    db: AsyncSession = Depends(get_db),
+):
+    # Single synchronized now_utc timestamp
+    now_utc = datetime.now(timezone.utc)
+    analyst_username = "Alex Rivera (Analyst-01)"
+
+    # Fetch Case
+    case_res = await db.execute(
+        select(Case).options(selectinload(Case.headers)).where(Case.id == case_id)
+    )
+    case = case_res.scalar_one_or_none()
+    if not case:
+        raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
+
+    # Fetch Headers & Hops
+    headers_db = case.headers
+    hops_res = await db.execute(
+        select(RelayHop).where(RelayHop.case_id == case_id).order_by(RelayHop.hop_number)
+    )
+    hops_db = hops_res.scalars().all()
+
+    # Fetch Content & URLs
+    nlp_res = await db.execute(select(NLPFinding).where(NLPFinding.case_id == case_id))
+    nlp_db = nlp_res.scalar_one_or_none()
+    urls_res = await db.execute(select(URLFinding).where(URLFinding.case_id == case_id))
+    urls_db = urls_res.scalars().all()
+
+    # Fetch Geo & Domain
+    geo_res = await db.execute(select(Geolocation).where(Geolocation.case_id == case_id))
+    geo_db = geo_res.scalar_one_or_none()
+    domain_res = await db.execute(select(DomainIntel).where(DomainIntel.case_id == case_id))
+    domain_db = domain_res.scalar_one_or_none()
+
+    # Fetch IP Rep Cache
+    ip_cache = None
+    if geo_db and geo_db.originating_ip:
+        ip_cache_res = await db.execute(
+            select(IPReputationCache).where(IPReputationCache.ip == geo_db.originating_ip)
+        )
+        ip_cache = ip_cache_res.scalar_one_or_none()
+
+    vpn_flag = ip_cache.is_vpn_tor if ip_cache else False
+
+    # Structure dicts
+    case_dict = {
+        "case_id": case.id,
+        "subject": case.subject,
+        "sender": case.sender,
+        "recipient": case.recipient,
+        "received_at": case.received_at.isoformat() if case.received_at else "",
+        "fraud_score": case.fraud_score or 0,
+        "risk_category": case.risk_category or "legitimate",
+        "confidence": case.confidence or "medium",
+        "verdict_summary": case.verdict_summary or "Analysis complete.",
+        "score_breakdown": case.score_breakdown or [],
+    }
+
+    headers_dict = {
+        "spf": headers_db.spf_result if headers_db else "none",
+        "dkim": headers_db.dkim_result if headers_db else "none",
+        "dmarc": headers_db.dmarc_result if headers_db else "none",
+        "anomalies": headers_db.anomalies if headers_db else [],
+        "relay_hops": [
+            {
+                "hop_number": h.hop_number,
+                "from_server": h.server,
+                "by_server": h.by_server,
+                "from_ip": h.ip,
+                "timestamp": h.timestamp.isoformat() if h.timestamp else "",
+                "delay_ms": h.delay_ms,
+                "is_origin": h.is_earliest_origin,
+            }
+            for h in hops_db
+        ],
+    }
+
+    content_dict = {
+        "classification": nlp_db.classification if nlp_db else "legitimate",
+        "classification_confidence": nlp_db.classification_confidence if nlp_db else 0.5,
+        "sentiment_urgency_score": nlp_db.sentiment_urgency_score if nlp_db else 0,
+        "impersonation_target": nlp_db.impersonation_target if nlp_db else None,
+        "flagged_phrases": nlp_db.flagged_phrases if nlp_db else [],
+        "bec_indicators": nlp_db.bec_indicators if nlp_db else [],
+        "urls": [
+            {
+                "url": u.original_url,
+                "resolved_url": u.resolved_url,
+                "domain": u.domain,
+                "is_homoglyph": u.is_flagged and "homoglyph" in (u.reason or "").lower(),
+                "is_suspicious": u.is_flagged,
+            }
+            for u in urls_db
+        ],
+    }
+
+    origin_dict = {
+        "originating_ip": geo_db.originating_ip if geo_db else "N/A",
+        "isp": geo_db.isp if geo_db else "Unknown ISP",
+        "vpn_tor_flag": vpn_flag,
+        "geolocation": {
+            "city": geo_db.city if geo_db else "Unknown",
+            "region": geo_db.region if geo_db else "Unknown",
+            "country": geo_db.country if geo_db else "Unknown",
+            "precision_confidence": geo_db.precision_confidence if geo_db else "low",
+        },
+        "domain_intel": {
+            "domain": domain_db.domain if domain_db else "N/A",
+            "registrar": domain_db.registrar if domain_db else "Unknown",
+            "registered_on": domain_db.registered_on if domain_db else None,
+            "domain_age_days": domain_db.domain_age_days if domain_db else 0,
+            "mx_valid": domain_db.mx_valid if domain_db else False,
+        },
+    }
+
+    # Record audit log entry with identical synchronized timestamp
+    audit_entry = AuditLog(
+        timestamp=now_utc,
+        username=analyst_username,
+        action="export_report",
+        case_id=case.id,
+        details=f"Exported forensic dossier in {format.upper()} format",
+    )
+    db.add(audit_entry)
+    await db.commit()
+
+    if format == "pdf":
+        pdf_bytes = generate_pdf_report(
+            case_data=case_dict,
+            headers_data=headers_dict,
+            content_data=content_dict,
+            origin_data=origin_dict,
+            file_hash=case.file_hash,
+            analyst_username=analyst_username,
+            now_utc=now_utc,
+        )
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'inline; filename="MailTrace_Report_{case.id}.pdf"',
+                "X-Report-Generated-At": now_utc.isoformat(),
+            },
+        )
+    else:
+        return build_json_report(
+            case_data=case_dict,
+            headers_data=headers_dict,
+            content_data=content_dict,
+            origin_data=origin_dict,
+            file_hash=case.file_hash,
+            analyst_username=analyst_username,
+            now_utc=now_utc,
+        )
+
+
+# =======================================================
+# 7. Case Headers & Relay Trace: GET /cases/{id}/headers
 # =======================================================
 @router.get("/cases/{case_id}/headers", response_model=CaseHeaders)
 async def get_case_headers(case_id: str, db: AsyncSession = Depends(get_db)):
@@ -255,7 +564,6 @@ async def get_case_headers(case_id: str, db: AsyncSession = Depends(get_db)):
     if not headers_db:
         raise HTTPException(status_code=404, detail=f"Headers for case {case_id} not found")
 
-    # Fetch relay hops
     hops_result = await db.execute(
         select(RelayHop).where(RelayHop.case_id == case_id).order_by(RelayHop.hop_number)
     )
@@ -297,8 +605,9 @@ async def get_case_headers(case_id: str, db: AsyncSession = Depends(get_db)):
         anomalies=headers_db.anomalies or [],
     )
 
+
 # =======================================================
-# 6. Case Content Analysis: GET /cases/{id}/content
+# 8. Case Content Analysis: GET /cases/{id}/content
 # =======================================================
 @router.get("/cases/{case_id}/content", response_model=CaseContent)
 async def get_case_content(case_id: str, db: AsyncSession = Depends(get_db)):
@@ -331,8 +640,9 @@ async def get_case_content(case_id: str, db: AsyncSession = Depends(get_db)):
         urls=urls_schema,
     )
 
+
 # =======================================================
-# 7. Case Origin & Geo: GET /cases/{id}/origin
+# 9. Case Origin & Geo: GET /cases/{id}/origin
 # =======================================================
 @router.get("/cases/{case_id}/origin", response_model=CaseOrigin)
 async def get_case_origin(case_id: str, db: AsyncSession = Depends(get_db)):
@@ -345,6 +655,21 @@ async def get_case_origin(case_id: str, db: AsyncSession = Depends(get_db)):
     if not geo_db or not domain_db:
         raise HTTPException(status_code=404, detail=f"Origin intelligence for case {case_id} not found")
 
+    # Check IP reputation cache or live lookup
+    ip_cache = None
+    if geo_db and geo_db.originating_ip:
+        ip_cache_result = await db.execute(
+            select(IPReputationCache).where(IPReputationCache.ip == geo_db.originating_ip)
+        )
+        ip_cache = ip_cache_result.scalar_one_or_none()
+
+    vpn_flag = ip_cache.is_vpn_tor if ip_cache else False
+    flag_source = (
+        ip_cache.flag_source
+        if ip_cache
+        else ("AbuseIPDB Live API" if (geo_db and geo_db.originating_ip != "127.0.0.1") else "Local Loopback")
+    )
+
     return CaseOrigin(
         originating_ip=geo_db.originating_ip,
         geolocation=GeolocationSchema(
@@ -356,8 +681,8 @@ async def get_case_origin(case_id: str, db: AsyncSession = Depends(get_db)):
             precision_confidence=geo_db.precision_confidence,
         ),
         isp=geo_db.isp,
-        vpn_tor_flag=False,
-        flag_source="AbuseIPDB",
+        vpn_tor_flag=vpn_flag,
+        flag_source=flag_source,
         domain_intel=DomainIntelSchema(
             domain=domain_db.domain,
             registrar=domain_db.registrar,
@@ -368,19 +693,20 @@ async def get_case_origin(case_id: str, db: AsyncSession = Depends(get_db)):
         ),
     )
 
+
 # =======================================================
-# 8. High Risk Threat Alerts: GET /alerts
+# 10. High Risk Threat Alerts: GET /alerts
 # =======================================================
 @router.get("/alerts")
 async def get_alerts(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Case)
-        .where(Case.fraud_score >= 70)
+        .where(Case.fraud_score >= settings.ALERT_THRESHOLD)
         .order_by(desc(Case.received_at))
-        .limit(10)
+        .limit(20)
     )
     cases = result.scalars().all()
-    
+
     alerts_list = [
         {
             "alert_id": f"alert-{c.id[:8]}",
@@ -389,14 +715,15 @@ async def get_alerts(db: AsyncSession = Depends(get_db)):
             "sender": c.sender,
             "fraud_score": c.fraud_score or 0,
             "risk_category": c.risk_category or "phishing",
-            "triggered_at": c.received_at.isoformat(),
+            "triggered_at": c.received_at.isoformat() if c.received_at else datetime.now(timezone.utc).isoformat(),
         }
         for c in cases
     ]
     return {"alerts": alerts_list}
 
+
 # =======================================================
-# 9. Phase 4 Stubs: Correlation, Campaigns, Settings, Audit
+# 11. Phase 4 Stubs: Correlation, Campaigns
 # =======================================================
 @router.get("/cases/{case_id}/correlation")
 async def get_case_correlation(case_id: str):
@@ -409,6 +736,7 @@ async def get_case_correlation(case_id: str):
         "linked_cases": [case_id],
         "shared_indicator": "Shared Bulletproof Relay Subnet (AS9009)",
     }
+
 
 @router.get("/campaigns")
 async def get_campaigns():

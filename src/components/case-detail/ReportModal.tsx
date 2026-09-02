@@ -1,7 +1,7 @@
-import React from 'react';
 import {
   X,
   Printer,
+  Download,
   Hash,
   FileCheck,
   Shield,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { CaseDetail, CaseOrigin } from '../../types/case';
 import { formatUtcDateTime } from '../../lib/formatters';
+import { getCaseReport } from '../../mocks/api';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -34,6 +35,10 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     window.print();
   };
 
+  const handleExportPdf = () => {
+    getCaseReport(caseDetail.case_id, 'pdf');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
       <div className="bg-soc-panel border border-slate-800/80 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -48,11 +53,19 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
           <div className="flex items-center gap-2.5">
             <button
+              onClick={handleExportPdf}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-semibold transition-colors"
+              title="Download official forensic PDF report generated with immutable evidence hash"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export Forensic PDF</span>
+            </button>
+            <button
               onClick={handlePrint}
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-semibold transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print / Save PDF</span>
+              <span>Print View</span>
             </button>
             <button
               onClick={onClose}

@@ -4,15 +4,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.config import settings
-from backend.app.database import async_engine, Base
+from backend.app.database import init_db, async_engine
 from backend.app.api import api_router
 from backend.app.core.content_analysis import get_ml_model
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Ensure DB tables exist
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Startup: Initialize DB with auto-fallback
+    await init_db()
     
     # Preload ML model into memory
     model = get_ml_model()
@@ -23,7 +22,10 @@ async def lifespan(app: FastAPI):
         
     yield
     # Shutdown
-    await async_engine.dispose()
+    try:
+        await async_engine.dispose()
+    except Exception:
+        pass
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -35,7 +37,15 @@ app = FastAPI(
 # Enable CORS for Vite frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS + ["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

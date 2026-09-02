@@ -1,0 +1,11 @@
+Received: from mail.internal.net (10.0.0.5) by edge.company.com (10.0.0.1); Wed, 02 Sep 2026 12:00:00 +0000
+Received: from suspicious-relay.com (198.51.100.99) by mail.internal.net (10.0.0.5); Wed, 02 Sep 2026 12:10:00 +0000
+From: "Accounting" <accounting@vendor-update.com>
+To: <analyst@corp.com>
+Subject: Invoice Update
+Date: Wed, 02 Sep 2026 11:55:00 +0000
+Message-ID: <invoice-out-of-order-123@vendor-update.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Please find the updated invoice for this billing cycle.

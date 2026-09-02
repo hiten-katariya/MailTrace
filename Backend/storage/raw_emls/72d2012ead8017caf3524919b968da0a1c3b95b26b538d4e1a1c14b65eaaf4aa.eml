@@ -1,0 +1,22 @@
+From: "PayPal Security Center" <service@paypal.com>
+To: "Victim User" <victim@target-enterprise.com>
+Subject: Account Alert: Immediate Action Required - Unauthorized Activity Detected
+Date: Wed, 02 Sep 2026 10:15:00 +0000
+Message-ID: <spoof.pp.99218@bad-mta.net>
+Return-Path: <bounce@unregistered-spammer-domain.net>
+Reply-To: <collector@unregistered-spammer-domain.net>
+Received: from bad-mta.net (bad-mta.net [203.0.113.199])
+	by mail.target-enterprise.com (Postfix) with ESMTP id 8839102
+	for <victim@target-enterprise.com>; Wed, 02 Sep 2026 10:15:05 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html>
+<body>
+<h2>PayPal Security Alert</h2>
+<p>We detected unauthorized login attempt on your PayPal corporate account from an unrecognized IP address.</p>
+<p>Immediate action is required. Your account will be suspended within 24 hours if you fail to respond and confirm your identity.</p>
+<p><a href="http://203.0.113.199/paypal/verify">Click here to verify your account credentials immediately</a></p>
+<p>Thank you,<br>PayPal Fraud Prevention Team</p>
+</body>
+</html>

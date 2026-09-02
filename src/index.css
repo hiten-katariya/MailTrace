@@ -48,14 +48,13 @@
 
 /* Leaflet dark styling overrides */
 .leaflet-container {
-  background-color: #070b12 !important;
+  background-color: #070B12 !important;
   font-family: 'IBM Plex Sans', sans-serif !important;
   border-radius: 0.25rem;
-  z-index: 10;
 }
 
 .leaflet-tile {
-  filter: brightness(0.7) invert(1) contrast(3.2) hue-rotate(205deg) saturate(0.25) brightness(0.65);
+  filter: invert(100%) hue-rotate(185deg) brightness(85%) contrast(110%);
 }
 
 .leaflet-popup-content-wrapper, .leaflet-popup-tip {
