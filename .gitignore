@@ -1,3 +1,5 @@
 *node_modules
 *GeoLite2-City.mmdb
 *.env
+*Backend/Data
+*Backend/.env
