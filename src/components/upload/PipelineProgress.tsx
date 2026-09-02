@@ -9,6 +9,7 @@ import {
   Sliders,
   ArrowRight,
   Terminal,
+  Hash,
 } from 'lucide-react';
 
 interface PipelineProgressProps {
@@ -36,66 +37,65 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
 
   const steps: StepInfo[] = [
     {
-      id: 'mime',
-      label: 'MIME Parsing & Evidence Integrity',
-      detail: `Parsed RFC 822 MIME structure. Computed SHA-256 hash (${fileHash.substring(0, 16)}...).`,
-      icon: <FileCode className="w-4 h-4 text-cyan-400" />,
+      id: 'sha256',
+      label: '1. SHA-256 Evidence Lock & Custody',
+      detail: `Computed cryptographic SHA-256 hash (${fileHash.substring(0, 20)}...). Immutable vault entry created.`,
+      icon: <Hash className="w-4 h-4 text-cyan-400" />,
     },
     {
-      id: 'headers',
-      label: 'Header & Protocol Authentication',
-      detail: 'Reconstructing Received hop sequence. Validating SPF, DKIM signature & DMARC alignment policy.',
+      id: 'mime',
+      label: '2. MIME Parsing & Header Analysis',
+      detail: 'Reconstructing Received relay chain sequence. Validating SPF record, DKIM key & DMARC policy alignment.',
       icon: <Server className="w-4 h-4 text-blue-400" />,
     },
     {
       id: 'nlp',
-      label: 'NLP & Psychological Urgency Engine',
-      detail: 'Analyzing semantic pressure cues, executive impersonation pretexts, and resolving sandboxed redirect URLs.',
+      label: '3. NLP Sentiment & Urgency Analysis',
+      detail: 'Evaluating DistilBERT phishing model, executive impersonation pretexts, and sandboxed redirect URLs.',
       icon: <ShieldAlert className="w-4 h-4 text-purple-400" />,
     },
     {
-      id: 'geo',
-      label: 'Origin Geolocation & WHOIS Intel',
-      detail: 'Querying MaxMind GeoLite2 IP origin coordinates, ASN bulletproof flags & AbuseIPDB threat feeds.',
+      id: 'origin',
+      label: '4. Origin Geolocation & Domain Intelligence',
+      detail: 'Querying MaxMind GeoLite2 IP coordinates, AbuseIPDB threat feeds, and WHOIS domain registration history.',
       icon: <Globe className="w-4 h-4 text-amber-400" />,
     },
     {
-      id: 'fusion',
-      label: 'Signal Fusion & Composite Scoring',
-      detail: 'Calculating explainable weighted fraud score. Building forensic case dossier and campaign links.',
+      id: 'scoring',
+      label: '5. Signal Fusion & Defensible Fraud Scoring',
+      detail: 'Fusing weighted evidence indicators into composite 0-100 score. Correlating campaign clusters.',
       icon: <Sliders className="w-4 h-4 text-emerald-400" />,
     },
   ];
 
   useEffect(() => {
-    // Stage 1
-    setLogs((prev) => [...prev, `[0.0s] Ingestion initiated for '${filename}'`]);
-    setLogs((prev) => [...prev, `[0.2s] SHA-256 evidence lock created: ${fileHash.substring(0, 24)}...`]);
+    setLogs((prev) => [...prev, `[0.0s] Ingestion daemon initiated for '${filename}'`]);
+    setLogs((prev) => [...prev, `[0.2s] SHA-256 evidence lock created: ${fileHash.substring(0, 28)}...`]);
 
     const timer1 = setTimeout(() => {
       setActiveStep(1);
-      setLogs((prev) => [...prev, `[0.8s] Parsed 4 Received header hops. SPF check dispatched.`]);
+      setLogs((prev) => [...prev, `[0.8s] Parsed 4 Received header hops. SPF DNS query dispatched.`]);
     }, 700);
 
     const timer2 = setTimeout(() => {
       setActiveStep(2);
-      setLogs((prev) => [...prev, `[1.6s] DistilBERT classification running. Scanning for BEC markers.`]);
+      setLogs((prev) => [...prev, `[1.6s] DistilBERT sentiment scan completed. Checking BEC payment markers.`]);
     }, 1500);
 
     const timer3 = setTimeout(() => {
       setActiveStep(3);
-      setLogs((prev) => [...prev, `[2.3s] Earliest IP identified. Cross-referencing AbuseIPDB & WHOIS.`]);
+      setLogs((prev) => [...prev, `[2.3s] Earliest origin IP extracted. Cross-referencing AbuseIPDB & WHOIS age.`]);
     }, 2300);
 
     const timer4 = setTimeout(() => {
       setActiveStep(4);
-      setLogs((prev) => [...prev, `[3.0s] Signal fusion complete. Generating case dossier ${caseId}.`]);
+      setLogs((prev) => [...prev, `[3.0s] Multi-signal fusion complete. Generating case dossier ${caseId}.`]);
     }, 3000);
 
     const timerComplete = setTimeout(() => {
       setActiveStep(5);
-      setLogs((prev) => [...prev, `[3.6s] Pipeline execution finished. Ready for triage.`]);
-    }, 3600);
+      setLogs((prev) => [...prev, `[3.5s] Forensic pipeline execution successful. Ready for triage.`]);
+    }, 3500);
 
     return () => {
       clearTimeout(timer1);
@@ -107,38 +107,38 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
   }, [filename, caseId, fileHash]);
 
   return (
-    <div className="bg-soc-panel border border-soc-border rounded-md shadow-soc-card p-6 space-y-6">
+    <div className="bg-soc-panel border border-slate-800/60 rounded shadow-soc-card p-5 space-y-5">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-soc-border">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/60">
         <div>
-          <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider font-bold">
-            FORENSIC SIGNAL PIPELINE IN PROGRESS
+          <span className="text-[9px] font-mono text-cyan-400 uppercase tracking-wider font-bold">
+            MULTI-SIGNAL FORENSIC PIPELINE IN PROGRESS
           </span>
-          <h2 className="text-base font-bold text-slate-100 font-mono mt-0.5">
-            Analyzing: <span className="text-cyan-300">{filename}</span>
+          <h2 className="text-sm font-bold text-slate-100 font-mono mt-0.5">
+            Ingesting: <span className="text-cyan-300">{filename}</span>
           </h2>
         </div>
 
         <div className="flex items-center gap-2">
           {activeStep < 5 ? (
-            <div className="flex items-center gap-2 px-3 py-1 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono">
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono">
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              <span>Processing Stage {activeStep + 1} of 5</span>
+              <span>Stage {activeStep + 1} of 5</span>
             </div>
           ) : (
             <button
               onClick={() => onComplete(caseId)}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold transition-colors animate-bounce"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold transition-colors"
             >
               <span>View Case Dossier</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
       </div>
 
       {/* 5-Step Pipeline Progress Cards */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {steps.map((step, idx) => {
           const isDone = activeStep > idx;
           const isCurrent = activeStep === idx;
@@ -146,22 +146,22 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
           return (
             <div
               key={step.id}
-              className={`p-3.5 rounded-md border transition-all flex items-start gap-3.5 ${
+              className={`p-3 rounded border transition-all flex items-start gap-3 ${
                 isDone
-                  ? 'bg-emerald-950/15 border-emerald-500/30'
+                  ? 'bg-emerald-500/5 border-emerald-500/25'
                   : isCurrent
-                  ? 'bg-cyan-950/30 border-cyan-500/50 shadow-soc-subtle'
-                  : 'bg-soc-inset/50 border-soc-border/60 opacity-60'
+                  ? 'bg-cyan-500/10 border-cyan-500/40 shadow-soc-subtle'
+                  : 'bg-soc-inset/50 border-slate-800/40 opacity-50'
               }`}
             >
               {/* Status Icon */}
               <div className="mt-0.5 shrink-0">
                 {isDone ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 ) : isCurrent ? (
-                  <RefreshCw className="w-5 h-5 text-cyan-400 animate-spin" />
+                  <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
                 ) : (
-                  <div className="w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center text-[10px] font-mono text-slate-500">
+                  <div className="w-4 h-4 rounded-full border border-slate-700 flex items-center justify-center text-[9px] font-mono text-slate-500">
                     {idx + 1}
                   </div>
                 )}
@@ -176,11 +176,11 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
                       {step.label}
                     </h4>
                   </div>
-                  <span className="text-[10px] font-mono text-soc-muted uppercase">
+                  <span className="text-[9px] font-mono uppercase tracking-wider text-slate-400">
                     {isDone ? 'COMPLETE' : isCurrent ? 'EXECUTING' : 'QUEUED'}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 font-sans mt-1 leading-relaxed">
+                <p className="text-[11px] text-slate-400 font-sans mt-0.5 leading-relaxed">
                   {step.detail}
                 </p>
               </div>
@@ -189,13 +189,13 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
         })}
       </div>
 
-      {/* Terminal Telemetry Log Output */}
-      <div className="rounded bg-black/80 border border-slate-800 p-3 font-mono text-[11px] text-slate-400 space-y-1">
-        <div className="flex items-center gap-1.5 text-slate-500 pb-1 border-b border-slate-900 text-[10px] uppercase">
-          <Terminal className="w-3.5 h-3.5" />
-          <span>Real-time Ingestion Daemon Stream</span>
+      {/* Real-time Ingestion Stream Log */}
+      <div className="rounded bg-black/60 border border-slate-800/80 p-2.5 font-mono text-[10px] text-slate-400 space-y-1">
+        <div className="flex items-center gap-1.5 text-slate-500 pb-1 border-b border-slate-900 text-[9px] uppercase">
+          <Terminal className="w-3 h-3" />
+          <span>Real-time Ingestion Daemon Output</span>
         </div>
-        <div className="max-h-24 overflow-y-auto space-y-0.5 pt-1">
+        <div className="max-h-20 overflow-y-auto space-y-0.5 pt-1">
           {logs.map((log, i) => (
             <div key={i} className="text-slate-300">
               {log}

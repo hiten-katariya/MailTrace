@@ -26,53 +26,53 @@ export const CampaignClusterTimeline: React.FC<CampaignClusterTimelineProps> = (
   const getNodeIcon = (type: string) => {
     switch (type) {
       case 'ip':
-        return <Server className="w-4 h-4 text-cyan-400" />;
+        return <Server className="w-3.5 h-3.5 text-cyan-400" />;
       case 'domain':
-        return <Globe className="w-4 h-4 text-indigo-400" />;
+        return <Globe className="w-3.5 h-3.5 text-indigo-400" />;
       case 'mailserver':
-        return <Network className="w-4 h-4 text-amber-400" />;
+        return <Network className="w-3.5 h-3.5 text-amber-400" />;
       case 'payload_url':
-        return <Link className="w-4 h-4 text-red-400" />;
+        return <Link className="w-3.5 h-3.5 text-red-400" />;
       default:
-        return <Hash className="w-4 h-4 text-slate-400" />;
+        return <Hash className="w-3.5 h-3.5 text-slate-400" />;
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Campaign Summary Banner */}
-      <div className="bg-soc-panel border border-soc-border rounded-md p-5 shadow-soc-card">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+      <div className="bg-soc-panel border border-slate-800/60 rounded p-4 shadow-soc-card">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
-            <Layers className="w-5 h-5 text-cyan-400" />
-            <h2 className="text-lg font-bold font-mono text-slate-100">
+            <Layers className="w-4 h-4 text-cyan-400" />
+            <h2 className="text-base font-bold font-mono text-slate-100">
               {campaign.name}
             </h2>
           </div>
           {campaign.primary_risk_category && (
-            <RiskChip category={campaign.primary_risk_category} />
+            <RiskChip category={campaign.primary_risk_category} size="sm" />
           )}
         </div>
 
-        <p className="text-xs text-slate-300 leading-relaxed font-sans mb-4">
+        <p className="text-xs text-slate-300 leading-relaxed font-sans mb-3">
           {campaign.description}
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
-          <div className="p-2.5 rounded bg-soc-inset border border-soc-border">
-            <span className="text-[10px] text-soc-muted uppercase block">Campaign ID</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
+          <div className="p-2 rounded bg-soc-inset border border-slate-800/50">
+            <span className="text-[9px] text-soc-muted uppercase block">Cluster ID</span>
             <span className="text-cyan-300 font-bold">{campaign.campaign_id}</span>
           </div>
-          <div className="p-2.5 rounded bg-soc-inset border border-soc-border">
-            <span className="text-[10px] text-soc-muted uppercase block">Linked Incidents</span>
+          <div className="p-2 rounded bg-soc-inset border border-slate-800/50">
+            <span className="text-[9px] text-soc-muted uppercase block">Linked Incidents</span>
             <span className="text-slate-100 font-bold">{campaign.linked_case_ids.length} Cases</span>
           </div>
-          <div className="p-2.5 rounded bg-soc-inset border border-soc-border">
-            <span className="text-[10px] text-soc-muted uppercase block">Earliest Sighting</span>
+          <div className="p-2 rounded bg-soc-inset border border-slate-800/50">
+            <span className="text-[9px] text-soc-muted uppercase block">First Sighted</span>
             <span className="text-slate-200">{campaign.first_seen.substring(0, 10)}</span>
           </div>
-          <div className="p-2.5 rounded bg-soc-inset border border-soc-border">
-            <span className="text-[10px] text-soc-muted uppercase block">Most Recent</span>
+          <div className="p-2 rounded bg-soc-inset border border-slate-800/50">
+            <span className="text-[9px] text-soc-muted uppercase block">Last Sighted</span>
             <span className="text-slate-200">{campaign.last_seen.substring(0, 10)}</span>
           </div>
         </div>
@@ -83,29 +83,29 @@ export const CampaignClusterTimeline: React.FC<CampaignClusterTimelineProps> = (
         title="Correlated Infrastructure & IOC Nodes"
         subtitle="Shared network assets, lookalike domains, and delivery relays linking cases together"
         badge={
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono text-cyan-300 bg-cyan-950 border border-cyan-500/30">
+          <span className="px-2 py-0.5 rounded text-[9px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/25">
             {campaign.infrastructure_nodes.length} ASSETS IDENTIFIED
           </span>
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           {campaign.infrastructure_nodes.map((node, idx) => (
             <div
               key={idx}
-              className="p-3 rounded bg-soc-inset border border-soc-border flex items-start gap-2.5 text-xs font-mono"
+              className="p-2.5 rounded bg-soc-inset border border-slate-800/50 flex items-start gap-2 text-xs font-mono"
             >
-              <div className="p-1.5 rounded bg-slate-800/80 shrink-0">
+              <div className="p-1 rounded bg-slate-800/60 shrink-0 mt-0.5">
                 {getNodeIcon(node.type)}
               </div>
               <div className="truncate flex-1">
-                <div className="flex items-center justify-between text-[10px] text-soc-muted uppercase mb-0.5">
+                <div className="flex items-center justify-between text-[9px] text-soc-muted uppercase mb-0.5">
                   <span>{node.type}</span>
                   <span>{node.first_observed}</span>
                 </div>
                 <CopyableText
                   text={node.value}
-                  truncate={node.value.length > 28}
-                  textClassName="text-slate-200"
+                  truncate={node.value.length > 26}
+                  textClassName="text-slate-200 text-[11px]"
                 />
               </div>
             </div>
@@ -118,33 +118,32 @@ export const CampaignClusterTimeline: React.FC<CampaignClusterTimelineProps> = (
         title="Targeting Progression Timeline"
         subtitle="Chronological sequence of detected email deliveries belonging to this campaign"
       >
-        <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-800">
+        <div className="relative pl-5 space-y-4 before:absolute before:left-1.5 before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-800/80">
           {campaign.timeline_events.map((event, idx) => (
             <div key={idx} className="relative group">
               {/* Timeline Dot */}
-              <div className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-cyan-400 border-2 border-slate-900 group-hover:scale-125 transition-transform" />
+              <div className="absolute -left-5 top-1.5 w-2 h-2 rounded-full bg-cyan-400 border-2 border-slate-900 group-hover:scale-125 transition-transform" />
 
-              <div className="p-3 rounded bg-soc-inset hover:bg-soc-hover/80 border border-soc-border transition-colors">
+              <div className="p-2.5 rounded bg-soc-inset hover:bg-soc-hover/60 border border-slate-800/50 transition-colors">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                  <span className="text-[11px] font-mono text-cyan-300">
+                  <span className="text-[10px] font-mono text-cyan-300 font-semibold">
                     {formatUtcDateTime(event.timestamp)}
                   </span>
                   <button
                     onClick={() => onSelectCase(event.case_id)}
-                    className="inline-flex items-center gap-1 text-xs font-mono text-slate-400 hover:text-cyan-300"
+                    className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-400 hover:text-cyan-300"
                   >
                     <span>Inspect Case ({event.case_id.substring(0, 8)})</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
 
-                <div className="font-semibold text-xs text-slate-100 mb-1">
+                <div className="font-semibold text-xs text-slate-100 mb-0.5">
                   {event.subject}
                 </div>
 
-                <div className="text-[11px] font-mono text-soc-muted">
-                  Target Ingestion Address:{' '}
-                  <span className="text-slate-300">{event.target_recipient}</span>
+                <div className="text-[10px] font-mono text-soc-muted">
+                  Target: <span className="text-slate-300">{event.target_recipient}</span>
                 </div>
               </div>
             </div>

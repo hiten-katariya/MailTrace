@@ -32,11 +32,11 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onCaseCreated }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 space-y-4">
       {/* Header */}
-      <div className="pb-2 border-b border-soc-border">
-        <h1 className="text-xl font-bold font-mono text-slate-100 flex items-center gap-2">
-          <Upload className="w-5 h-5 text-cyan-400" />
+      <div className="pb-2.5 border-b border-slate-800/60">
+        <h1 className="text-lg font-bold font-mono text-slate-100 flex items-center gap-2">
+          <Upload className="w-4 h-4 text-cyan-400" />
           <span>INGEST & ANALYZE RAW .EML TRANSMISSION</span>
         </h1>
         <p className="text-xs text-soc-text-dim mt-0.5">
@@ -46,7 +46,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onCaseCreated }) => {
 
       {/* Main Upload / Pipeline Area */}
       {ingestResult ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <PipelineProgress
             filename={ingestResult.filename || 'uploaded_email.eml'}
             caseId={ingestResult.case_id}
@@ -54,12 +54,12 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onCaseCreated }) => {
             onComplete={(id) => onCaseCreated(id)}
           />
 
-          <div className="text-center">
+          <div className="text-center pt-1">
             <button
               onClick={() => setIngestResult(null)}
               className="text-xs font-mono text-slate-400 hover:text-cyan-300 underline cursor-pointer"
             >
-              ← Submit Another .EML File
+              ← Submit Another .EML Evidence File
             </button>
           </div>
         </div>

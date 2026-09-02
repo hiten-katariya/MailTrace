@@ -17,11 +17,11 @@ export const ConfidenceTag: React.FC<ConfidenceTagProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[11px] font-mono tracking-tight font-medium ${config.tagClass} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-mono tracking-wider font-semibold ${config.tagClass} ${className}`}
       title={`Confidence Assessment: ${confidence.toUpperCase()}`}
     >
-      <span className="text-[9px] tracking-tighter opacity-80">{config.dots}</span>
-      <span>{prefix ? `${prefix}: ${confidence.toUpperCase()}` : `Confidence: ${confidence.toUpperCase()}`}</span>
+      <span className="text-[8px] tracking-tight">{config.dots}</span>
+      <span>{prefix ? `${prefix}: ${confidence.toUpperCase()}` : config.label}</span>
     </span>
   );
 };

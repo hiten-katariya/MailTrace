@@ -39,11 +39,11 @@ export const CampaignPage: React.FC<CampaignPageProps> = ({
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-4">
       {/* Header */}
-      <div className="pb-2 border-b border-soc-border">
-        <h1 className="text-xl font-bold font-mono text-slate-100 flex items-center gap-2">
-          <Layers className="w-5 h-5 text-cyan-400" />
+      <div className="pb-2.5 border-b border-slate-800/60">
+        <h1 className="text-lg font-bold font-mono text-slate-100 flex items-center gap-2">
+          <Layers className="w-4 h-4 text-cyan-400" />
           <span>THREAT CAMPAIGN CLUSTERS & ATTRIBUTION</span>
         </h1>
         <p className="text-xs text-soc-text-dim mt-0.5">
@@ -52,20 +52,20 @@ export const CampaignPage: React.FC<CampaignPageProps> = ({
       </div>
 
       {/* Main Grid: Left Campaign Cards, Right Detailed Timeline & Infra */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Left 4 cols: Campaign List */}
-        <div className="lg:col-span-4 space-y-3">
-          <div className="text-[11px] font-mono text-soc-muted uppercase tracking-wider">
+        <div className="lg:col-span-4 space-y-2.5">
+          <div className="text-[10px] font-mono text-soc-muted uppercase tracking-wider">
             Active Campaign Clusters ({campaigns.length})
           </div>
 
           {isLoading ? (
             <div className="p-8 text-center text-slate-400 font-mono text-xs">
-              <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-cyan-400" />
+              <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2 text-cyan-400" />
               Loading campaign clusters...
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {campaigns.map((camp) => (
                 <CampaignCard
                   key={camp.campaign_id}
@@ -81,8 +81,8 @@ export const CampaignPage: React.FC<CampaignPageProps> = ({
         {/* Right 8 cols: Campaign Detail Breakdown */}
         <div className="lg:col-span-8">
           {isDetailLoading || !campaignDetail ? (
-            <div className="p-12 text-center bg-soc-panel border border-soc-border rounded-md text-slate-400 font-mono text-xs">
-              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-cyan-400" />
+            <div className="p-12 text-center bg-soc-panel border border-slate-800/60 rounded text-slate-400 font-mono text-xs">
+              <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-cyan-400" />
               Retrieving cluster infrastructure graph...
             </div>
           ) : (

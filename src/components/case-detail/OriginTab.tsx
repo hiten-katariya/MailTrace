@@ -5,6 +5,8 @@ import {
   CheckCircle,
   XCircle,
   Radio,
+  MapPin,
+  ShieldAlert,
 } from 'lucide-react';
 import { CaseOrigin } from '../../types/case';
 import { EvidenceCard } from '../common/EvidenceCard';
@@ -12,17 +14,17 @@ import { CopyableText } from '../common/CopyableText';
 
 // Custom SVG map marker for dark SOC theme
 const createCustomMarker = (isVpn: boolean) => {
-  const color = isVpn ? '#EF4444' : '#06B6D4';
+  const color = isVpn ? '#EF4444' : '#28C7E8';
   return L.divIcon({
     className: 'custom-leaflet-marker',
     html: `
-      <div style="position: relative; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
-        <div style="position: absolute; width: 28px; height: 28px; background-color: ${color}; opacity: 0.25; border-radius: 50%; animation: ping 2s infinite;"></div>
-        <div style="width: 14px; height: 14px; background-color: ${color}; border: 2px solid #FFFFFF; border-radius: 50%; box-shadow: 0 0 10px ${color};"></div>
+      <div style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+        <div style="position: absolute; width: 24px; height: 24px; background-color: ${color}; opacity: 0.25; border-radius: 50%; animation: ping 2.5s infinite;"></div>
+        <div style="width: 12px; height: 12px; background-color: ${color}; border: 2px solid #0A0F18; border-radius: 50%; box-shadow: 0 0 8px ${color};"></div>
       </div>
     `,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
   });
 };
 
@@ -37,25 +39,24 @@ export const OriginTab: React.FC<OriginTabProps> = ({ origin }) => {
   const isYoungDomain = origin.domain_intel.domain_age_days < 14;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* 1. Interactive Leaflet Geolocation Map */}
       <EvidenceCard
         title="Origin Geolocation & Infrastructure Map"
         subtitle={`Estimated sending origin: ${origin.geolocation.city}, ${origin.geolocation.region}, ${origin.geolocation.country}`}
         badge={
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-950/60 text-amber-300 border border-amber-500/30">
-            {origin.geolocation.precision_confidence}
+          <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/25">
+            {origin.geolocation.precision_confidence.toUpperCase()}
           </span>
         }
       >
-        <div className="h-72 w-full rounded overflow-hidden border border-soc-border relative z-0">
+        <div className="h-64 w-full rounded overflow-hidden border border-slate-800/60 relative z-0">
           <MapContainer
             center={[lat, lng]}
             zoom={5}
             scrollWheelZoom={false}
             style={{ height: '100%', width: '100%' }}
           >
-            {/* Dark Matter / Carto Dark Tiles */}
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -64,13 +65,13 @@ export const OriginTab: React.FC<OriginTabProps> = ({ origin }) => {
             {/* Confidence Boundary Circle */}
             <Circle
               center={[lat, lng]}
-              radius={origin.geolocation.precision_confidence.includes('city: low') ? 75000 : 25000}
+              radius={origin.geolocation.precision_confidence.includes('city: low') ? 70000 : 25000}
               pathOptions={{
-                color: origin.vpn_tor_flag ? '#EF4444' : '#06B6D4',
-                fillColor: origin.vpn_tor_flag ? '#EF4444' : '#06B6D4',
-                fillOpacity: 0.15,
+                color: origin.vpn_tor_flag ? '#EF4444' : '#28C7E8',
+                fillColor: origin.vpn_tor_flag ? '#EF4444' : '#28C7E8',
+                fillOpacity: 0.12,
                 weight: 1.5,
-                dashArray: '4, 4',
+                dashArray: '3, 3',
               }}
             />
 
@@ -95,19 +96,19 @@ export const OriginTab: React.FC<OriginTabProps> = ({ origin }) => {
           </MapContainer>
         </div>
 
-        <div className="mt-3 p-2.5 rounded bg-soc-inset border border-soc-border flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        <div className="mt-2.5 p-2 rounded bg-soc-inset border border-slate-800/60 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
           <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
             <span className="text-slate-300">
               Origin IP: <strong className="text-cyan-300">{origin.originating_ip}</strong>
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 text-[11px]">
             <span className="text-slate-400">
               Coordinates: <span className="text-slate-200">{lat.toFixed(4)}, {lng.toFixed(4)}</span>
             </span>
-            <span className="text-slate-600">|</span>
+            <span className="text-slate-700">|</span>
             <span className="text-slate-400">
               Provider: <span className="text-slate-200">{origin.isp}</span>
             </span>
@@ -116,42 +117,42 @@ export const OriginTab: React.FC<OriginTabProps> = ({ origin }) => {
       </EvidenceCard>
 
       {/* 2. Dual Intel Grid: IP Intelligence & Domain WHOIS/DNS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
         {/* IP Intelligence */}
         <EvidenceCard
           title="IP Intelligence & Node Reputation"
           badge={
             origin.vpn_tor_flag ? (
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950 text-red-300 border border-red-500/40">
-                VPN / TOR DETECTED
+              <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-red-500/15 text-red-300 border border-red-500/30">
+                VPN / TOR EXIT NODE
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">
-                DIRECT RESIDENTIAL / CLOUD
+              <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                DIRECT CLOUD / RESIDENTIAL
               </span>
             )
           }
         >
-          <div className="space-y-3 text-xs font-mono">
-            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-soc-border">
-              <span className="text-soc-muted">Originating IP:</span>
+          <div className="space-y-2 text-xs font-mono">
+            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-slate-800/50">
+              <span className="text-soc-muted text-[11px]">Originating IP:</span>
               <CopyableText text={origin.originating_ip} textClassName="text-cyan-300 font-bold" />
             </div>
 
-            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-soc-border">
-              <span className="text-soc-muted">ISP / Hosting Carrier:</span>
-              <span className="text-slate-200 font-semibold">{origin.isp}</span>
+            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-slate-800/50">
+              <span className="text-soc-muted text-[11px]">ISP / Transit Carrier:</span>
+              <span className="text-slate-200 font-medium text-[11px]">{origin.isp}</span>
             </div>
 
-            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-soc-border">
-              <span className="text-soc-muted">Threat Intelligence Source:</span>
-              <span className="text-amber-300">{origin.flag_source}</span>
+            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-slate-800/50">
+              <span className="text-soc-muted text-[11px]">Threat Feed Corroboration:</span>
+              <span className="text-amber-300 font-medium text-[11px]">{origin.flag_source}</span>
             </div>
 
-            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-soc-border">
-              <span className="text-soc-muted">Anonymization Risk:</span>
-              <span className={origin.vpn_tor_flag ? 'text-red-400 font-bold' : 'text-emerald-400 font-bold'}>
-                {origin.vpn_tor_flag ? 'High (Proxy/Bulletproof Node)' : 'Low (Standard Route)'}
+            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-slate-800/50">
+              <span className="text-soc-muted text-[11px]">Anonymization Posture:</span>
+              <span className={origin.vpn_tor_flag ? 'text-red-400 font-bold text-[11px]' : 'text-emerald-400 font-bold text-[11px]'}>
+                {origin.vpn_tor_flag ? 'High Risk (Bulletproof / Proxy)' : 'Standard Network Route'}
               </span>
             </div>
           </div>
@@ -159,49 +160,49 @@ export const OriginTab: React.FC<OriginTabProps> = ({ origin }) => {
 
         {/* Domain WHOIS & DNS Intelligence */}
         <EvidenceCard
-          title="Domain Intelligence & WHOIS Age"
+          title="Domain Intelligence & Registration History"
           badge={
             isYoungDomain ? (
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950 text-red-300 border border-red-500/40">
+              <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-red-500/15 text-red-300 border border-red-500/30">
                 NEWLY REGISTERED DOMAIN
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+              <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
                 ESTABLISHED DOMAIN
               </span>
             )
           }
         >
-          <div className="space-y-3 text-xs font-mono">
-            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-soc-border">
-              <span className="text-soc-muted">Evaluated Domain:</span>
+          <div className="space-y-2 text-xs font-mono">
+            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-slate-800/50">
+              <span className="text-soc-muted text-[11px]">Evaluated Domain:</span>
               <CopyableText text={origin.domain_intel.domain} textClassName="text-cyan-300 font-bold" />
             </div>
 
-            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-soc-border">
-              <span className="text-soc-muted">Domain Age:</span>
-              <span className={`font-bold ${isYoungDomain ? 'text-red-400' : 'text-emerald-400'}`}>
+            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-slate-800/50">
+              <span className="text-soc-muted text-[11px]">Domain Age:</span>
+              <span className={`font-bold text-[11px] ${isYoungDomain ? 'text-red-400' : 'text-emerald-400'}`}>
                 {origin.domain_intel.domain_age_days} days (Registered {origin.domain_intel.registered_on})
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-soc-border">
-              <span className="text-soc-muted">Registrar Organization:</span>
-              <span className="text-slate-200 font-medium">{origin.domain_intel.registrar}</span>
+            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-slate-800/50">
+              <span className="text-soc-muted text-[11px]">Registrar:</span>
+              <span className="text-slate-200 font-medium text-[11px]">{origin.domain_intel.registrar}</span>
             </div>
 
-            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-soc-border">
-              <span className="text-soc-muted">MX DNS Record Validity:</span>
+            <div className="flex items-center justify-between p-2 rounded bg-soc-inset border border-slate-800/50">
+              <span className="text-soc-muted text-[11px]">MX DNS Validity:</span>
               <div className="flex items-center gap-1.5">
                 {origin.domain_intel.mx_valid ? (
                   <>
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400 font-semibold">VALID MX</span>
+                    <span className="text-emerald-400 font-semibold text-[11px]">VALID MX</span>
                   </>
                 ) : (
                   <>
                     <XCircle className="w-3.5 h-3.5 text-red-400" />
-                    <span className="text-red-400 font-semibold">NO VALID MX RECORD</span>
+                    <span className="text-red-400 font-semibold text-[11px]">NO VALID MX RECORD</span>
                   </>
                 )}
               </div>

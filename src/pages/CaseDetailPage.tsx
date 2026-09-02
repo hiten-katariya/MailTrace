@@ -71,22 +71,22 @@ export const CaseDetailPage: React.FC<CaseDetailPageProps> = ({
   if (isDetailLoading || !caseDetail) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-slate-400 font-mono">
-        <RefreshCw className="w-8 h-8 animate-spin text-cyan-400 mb-3" />
-        <span className="text-sm">Retrieving forensic evidence dossier for {caseId}...</span>
+        <RefreshCw className="w-6 h-6 animate-spin text-cyan-400 mb-2" />
+        <span className="text-xs tracking-wider">RETRIEVING FORENSIC DOSSIER #{caseId.substring(0, 8).toUpperCase()}...</span>
       </div>
     );
   }
 
   const tabs = [
-    { id: 'overview', label: '1. Forensic Overview & Ledger', icon: <LayoutList className="w-4 h-4" /> },
-    { id: 'headers', label: '2. Header & Relay Trace', icon: <Server className="w-4 h-4" /> },
-    { id: 'content', label: '3. Content & NLP Analysis', icon: <FileSearch className="w-4 h-4" /> },
-    { id: 'origin', label: '4. Origin Geolocation & Domain', icon: <Globe className="w-4 h-4" /> },
-    { id: 'correlation', label: '5. Threat Intel & Campaign Link', icon: <Network className="w-4 h-4" /> },
+    { id: 'overview', label: '1. OVERVIEW & LEDGER', icon: <LayoutList className="w-3.5 h-3.5" /> },
+    { id: 'headers', label: '2. HEADER & RELAY TRACE', icon: <Server className="w-3.5 h-3.5" /> },
+    { id: 'content', label: '3. NLP CONTENT ANALYSIS', icon: <FileSearch className="w-3.5 h-3.5" /> },
+    { id: 'origin', label: '4. ORIGIN GEO & DOMAIN', icon: <Globe className="w-3.5 h-3.5" /> },
+    { id: 'correlation', label: '5. THREAT INTEL & CLUSTERS', icon: <Network className="w-3.5 h-3.5" /> },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-4">
       {/* Case Header */}
       <CaseHeader
         caseDetail={caseDetail}
@@ -95,15 +95,15 @@ export const CaseDetailPage: React.FC<CaseDetailPageProps> = ({
       />
 
       {/* Forensic Tabs Bar */}
-      <div className="flex border-b border-soc-border overflow-x-auto gap-1">
+      <div className="flex border-b border-slate-800/60 overflow-x-auto gap-1 bg-[#0A0F18] p-1 rounded-t">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center gap-2 px-4 py-2.5 font-mono text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 font-mono text-[11px] font-semibold whitespace-nowrap rounded transition-colors ${
               activeTab === tab.id
-                ? 'border-cyan-400 text-cyan-300 bg-soc-raised/60'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-soc-hover/40'
+                ? 'bg-cyan-500/10 text-cyan-300 border-b-2 border-cyan-400'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
             }`}
           >
             {tab.icon}
@@ -113,7 +113,7 @@ export const CaseDetailPage: React.FC<CaseDetailPageProps> = ({
       </div>
 
       {/* Tab Panels */}
-      <div className="pt-2">
+      <div>
         {activeTab === 'overview' && (
           <OverviewTab
             caseDetail={caseDetail}

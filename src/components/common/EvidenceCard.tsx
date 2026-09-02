@@ -20,14 +20,14 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({
   bodyClassName = 'p-4',
 }) => {
   return (
-    <div className={`bg-soc-panel border border-soc-border rounded-md shadow-soc-subtle overflow-hidden ${className}`}>
+    <div className={`bg-soc-panel border border-slate-800/60 rounded overflow-hidden shadow-soc-card ${className}`}>
       {/* Header bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-soc-raised/60 border-b border-soc-border">
-        <div className="flex items-center gap-2.5">
-          <div className="w-1.5 h-3.5 bg-cyber-cyan/80 rounded-full" />
+      <div className="flex items-center justify-between px-3.5 py-2.5 bg-soc-raised/40 border-b border-slate-800/60">
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-3 bg-cyber-cyan rounded-full" />
           <div>
-            <h3 className="text-sm font-semibold text-slate-100 tracking-wide">{title}</h3>
-            {subtitle && <p className="text-[11px] text-soc-text-dim mt-0.5">{subtitle}</p>}
+            <h3 className="text-xs font-mono font-bold text-slate-100 uppercase tracking-wider">{title}</h3>
+            {subtitle && <p className="text-[10px] text-soc-text-dim mt-0.2">{subtitle}</p>}
           </div>
           {badge && <div className="ml-2">{badge}</div>}
         </div>
