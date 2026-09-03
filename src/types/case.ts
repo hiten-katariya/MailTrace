@@ -17,6 +17,7 @@ export interface CaseSummary {
   received_at: string;
   fraud_score: number;
   risk_category: RiskCategory;
+  status?: string;
   spf: ProtocolStatus;
   dkim: ProtocolStatus;
   dmarc: ProtocolStatus;

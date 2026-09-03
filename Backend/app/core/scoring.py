@@ -100,6 +100,21 @@ def calculate_composite_score(
             sourceModule="header",
         ))
 
+    # Complete absence of domain authentication (no SPF policy, no DMARC, and broken/missing DKIM)
+    is_completely_unauthenticated = (
+        headers_res.spf_result in ["none", "neutral"]
+        and headers_res.dmarc_result in ["none", "neutral"]
+        and (headers_res.dkim_result in ["none", "fail"] or not headers_res.dkim_signature_present)
+    )
+    if is_completely_unauthenticated:
+        cat1_signals.append(ScoreSignal(
+            signal="Unauthenticated Sender Identity",
+            weight=10,
+            contribution=10,
+            reason="Sending domain publishes neither SPF authorization nor DMARC policy, allowing unverified sender identity.",
+            sourceModule="header",
+        ))
+
     # Normalize Cat 1 to max 25
     cat1_total = min(25, sum(s.contribution for s in cat1_signals))
     signals.extend(cat1_signals)
@@ -134,6 +149,16 @@ def calculate_composite_score(
                 reason=anomaly,
                 sourceModule="header",
             ))
+    upstream_spam_anomalies = [a for a in headers_res.anomalies if "upstream mail" in a.lower() or "[spam]" in a.lower() or "spam score" in a.lower()]
+    if upstream_spam_anomalies:
+        summary_reason = "; ".join(upstream_spam_anomalies[:2])
+        cat2_signals.append(ScoreSignal(
+            signal="Upstream Gateway Spam Tag Detected",
+            weight=10,
+            contribution=10,
+            reason=f"MTA security filters stamped message as SPAM: {summary_reason}",
+            sourceModule="header",
+        ))
 
     cat2_total = min(15, sum(s.contribution for s in cat2_signals))
     signals.extend(cat2_signals)
@@ -172,6 +197,17 @@ def calculate_composite_score(
             sourceModule="domain",
         ))
 
+    # Known high-abuse TLD reputation
+    ABUSE_TLDS = (".bid", ".win", ".top", ".click", ".loan", ".work", ".date", ".racing", ".download", ".party", ".review", ".stream", ".trade", ".accountant", ".cricket", ".science", ".faith", ".zip", ".mov")
+    if domain_res and domain_res.domain and domain_res.domain.endswith(ABUSE_TLDS):
+        cat3_signals.append(ScoreSignal(
+            signal="High-Abuse Domain TLD Reputation",
+            weight=10,
+            contribution=10,
+            reason=f"Sending domain uses high-abuse gTLD ('.{domain_res.domain.split('.')[-1]}') commonly associated with bulk spam.",
+            sourceModule="domain",
+        ))
+
     # Origin IP Anonymization / VPN / Tor
     if ip_rep_res.is_vpn_tor or (ip_rep_res.abuse_score and ip_rep_res.abuse_score >= 50):
         cat3_signals.append(ScoreSignal(
@@ -191,15 +227,38 @@ def calculate_composite_score(
     cat4_signals = []
 
     # ML Classifier Contribution (0-10 pts)
+    # Multi-Signal Co-Occurrence Gate: If sender is fully authenticated (SPF pass, DKIM pass, DMARC pass),
+    # with 0 header anomalies and 0 flagged URLs, passive statistical text vocabulary requires
+    # co-occurrence with either explicit coercive urgency phrases or BEC indicators to contribute penalty points.
+    is_fully_authenticated = (
+        headers_res.spf_result == "pass"
+        and headers_res.dkim_result == "pass"
+        and headers_res.dmarc_result == "pass"
+        and len(headers_res.anomalies) == 0
+        and not any(u.get("is_flagged") for u in url_results)
+    )
+
     if content_res.classification in ["phishing", "bec"]:
-        ml_contrib = int(content_res.classification_confidence * 10)
-        cat4_signals.append(ScoreSignal(
-            signal="NLP Phishing / BEC Classifier Confidence",
-            weight=10,
-            contribution=ml_contrib,
-            reason=f"Statistical NLP model evaluated text with {int(content_res.classification_confidence*100)}% {content_res.classification.upper()} probability.",
-            sourceModule="nlp",
-        ))
+        if is_fully_authenticated and not content_res.flagged_phrases and not content_res.bec_indicators:
+            pass
+        else:
+            ml_contrib = int(content_res.classification_confidence * 10)
+            cat4_signals.append(ScoreSignal(
+                signal="NLP Phishing / BEC Classifier Confidence",
+                weight=10,
+                contribution=ml_contrib,
+                reason=f"Statistical NLP model evaluated text with {int(content_res.classification_confidence*100)}% {content_res.classification.upper()} probability.",
+                sourceModule="nlp",
+            ))
+    elif content_res.classification == "suspicious":
+        if not is_fully_authenticated:
+            cat4_signals.append(ScoreSignal(
+                signal="Suspicious Content Classification",
+                weight=6,
+                contribution=5,
+                reason="Content analysis identified high-pressure marketing lure, unsolicited bulk spam, or social engineering pretexts.",
+                sourceModule="nlp",
+            ))
 
     # Urgency Phrases
     if content_res.flagged_phrases:

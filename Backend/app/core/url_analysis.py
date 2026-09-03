@@ -27,6 +27,24 @@ KNOWN_BRANDS = [
     "slack",
 ]
 
+# Legitimate corporate shorteners that should not be flagged as deceptive lookalikes or unknown shorteners
+KNOWN_CORPORATE_SHORTENERS: Dict[str, str] = {
+    "c.gle": "Google Official Shortener",
+    "goo.gl": "Google Official Shortener",
+    "g.co": "Google Official Shortener",
+    "amzn.to": "Amazon Official Shortener",
+    "msft.it": "Microsoft Official Shortener",
+    "t.co": "X / Twitter Official Shortener",
+    "youtu.be": "YouTube Official Shortener",
+    "lnkd.in": "LinkedIn Official Shortener",
+    "apple.co": "Apple Official Shortener",
+    "fb.me": "Meta / Facebook Official Shortener",
+    "bit.ly": "Bitly Shortener",
+}
+
+# Dedicated Brand Top-Level Domains (ICANN gTLDs owned by major brands)
+BRAND_TLDS = {"google", "apple", "amazon", "microsoft"}
+
 # Common homoglyph substitutions: 0 -> o, 1 -> l/i, vv -> w, rn -> m
 HOMOGLYPH_MAP = {
     '0': 'o',
@@ -66,8 +84,21 @@ def is_lookalike_domain(domain: str) -> tuple[bool, Optional[str]]:
     if not domain:
         return False, None
 
+    clean_domain = domain.lower().strip()
+    if clean_domain in KNOWN_CORPORATE_SHORTENERS:
+        return False, None
+
     ext = tldextract.extract(domain)
     registered_domain = ext.domain.lower()
+
+    # If domain suffix is a recognized brand TLD (e.g., play.google -> suffix="google")
+    if ext.suffix and ext.suffix.lower() in BRAND_TLDS:
+        return False, None
+
+    # Known high-abuse spam/malware TLDs
+    ABUSE_TLDS = (".bid", ".win", ".top", ".click", ".loan", ".work", ".date", ".racing", ".download", ".party", ".review", ".stream", ".trade", ".accountant", ".cricket", ".science", ".faith", ".zip", ".mov")
+    if ext.suffix and f".{ext.suffix.lower()}" in ABUSE_TLDS:
+        return True, f"High-abuse spam/malware TLD ('.{ext.suffix.lower()}')"
 
     # Check if domain uses raw IP
     if re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', domain):
@@ -77,7 +108,7 @@ def is_lookalike_domain(domain: str) -> tuple[bool, Optional[str]]:
 
     for brand in KNOWN_BRANDS:
         # Exact legitimate brand domain match is not a lookalike
-        if registered_domain == brand:
+        if registered_domain == brand or clean_domain == f"{brand}.com":
             return False, None
 
         # Lookalike variant: normalized matches brand exactly (e.g. paypa1 -> paypal)
@@ -100,7 +131,11 @@ async def resolve_url_safely(url: str, timeout_seconds: float = 2.0) -> Dict[str
     ext = tldextract.extract(url)
     domain_name = f"{ext.domain}.{ext.suffix}" if ext.suffix else ext.domain
 
-    is_flagged, reason = is_lookalike_domain(domain_name)
+    if domain_name.lower() in KNOWN_CORPORATE_SHORTENERS:
+        is_flagged = False
+        reason = f"Verified corporate shortener ({KNOWN_CORPORATE_SHORTENERS[domain_name.lower()]})"
+    else:
+        is_flagged, reason = is_lookalike_domain(domain_name)
     resolved_url = url
     hops = 0
     status_code = None

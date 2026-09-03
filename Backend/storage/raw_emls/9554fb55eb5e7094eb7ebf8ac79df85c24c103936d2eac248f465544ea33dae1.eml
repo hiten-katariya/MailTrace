@@ -1,0 +1,17 @@
+From: cfo@trusted-supplier.com
+To: accounts.payable@client-corp.com
+Subject: Updated remittance coordinates for pending settlement
+Authentication-Results: mx.client-corp.com; spf=pass; dkim=pass; dmarc=pass (p=reject)
+DKIM-Signature: v=1; a=rsa-sha256; d=trusted-supplier.com; s=k1; b=dummy;
+Received: from mail.trusted-supplier.com (mail.trusted-supplier.com [198.51.100.20]) by mx.client-corp.com with ESMTP id 5544; Wed, 02 Sep 2026 12:00:00 +0000
+Return-Path: <cfo@trusted-supplier.com>
+
+Hi team,
+
+Due to our corporate restructuring, please redirect the pending settlement payment to our new clearing bank coordinates below.
+
+Treasury Account: 8839-2091-22
+Routing: 021000021
+
+Thanks,
+Executive Operations

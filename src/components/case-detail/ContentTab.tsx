@@ -15,7 +15,16 @@ interface ContentTabProps {
 }
 
 export const ContentTab: React.FC<ContentTabProps> = ({ content }) => {
-  const isHighUrgency = (content.sentiment_urgency_score ?? 0) >= 70;
+  const urgency = content.sentiment_urgency_score ?? 0;
+  const isSevere = urgency >= 70;
+  const isElevated = urgency >= 40;
+  const urgencyLabel = isSevere
+    ? 'High psychological coercion pressure detected'
+    : isElevated
+    ? 'Elevated urgency & promotional scarcity detected'
+    : 'Standard conversational tone';
+  const flameColor = isSevere ? 'text-red-400' : isElevated ? 'text-amber-400' : 'text-emerald-400';
+  const barColor = isSevere ? 'bg-red-500' : isElevated ? 'bg-amber-500' : 'bg-emerald-500';
 
   return (
     <div className="space-y-4">
@@ -33,27 +42,27 @@ export const ContentTab: React.FC<ContentTabProps> = ({ content }) => {
             </div>
           </div>
           <p className="text-[10px] text-soc-text-dim mt-2 font-sans">
-            Evaluated via DistilBERT Phishing Classifier & TF-IDF heuristic matrix.
+            Evaluated via Multi-Layer Perceptron (MLP) Classifier & TF-IDF heuristic matrix.
           </p>
         </EvidenceCard>
 
         {/* Urgency Pressure Meter */}
         <EvidenceCard title="Urgency & Pressure Index">
           <div className="flex items-center gap-2">
-            <Flame className={`w-4 h-4 ${isHighUrgency ? 'text-red-400' : 'text-emerald-400'}`} />
+            <Flame className={`w-4 h-4 ${flameColor}`} />
             <span className="text-lg font-bold font-mono text-slate-100">
-              {content.sentiment_urgency_score ?? 0}
+              {urgency}
             </span>
             <span className="text-xs font-mono text-soc-muted">/100</span>
           </div>
           <div className="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden mt-2">
             <div
-              className={`h-full ${isHighUrgency ? 'bg-red-500' : 'bg-emerald-500'} rounded-full transition-all duration-500`}
-              style={{ width: `${content.sentiment_urgency_score ?? 0}%` }}
+              className={`h-full ${barColor} rounded-full transition-all duration-500`}
+              style={{ width: `${urgency}%` }}
             />
           </div>
           <p className="text-[10px] text-soc-text-dim mt-1.5 font-sans">
-            {isHighUrgency ? 'High psychological coercion pressure detected' : 'Standard conversational tone'}
+            {urgencyLabel}
           </p>
         </EvidenceCard>
 

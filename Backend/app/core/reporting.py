@@ -4,18 +4,12 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 import html
 
-# Try importing PDF rendering engines
+# Primary deterministic PDF rendering engine (pure Python / ReportLab based)
 try:
     from xhtml2pdf import pisa
     XHTML2PDF_AVAILABLE = True
 except ImportError:
     XHTML2PDF_AVAILABLE = False
-
-try:
-    import weasyprint
-    WEASYPRINT_AVAILABLE = True
-except (ImportError, OSError):
-    WEASYPRINT_AVAILABLE = False
 
 
 def format_dt(dt: Optional[datetime]) -> str:
@@ -47,6 +41,8 @@ def build_json_report(
             "risk_category": case_data.get("risk_category", "legitimate"),
             "confidence": case_data.get("confidence", "low"),
             "verdict_summary": case_data.get("verdict_summary", ""),
+            "attribution_type": case_data.get("attribution_type", "unattributed"),
+            "attribution_confidence": case_data.get("attribution_confidence", "low"),
         },
         "headers_analysis": headers_data,
         "content_analysis": content_data,
@@ -81,6 +77,8 @@ def build_html_report(
     recipient = html.escape(str(case_data.get("recipient", "N/A")))
     received_at = html.escape(str(case_data.get("received_at", "N/A")))
     verdict = html.escape(str(case_data.get("verdict_summary", "No verdict summary provided.")))
+    attr_type = html.escape(str(case_data.get("attribution_type", "unattributed")).upper().replace("_", " "))
+    attr_conf = html.escape(str(case_data.get("attribution_confidence", "low")).upper())
     
     # Colors for printing
     if risk_cat in ["PHISHING", "BEC"]:
@@ -368,6 +366,10 @@ def build_html_report(
         <td style="background-color: #f8fafc; font-weight: bold;">SHA-256 Digest:</td>
         <td><code style="font-weight: bold; color: #0f172a;">{file_hash}</code> (Immutable Custody Lock)</td>
     </tr>
+    <tr>
+        <td style="background-color: #f8fafc; font-weight: bold;">Attribution Vector:</td>
+        <td><strong>{attr_type}</strong> ({attr_conf} CONFIDENCE) — <span style="font-size: 8pt; color: #64748b;">Investigative infrastructure correlation, not confirmed legal identity.</span></td>
+    </tr>
 </table>
 
 <!-- Section 3: Scoring Matrix Breakdown -->
@@ -511,18 +513,18 @@ def generate_pdf_report(
         now_utc=now_utc,
     )
 
-    # 1. Primary engine: xhtml2pdf / ReportLab (stable on Windows & Linux)
+    # 1. Primary engine: xhtml2pdf / ReportLab (deterministic, zero external C library requirements)
     if XHTML2PDF_AVAILABLE:
         pdf_stream = BytesIO()
         pisa_status = pisa.CreatePDF(html_string, dest=pdf_stream)
         if not pisa_status.err:
             return pdf_stream.getvalue()
 
-    # 2. Fallback / Alternative: WeasyPrint (if GTK libraries are configured)
-    if WEASYPRINT_AVAILABLE:
-        try:
-            return weasyprint.HTML(string=html_string).write_pdf()
-        except Exception:
-            pass
+    # 2. Fallback: Lazy load WeasyPrint only if xhtml2pdf is unavailable
+    try:
+        import weasyprint
+        return weasyprint.HTML(string=html_string).write_pdf()
+    except Exception:
+        pass
 
-    raise RuntimeError("No suitable PDF rendering engine available. Ensure xhtml2pdf or weasyprint is installed.")
+    raise RuntimeError("No suitable PDF rendering engine available. Ensure xhtml2pdf is installed.")

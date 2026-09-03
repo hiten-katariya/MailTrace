@@ -3,21 +3,37 @@ import joblib
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report, accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 
-DATA_PATH = os.path.join("backend", "data", "training", "combined_dataset.csv")
-MODEL_OUTPUT_PATH = os.path.join("backend", "models", "phishing_classifier.joblib")
-os.makedirs(os.path.dirname(MODEL_OUTPUT_PATH), exist_ok=True)
+DATA_PATHS = [
+    os.path.join("Backend", "Data", "Training", "combined_dataset.csv"),
+    os.path.join("backend", "data", "training", "combined_dataset.csv"),
+]
+MODEL_OUTPUT_PATHS = [
+    os.path.join("Backend", "models", "phishing_classifier.joblib"),
+    os.path.join("backend", "models", "phishing_classifier.joblib"),
+]
+for p in MODEL_OUTPUT_PATHS:
+    os.makedirs(os.path.dirname(p), exist_ok=True)
 
 def train_model():
-    print("=== Training TF-IDF + Logistic Regression Phishing Classifier ===")
-    if not os.path.exists(DATA_PATH):
-        raise FileNotFoundError(f"Training dataset not found at {DATA_PATH}. Run prepare_training_data.py first.")
+    print("=" * 60)
+    print("=== Training TF-IDF + MLP (Multi-Layer Perceptron) Neural Network ===")
+    print("=" * 60)
 
-    print(f"[+] Loading dataset from {DATA_PATH}...")
-    df = pd.read_csv(DATA_PATH)
+    data_path = None
+    for p in DATA_PATHS:
+        if os.path.exists(p):
+            data_path = p
+            break
+
+    if not data_path:
+        raise FileNotFoundError(f"Training dataset not found in {DATA_PATHS}. Run prepare_training_data.py first.")
+
+    print(f"[+] Loading deduplicated dataset from {data_path}...")
+    df = pd.read_csv(data_path)
     
     # Fill NAs
     df["subject"] = df["subject"].fillna("")
@@ -30,13 +46,15 @@ def train_model():
     X = df["text"].values
     y = df["target"].values
 
-    print(f"[+] Total samples: {len(X)} (Phishing: {sum(y)}, Legitimate: {len(y) - sum(y)})")
+    phish_count = int(sum(y))
+    legit_count = int(len(y) - phish_count)
+    print(f"[+] Total deduplicated samples: {len(X):,} (Phishing: {phish_count:,}, Legitimate: {legit_count:,})")
 
     # 80/20 train/test split with stratify
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.20, random_state=42, stratify=y
     )
-    print(f"[+] Train set: {len(X_train)} samples | Test set: {len(X_test)} samples")
+    print(f"[+] Train set: {len(X_train):,} samples | Test set: {len(X_test):,} samples")
 
     from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
     custom_stopwords = list(ENGLISH_STOP_WORDS.union({
@@ -46,7 +64,8 @@ def train_model():
         "mike", "john", "hb", "eol", "pm", "ur", "kent"
     }))
 
-    # Construct Pipeline
+    # Construct MLP Neural Network Pipeline
+    print("[+] Building TF-IDF + Multi-Layer Perceptron (MLP) architecture...")
     pipeline = Pipeline([
         ("tfidf", TfidfVectorizer(
             max_features=12000,
@@ -54,12 +73,21 @@ def train_model():
             stop_words=custom_stopwords,
             sublinear_tf=True,
             strip_accents="unicode",
+            min_df=2,
         )),
-        ("clf", LogisticRegression(
-            C=2.0,
-            max_iter=1000,
-            class_weight="balanced",
+        ("clf", MLPClassifier(
+            hidden_layer_sizes=(128, 64),
+            activation="relu",
+            solver="adam",
+            alpha=1e-4,
+            batch_size=256,
+            learning_rate_init=0.001,
+            max_iter=30,
+            early_stopping=True,
+            validation_fraction=0.1,
+            n_iter_no_change=4,
             random_state=42,
+            verbose=True,
         )),
     ])
 
@@ -93,8 +121,9 @@ def train_model():
     print("="*50 + "\n")
 
     # Save artifact
-    joblib.dump(pipeline, MODEL_OUTPUT_PATH)
-    print(f"[+] Serialized model artifact saved to {MODEL_OUTPUT_PATH}")
+    for p in MODEL_OUTPUT_PATHS:
+        joblib.dump(pipeline, p)
+        print(f"[+] Serialized model artifact saved to {p}")
     print("=== Training Completed Successfully ===")
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import {
   Hash,
   AlertOctagon,
   ShieldAlert,
+  RefreshCw,
 } from 'lucide-react';
 import { CaseDetail } from '../../types/case';
 import { ScoreBadge } from '../common/ScoreBadge';
@@ -27,6 +28,11 @@ export const CaseHeader: React.FC<CaseHeaderProps> = ({
   onOpenReport,
 }) => {
   const shortId = caseDetail.case_id.substring(0, 8).toUpperCase();
+  const isAnalyzing =
+    caseDetail.status === 'pending' ||
+    caseDetail.status === 'processing' ||
+    caseDetail.verdict_summary === 'Analysis in progress.' ||
+    (caseDetail.fraud_score === 0 && caseDetail.risk_category === 'legitimate' && (!caseDetail.score_breakdown || caseDetail.score_breakdown.length === 0));
 
   return (
     <div className="bg-soc-panel border border-slate-800/60 rounded shadow-soc-card p-4 space-y-4">
@@ -41,8 +47,17 @@ export const CaseHeader: React.FC<CaseHeaderProps> = ({
         </button>
 
         <div className="flex items-center gap-2">
-          <RiskChip category={caseDetail.risk_category} />
-          <ConfidenceTag confidence={caseDetail.confidence} />
+          {isAnalyzing ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-xs font-bold animate-pulse">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ANALYZING PIPELINE...
+            </span>
+          ) : (
+            <>
+              <RiskChip category={caseDetail.risk_category} />
+              <ConfidenceTag confidence={caseDetail.confidence} />
+            </>
+          )}
           <button
             onClick={onOpenReport}
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-semibold transition-colors shadow-soc-subtle"
@@ -108,22 +123,44 @@ export const CaseHeader: React.FC<CaseHeaderProps> = ({
 
         {/* Right 4 cols: Large Score Gauge */}
         <div className="lg:col-span-4 flex flex-col justify-center">
-          <ScoreBadge score={caseDetail.fraud_score} size="lg" />
+          {isAnalyzing ? (
+            <div className="p-4 rounded bg-soc-inset border border-cyan-500/30 flex flex-col items-center justify-center text-center space-y-1.5 animate-pulse">
+              <RefreshCw className="w-6 h-6 animate-spin text-cyan-400" />
+              <div className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider">Analysis In Progress</div>
+              <div className="text-[10px] text-slate-400 font-sans">Synthesizing headers, NLP cues, and threat intel...</div>
+            </div>
+          ) : (
+            <ScoreBadge score={caseDetail.fraud_score} size="lg" />
+          )}
         </div>
       </div>
 
       {/* 3. Plain-English Explainable Verdict Summary Banner */}
-      <div className="p-3 rounded bg-soc-inset border-l-2 border-l-cyan-400 border border-slate-800/60 flex items-start gap-2.5">
-        <AlertOctagon className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-        <div>
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300 block mb-0.5">
-            Plain-English Forensic Verdict & Explainability Summary
-          </span>
-          <p className="text-xs text-slate-200 leading-relaxed font-sans">
-            {caseDetail.verdict_summary}
-          </p>
+      {isAnalyzing ? (
+        <div className="p-3 rounded bg-soc-inset border-l-2 border-l-cyan-400 border border-slate-800/60 flex items-start gap-2.5 animate-pulse">
+          <RefreshCw className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5 animate-spin" />
+          <div>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300 block mb-0.5">
+              Forensic Evaluation In Progress
+            </span>
+            <p className="text-xs text-slate-300 leading-relaxed font-sans">
+              Processing envelope authentication, extracting language cues, and querying threat databases. Findings will appear automatically momentarily...
+            </p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="p-3 rounded bg-soc-inset border-l-2 border-l-cyan-400 border border-slate-800/60 flex items-start gap-2.5">
+          <AlertOctagon className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+          <div>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300 block mb-0.5">
+              Plain-English Forensic Verdict & Explainability Summary
+            </span>
+            <p className="text-xs text-slate-200 leading-relaxed font-sans">
+              {caseDetail.verdict_summary}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

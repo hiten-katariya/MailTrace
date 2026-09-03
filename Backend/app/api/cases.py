@@ -39,6 +39,10 @@ from backend.app.schemas.stats import (
     DetectionTrendDaySchema,
 )
 from backend.app.schemas.report import CaseReportJSONResponse
+from backend.app.models.campaign import Campaign
+from backend.app.models.threat_intel import ThreatIntelMatch
+from backend.app.schemas.correlation import CaseCorrelationResponse, ThreatIntelMatchSchema
+from backend.app.core.retention import get_or_create_retention_policy, mask_email_address
 
 from backend.app.core.ingestion import parse_raw_email
 from backend.app.core.pipeline import execute_case_pipeline
@@ -306,20 +310,26 @@ async def list_cases(
     results = await db.execute(query)
     cases = results.scalars().all()
 
+    policy = await get_or_create_retention_policy(db)
+    mask_pii = policy.mask_pii
+
     case_summaries = []
     for c in cases:
         spf_val = c.headers.spf_result if c.headers else "none"
         dkim_val = c.headers.dkim_result if c.headers else "none"
         dmarc_val = c.headers.dmarc_result if c.headers else "none"
 
+        sender_val = mask_email_address(c.sender) if mask_pii else c.sender
+
         case_summaries.append(
             CaseSummary(
                 case_id=c.id,
                 subject=c.subject,
-                sender=c.sender,
+                sender=sender_val or c.sender,
                 received_at=c.received_at.isoformat(),
                 fraud_score=c.fraud_score or 0,
                 risk_category=c.risk_category or "legitimate",
+                status=c.status or "completed",
                 spf=spf_val,
                 dkim=dkim_val,
                 dmarc=dmarc_val,
@@ -375,10 +385,13 @@ async def get_case_detail(case_id: str, db: AsyncSession = Depends(get_db)):
     dkim_val = case.headers.dkim_result if case.headers else "none"
     dmarc_val = case.headers.dmarc_result if case.headers else "none"
 
+    policy = await get_or_create_retention_policy(db)
+    sender_val = mask_email_address(case.sender) if policy.mask_pii else case.sender
+
     return CaseDetail(
         case_id=case.id,
         subject=case.subject,
-        sender=case.sender,
+        sender=sender_val or case.sender,
         received_at=case.received_at.isoformat(),
         file_hash=case.file_hash,
         fraud_score=case.fraud_score or 0,
@@ -386,6 +399,7 @@ async def get_case_detail(case_id: str, db: AsyncSession = Depends(get_db)):
         confidence=case.confidence or "medium",
         verdict_summary=case.verdict_summary or "Analysis in progress.",
         score_breakdown=breakdown,
+        status=case.status or "completed",
         spf=spf_val,
         dkim=dkim_val,
         dmarc=dmarc_val,
@@ -442,18 +456,25 @@ async def get_case_report(
 
     vpn_flag = ip_cache.is_vpn_tor if ip_cache else False
 
+    policy = await get_or_create_retention_policy(db)
+    mask_pii = policy.mask_pii
+    sender_val = mask_email_address(case.sender) if mask_pii else case.sender
+    recipient_val = mask_email_address(case.recipient) if mask_pii else case.recipient
+
     # Structure dicts
     case_dict = {
         "case_id": case.id,
         "subject": case.subject,
-        "sender": case.sender,
-        "recipient": case.recipient,
+        "sender": sender_val or case.sender,
+        "recipient": recipient_val or (case.recipient or ""),
         "received_at": case.received_at.isoformat() if case.received_at else "",
         "fraud_score": case.fraud_score or 0,
         "risk_category": case.risk_category or "legitimate",
         "confidence": case.confidence or "medium",
         "verdict_summary": case.verdict_summary or "Analysis complete.",
         "score_breakdown": case.score_breakdown or [],
+        "attribution_type": case.attribution_type or "unattributed",
+        "attribution_confidence": case.attribution_confidence or "low",
     }
 
     headers_dict = {
@@ -711,13 +732,15 @@ async def get_alerts(db: AsyncSession = Depends(get_db)):
         .limit(20)
     )
     cases = result.scalars().all()
+    policy = await get_or_create_retention_policy(db)
+    mask_pii = policy.mask_pii
 
     alerts_list = [
         {
             "alert_id": f"alert-{c.id[:8]}",
             "case_id": c.id,
             "subject": c.subject,
-            "sender": c.sender,
+            "sender": mask_email_address(c.sender) if mask_pii else c.sender,
             "fraud_score": c.fraud_score or 0,
             "risk_category": c.risk_category or "phishing",
             "triggered_at": c.received_at.isoformat() if c.received_at else datetime.now(timezone.utc).isoformat(),
@@ -728,36 +751,71 @@ async def get_alerts(db: AsyncSession = Depends(get_db)):
 
 
 # =======================================================
-# 11. Phase 4 Stubs: Correlation, Campaigns
+# 11. Identity Correlation & Threat Intel: GET /cases/{id}/correlation
 # =======================================================
-@router.get("/cases/{case_id}/correlation")
-async def get_case_correlation(case_id: str):
-    # TODO (Phase 4): Full campaign adjacency graph clustering
-    return {
-        "threat_intel_matches": [
-            {"indicator": "185.220.101.5", "source": "AbuseIPDB", "abuse_score": 88}
-        ],
-        "campaign_id": "camp-3391",
-        "linked_cases": [case_id],
-        "shared_indicator": "Shared Bulletproof Relay Subnet (AS9009)",
-    }
+@router.get("/cases/{case_id}/correlation", response_model=CaseCorrelationResponse)
+async def get_case_correlation(case_id: str, db: AsyncSession = Depends(get_db)):
+    case_res = await db.execute(
+        select(Case)
+        .options(selectinload(Case.campaign), selectinload(Case.threat_intel_matches), selectinload(Case.geolocation))
+        .where(Case.id == case_id)
+    )
+    case = case_res.scalar_one_or_none()
+    if not case:
+        raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
 
+    # Fetch linked cases in same campaign cluster
+    linked_case_ids = []
+    if case.campaign_id:
+        linked_res = await db.execute(
+            select(Case.id).where(Case.campaign_id == case.campaign_id)
+        )
+        linked_case_ids = [cid for cid in linked_res.scalars().all()]
+    else:
+        linked_case_ids = [case.id]
 
-@router.get("/campaigns")
-async def get_campaigns():
-    # TODO (Phase 4): Campaign cluster list
-    return {
-        "campaigns": [
-            {
-                "campaign_id": "camp-3391",
-                "name": "PhantomRelay Phishing Cluster",
-                "case_count": 14,
-                "shared_indicator": "185.220.101.0/24 (Tor Exit Node)",
-                "indicator_type": "ip_subnet",
-                "first_seen": "2026-08-15T08:00:00Z",
-                "last_seen": "2026-09-02T10:00:00Z",
-                "primary_risk_category": "phishing",
-                "average_fraud_score": 89,
-            }
-        ]
-    }
+    # Threat Intel matches
+    matches_schemas: List[ThreatIntelMatchSchema] = []
+    for tm in case.threat_intel_matches:
+        matches_schemas.append(
+            ThreatIntelMatchSchema(
+                indicator=tm.indicator,
+                source=tm.source,
+                abuse_score=tm.abuse_score,
+                last_reported=tm.matched_at.isoformat() if tm.matched_at else None,
+            )
+        )
+
+    # If no recorded matches in DB yet, check origin IP reputation cache
+    if not matches_schemas and case.geolocation:
+        origin_ip = case.geolocation.originating_ip
+        if origin_ip:
+            cache_res = await db.execute(
+                select(IPReputationCache).where(IPReputationCache.ip == origin_ip)
+            )
+            cache_row = cache_res.scalar_one_or_none()
+            if cache_row and (cache_row.abuse_score or cache_row.is_vpn_tor):
+                matches_schemas.append(
+                    ThreatIntelMatchSchema(
+                        indicator=origin_ip,
+                        source="AbuseIPDB",
+                        abuse_score=cache_row.abuse_score or (80 if cache_row.is_vpn_tor else 0),
+                        last_reported=cache_row.cached_at.isoformat() if cache_row.cached_at else None,
+                    )
+                )
+
+    shared_indicator = (
+        case.campaign.shared_indicator
+        if case.campaign
+        else "Isolated Investigation (No Cluster Match)"
+    )
+
+    return CaseCorrelationResponse(
+        threat_intel_matches=matches_schemas,
+        campaign_id=case.campaign_id,
+        linked_cases=linked_case_ids,
+        shared_indicator=shared_indicator,
+        attribution_type=case.attribution_type or "unattributed",
+        attribution_confidence=case.attribution_confidence or "low",
+        attribution_reason=case.verdict_summary,
+    )

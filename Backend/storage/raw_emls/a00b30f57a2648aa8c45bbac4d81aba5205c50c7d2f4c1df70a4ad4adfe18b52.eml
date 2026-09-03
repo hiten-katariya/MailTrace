@@ -1,0 +1,184 @@
+Delivered-To: hiten8411jdrravi@gmail.com
+Received: by 2002:a05:7010:7307:b0:535:3169:f608 with SMTP id h7csp5678367mdc;
+        Wed, 2 Sep 2026 03:32:36 -0700 (PDT)
+X-Received: by 2002:a05:620a:6088:b0:92e:6637:d98 with SMTP id af79cd13be357-93960e8ec56mr402681485a.18.1788345156173;
+        Wed, 02 Sep 2026 03:32:36 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788345156; cv=none;
+        d=google.com; s=arc-20260327;
+        b=AaxiV5sKhp6QXO3frtk+AHrJ4rOegGuLib9Za3pk4etAGYzGRrDeXsNBYUK7JHQZye
+         qtnNNuPll4UKBIdKi1njp/rMgV0m8/jhiPMtbSOomGH8kXbn739UE0IlL5bpsXbGbm13
+         2wph5CMsUnvdLs5NishXF5xNW1IkHb9ZaUiIYLmalsKBuFDgQv9SDm6hYfUVF6kr9BDx
+         TZbx/gIr8HUMCM9lehUmw2CKZb59wi9JledW2Bf7U94JkK+gRTks6iR7e8KLMeNVCI8U
+         TQ3wlyUG5vpjoWS4gWe8gIhyicugwIlLtouyfHFoUH1lzlNGaQaapR2c26WQab/V/M5z
+         VX/A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=to:subject:message-id:mime-version:from:date
+         :content-transfer-encoding:dkim-signature:dkim-signature;
+        bh=XRCsA/0fkYvMzTWFSIDQp97NrA1eRGdbdfEfkIprISI=;
+        fh=EPCSxaFH5SENf6g7uPX0Wq7JkTWkYqqE/mObsB9gSkA=;
+        b=S03mlGiTNGGaaNQuJUYMjvWVG6z4oJBfd4Ic9zthzg0FAVf1OqZ8kx9ViGboNOkh6e
+         7AjR4XWDAJh2tYXY/GdA+Hvz6FMgdxbz4poN9nZCstmWaWQFePaY7asFFF3XWM5PJjGo
+         3LnzgtgLxjQKIH39u+bK9qTnXBK6VG4ULPQ2BJ56+tkXGG/88BN2GUxOdvZVvpndl8UM
+         obRmFjk75aNxFU8wE+vEahqS/3K2Z8C+jlMkSE56HvPNsJuzVjEU2HyO/IZ1dBXgTmrP
+         rZGyoANOV/fSZR8s3+s3/KlvtJYKml8u7oe0LZV4vB/oN0f9C+TO177chTy/zJUE1KIA
+         KTJA==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@maxmind.com header.s=mm header.b=Zu79C8li;
+       dkim=pass header.i=@sendgrid.info header.s=smtpapi header.b=wGFoZI3p;
+       spf=pass (google.com: domain of bounces+22608499-1f1e-hiten8411jdrravi=gmail.com@em9899.maxmind.com designates 149.72.46.179 as permitted sender) smtp.mailfrom="bounces+22608499-1f1e-hiten8411jdrravi=gmail.com@em9899.maxmind.com";
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=maxmind.com
+Return-Path: <bounces+22608499-1f1e-hiten8411jdrravi=gmail.com@em9899.maxmind.com>
+Received: from o1.ptr9166.maxmind.com (o1.ptr9166.maxmind.com. [149.72.46.179])
+        by mx.google.com with ESMTPS id af79cd13be357-9395f15c652si137708385a.120.2026.09.02.03.32.36
+        for <hiten8411jdrravi@gmail.com>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Sep 2026 03:32:36 -0700 (PDT)
+Received-SPF: pass (google.com: domain of bounces+22608499-1f1e-hiten8411jdrravi=gmail.com@em9899.maxmind.com designates 149.72.46.179 as permitted sender) client-ip=149.72.46.179;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@maxmind.com header.s=mm header.b=Zu79C8li;
+       dkim=pass header.i=@sendgrid.info header.s=smtpapi header.b=wGFoZI3p;
+       spf=pass (google.com: domain of bounces+22608499-1f1e-hiten8411jdrravi=gmail.com@em9899.maxmind.com designates 149.72.46.179 as permitted sender) smtp.mailfrom="bounces+22608499-1f1e-hiten8411jdrravi=gmail.com@em9899.maxmind.com";
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=maxmind.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maxmind.com;
+	h=content-transfer-encoding:content-type:date:from:mime-version:subject:
+	to:cc:content-type:date:feedback-id:from:subject:to;
+	s=mm; t=1788345155;
+	bh=XRCsA/0fkYvMzTWFSIDQp97NrA1eRGdbdfEfkIprISI=;
+	b=Zu79C8liL6G2JdVc1fCJdH3VRKsF490Kj6K7qjF0yGxHUFatkPrAoIXswIZyk5Fd0/de
+	ES6LE7hd7/BvXisZJXJxIZWCKsninLl9hLob44ayA0gfIRfpUHzqlHLqNfNdOQe8bxfDu6
+	4+R5AHn5zDIQEqJGw/Iv71O1LDNzsyqFbcnbdo3FPE1Q9OwQC5grSpMEIcTPhfSk0FXP8K
+	hl91rp/WPfOeqVF2DY5QlDJsprAOQ5CxcKe9uwZe6yypk8aF8QABLt+dYnYSL8Wb+pOyv+
+	OCcP8KnG8tHPgua8U8dvEq8Zy/JT7mj+BZyr3UWJ9O6ud7tHF0zLdxofoqJqIo1Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sendgrid.info;
+	h=content-transfer-encoding:content-type:date:from:mime-version:subject:
+	to:cc:content-type:date:feedback-id:from:subject:to;
+	s=smtpapi; t=1788345155;
+	bh=XRCsA/0fkYvMzTWFSIDQp97NrA1eRGdbdfEfkIprISI=;
+	b=wGFoZI3pSbehMs2l5VUPl1HDwIZhjZcmEmlqhhI7ukRApEsji76QYNLoEnm6u0P4KqFl
+	HTps676rFHWioD5B2fKa8KctIpI07QPzLS/q0ydGm7BiENneMziZArQga2eMRxdJmLcphD
+	+ZfOetMxWfe4so8RhA++gn2ZsUxxHwL0Y=
+Received: by recvd-7cb4d47b9d-mp4p4 with SMTP id recvd-7cb4d47b9d-mp4p4-1-6A97FB43-3D
+	2026-09-02 10:32:35.722937815 +0000 UTC m=+123051.823014841
+Received: from MjI2MDg0OTk (unknown)
+	by geopod-ismtpd-55 (SG) with HTTP
+	id 1nQQt1f-S9a-3ZQZ31MxEg
+	Wed, 02 Sep 2026 10:32:35.702 +0000 (UTC)
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset=us-ascii
+Date: Wed, 02 Sep 2026 10:32:35 +0000 (UTC)
+From: noreply@maxmind.com
+Mime-Version: 1.0
+Message-ID: <1nQQt1f-S9a-3ZQZ31MxEg@geopod-ismtpd-55>
+Subject: MaxMind Account Access Code
+X-Sender: mm_website
+X-SG-EID: 
+ =?us-ascii?Q?u001=2EwgPQEA+gt=2F9mQv4JaEv+7XXe2iLQTk8J0CFrHdwmVZrTphdGgZBgOJ3mA?=
+ =?us-ascii?Q?TWPFKh73wdP7RwVYuPD3L4cI+U=2F2MMV5iblTYlf?=
+ =?us-ascii?Q?MmeIgtfAejBasO5F0SXpKVFahvRXQTSokE6Xrjb?=
+ =?us-ascii?Q?9Gte4XbJGxiIRnYAj96es4jsCFmXYgG=2FlhkiIwA?=
+ =?us-ascii?Q?W6GSono2GflybqB=2FKz3di+ujhxUa5pXUE8=2FHbti?=
+ =?us-ascii?Q?Q=3D=3D?=
+X-SG-ID: 
+ =?us-ascii?Q?u001=2ESdBcvi+Evd=2FbQef8eZF3Bn75C58UbX41OvcFaGVvgVHuO9DcgPLW7qpHr?=
+ =?us-ascii?Q?yWVkNos=2F1pZx5eR6Kxtmesitd8nC4gIE929T+g+?=
+ =?us-ascii?Q?mIHZ9IVwdCs=3D?=
+To: hiten8411jdrravi@gmail.com
+X-Entity-ID: u001.Wvcr+324MzpQDgznoBzlfg==
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset=3D"utf-8" />
+    <title>MaxMind Account Access Code</title>
+  </head>
+  <body>
+    <p>Hello,</p>
+
+  <p>
+    You recently tried to sign in to your account. Complete your sign-in wi=
+th
+    the security code below.
+  </p>
+
+  <p>
+    This code will expire <strong>30 minutes</strong> after you receive thi=
+s
+    email. Your security code:
+  </p>
+
+  <p style=3D"text-align: center; font-size: 3em; font-weight: bold">
+    570592
+  </p>
+
+  <table style=3D"border: none; border-spacing: 1.5em; text-align: center">
+    <thead>
+      <tr>
+        <th style=3D"font-weight:normal">IP Address:</th>
+        <th style=3D"font-weight:normal">OS:</th>
+        <th style=3D"font-weight:normal">Browser:</th>
+        <th style=3D"font-weight:normal">Estimated Location:</th>
+      </tr>
+    </thead>
+    <tbody style=3D"font-weight: bold">
+      <tr>
+        <th>2409:40d4:2430:a818:c0c5:c94c:12d7:65b9</th>
+        <th>Windows 10</th>
+        <th>Chrome 152</th>
+        <th>Jodhpur, Rajasthan, India</th>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    If you did not attempt to sign in and you believe that someone may be
+    attempting to access your account, please contact us at
+    <a href=3D"mailto:support@maxmind.com">support@maxmind.com</a>.
+  </p>
+
+    <p>
+        This email is regarding Account ID
+        1403424
+          and is intended for user
+          hiten8411jdrravi@gmail<span>&#46;</span>com.
+      </p>
+
+
+    <p>Sincerely,<br />The Team at MaxMind</p>
+
+    <footer style=3D"font-size: 90%; border-top: 1px solid;">
+      <p>
+        minFraud service customers can help us detect and prevent more frau=
+d by
+        reporting chargebacks, false positives, and suspected fraud
+        <a
+          href=3D"https://www.maxmind.com/en/accounts/current/minfraud/repo=
+rt-transactions?utm_source=3Dtxn_email&amp;utm_medium=3Demail&amp;utm_campa=
+ign=3D"
+        >
+          here</a
+        >.
+      </p>
+
+      <p>Follow us on <a href=3D"https://twitter.com/maxmind">Twitter</a>.<=
+/p>
+
+      <p>
+        Connect with us on
+        <a href=3D"https://www.linkedin.com/company/maxmind">LinkedIn</a>.
+      </p>
+
+      <p>
+        For information about MaxMind's privacy practices, see our
+        <a
+          href=3D"https://www.maxmind.com/en/privacy-policy?utm_source=3Dtx=
+n_email&amp;utm_medium=3Demail&amp;utm_campaign=3D"
+          >Privacy Policy</a
+        >.
+      </p>
+    </footer>
+  </body>
+</html>
+
+
+

@@ -42,30 +42,51 @@ export const CaseDetailPage: React.FC<CaseDetailPageProps> = ({
   const { data: caseDetail, isLoading: isDetailLoading } = useQuery({
     queryKey: ['case-detail', caseId],
     queryFn: () => getCaseById(caseId),
+    refetchInterval: (query) => {
+      const d = query.state.data;
+      if (!d) return false;
+      const analyzing =
+        d.status === 'pending' ||
+        d.status === 'processing' ||
+        d.verdict_summary === 'Analysis in progress.' ||
+        (d.fraud_score === 0 && d.risk_category === 'legitimate' && (!d.score_breakdown || d.score_breakdown.length === 0));
+      return analyzing ? 1000 : false;
+    },
   });
 
+  const isAnalyzing =
+    !caseDetail ||
+    caseDetail.status === 'pending' ||
+    caseDetail.status === 'processing' ||
+    caseDetail.verdict_summary === 'Analysis in progress.' ||
+    (caseDetail.fraud_score === 0 && caseDetail.risk_category === 'legitimate' && (!caseDetail.score_breakdown || caseDetail.score_breakdown.length === 0));
+
   const { data: headers } = useQuery({
-    queryKey: ['case-headers', caseId],
+    queryKey: ['case-headers', caseId, caseDetail?.verdict_summary],
     queryFn: () => getCaseHeaders(caseId),
     enabled: !!caseDetail,
+    refetchInterval: isAnalyzing ? 1500 : false,
   });
 
   const { data: content } = useQuery({
-    queryKey: ['case-content', caseId],
+    queryKey: ['case-content', caseId, caseDetail?.verdict_summary],
     queryFn: () => getCaseContent(caseId),
     enabled: !!caseDetail,
+    refetchInterval: isAnalyzing ? 1500 : false,
   });
 
   const { data: origin } = useQuery({
-    queryKey: ['case-origin', caseId],
+    queryKey: ['case-origin', caseId, caseDetail?.verdict_summary],
     queryFn: () => getCaseOrigin(caseId),
     enabled: !!caseDetail,
+    refetchInterval: isAnalyzing ? 1500 : false,
   });
 
   const { data: correlation } = useQuery({
-    queryKey: ['case-correlation', caseId],
+    queryKey: ['case-correlation', caseId, caseDetail?.verdict_summary],
     queryFn: () => getCaseCorrelation(caseId),
     enabled: !!caseDetail,
+    refetchInterval: isAnalyzing ? 1500 : false,
   });
 
   if (isDetailLoading || !caseDetail) {

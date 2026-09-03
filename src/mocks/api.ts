@@ -241,10 +241,14 @@ export async function getCaseCorrelation(caseId: string): Promise<CaseCorrelatio
           threat_intel_matches: data.threat_intel_matches || [],
           campaign_id: data.campaign_id,
           linked_cases: data.linked_cases || [caseId],
-          shared_indicator: data.shared_indicator || 'Shared Relay Infrastructure',
+          shared_indicator: data.shared_indicator || 'Isolated Investigation (No Cluster Match)',
+          attribution_type: data.attribution_type,
+          attribution_confidence: data.attribution_confidence,
         };
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn(`Backend /cases/${caseId}/correlation unavailable:`, e);
+    }
   }
 
   await delay(100);
@@ -265,7 +269,9 @@ export async function getCampaigns(): Promise<{ campaigns: CampaignSummary[] }> 
       if (resp.ok) {
         return await resp.json();
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Backend /campaigns unavailable:', e);
+    }
   }
 
   await delay(120);
@@ -287,6 +293,17 @@ export async function getCampaigns(): Promise<{ campaigns: CampaignSummary[] }> 
  * GET /campaigns/{campaign_id} (Phase 4 Hook / Stub)
  */
 export async function getCampaignById(campaignId: string): Promise<CampaignDetail> {
+  if (!USE_MOCKS) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/campaigns/${campaignId}`);
+      if (resp.ok) {
+        return await resp.json();
+      }
+    } catch (e) {
+      console.warn(`Backend /campaigns/${campaignId} unavailable:`, e);
+    }
+  }
+
   await delay(100);
   const found = MOCK_CAMPAIGNS.find((c) => c.campaign_id === campaignId);
   if (!found) {
@@ -503,6 +520,17 @@ export async function getCaseReport(caseId: string, format: 'pdf' | 'json' = 'js
  * GET /settings/retention
  */
 export async function getRetentionSettings(): Promise<RetentionSettings> {
+  if (!USE_MOCKS) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/settings/retention`);
+      if (resp.ok) {
+        return await resp.json();
+      }
+    } catch (e) {
+      console.warn('Backend /settings/retention unavailable:', e);
+    }
+  }
+
   await delay(80);
   return { ...retentionStore };
 }
@@ -511,6 +539,23 @@ export async function getRetentionSettings(): Promise<RetentionSettings> {
  * PUT /settings/retention
  */
 export async function updateRetentionSettings(settings: Partial<RetentionSettings>): Promise<RetentionSettings> {
+  if (!USE_MOCKS) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/settings/retention`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        retentionStore = { ...retentionStore, ...data };
+        return data;
+      }
+    } catch (e) {
+      console.warn('Backend PUT /settings/retention unavailable:', e);
+    }
+  }
+
   await delay(120);
   retentionStore = { ...retentionStore, ...settings };
   return { ...retentionStore };

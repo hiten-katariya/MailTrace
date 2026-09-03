@@ -15,6 +15,7 @@ class CaseSummary(BaseModel):
     received_at: str
     fraud_score: int
     risk_category: str  # 'legitimate', 'suspicious', 'phishing', 'bec'
+    status: Optional[str] = "completed"
     spf: str
     dkim: str
     dmarc: str
@@ -33,6 +34,7 @@ class CaseDetail(BaseModel):
     confidence: str
     verdict_summary: str
     score_breakdown: List[ScoreSignal]
+    status: Optional[str] = "completed"
     spf: Optional[str] = "none"
     dkim: Optional[str] = "none"
     dmarc: Optional[str] = "none"

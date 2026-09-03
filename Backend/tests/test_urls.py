@@ -23,3 +23,13 @@ def test_homoglyph_detection():
 
     flagged, _ = is_lookalike_domain("microsoft.com")
     assert flagged is False
+
+    # Legitimate corporate shorteners (e.g. c.gle, goo.gl, amzn.to)
+    flagged, _ = is_lookalike_domain("c.gle")
+    assert flagged is False
+
+    flagged, _ = is_lookalike_domain("amzn.to")
+    assert flagged is False
+
+    flagged, _ = is_lookalike_domain("play.google")
+    assert flagged is False

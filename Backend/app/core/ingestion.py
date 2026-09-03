@@ -154,10 +154,23 @@ def parse_raw_email(content_bytes: bytes) -> ParsedEmail:
     body_html = "\n".join(body_html_parts)
     body_text = "\n".join(body_plain_parts)
 
-    # If plain text is empty but HTML is available, extract plain text from HTML
-    if not body_text.strip() and body_html.strip():
+    # Extract clean text from HTML, stripping HTML comments (neutralizes Bayesian comment poisoning)
+    html_clean_text = ""
+    if body_html.strip():
+        from bs4 import Comment
         soup = BeautifulSoup(body_html, "html.parser")
-        body_text = soup.get_text(separator="\n", strip=True)
+        # Strip comments, scripts, styles
+        for element in soup.find_all(string=lambda text: isinstance(text, Comment)):
+            element.extract()
+        for element in soup(["script", "style"]):
+            element.decompose()
+        html_clean_text = soup.get_text(separator="\n", strip=True)
+
+    # If plain text is empty or a short stub while HTML has rich body content, adopt the clean HTML text
+    if not body_text.strip():
+        body_text = html_clean_text
+    elif html_clean_text and len(html_clean_text) > len(body_text) * 1.5:
+        body_text = f"{body_text}\n\n{html_clean_text}"
 
     # Extract URLs from HTML hrefs and plain text
     import re

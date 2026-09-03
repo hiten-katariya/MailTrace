@@ -56,6 +56,19 @@ URGENCY_PATTERNS = [
     r'fail(?:ure)?\s+to\s+respond',
     r'deactivation\s+warning',
     r'critical\s+breach',
+    # Unsolicited bulk marketing / spam scarcity and lure patterns
+    r'100%\s+free',
+    r'claim\s+(?:it|yours|now)',
+    r'grab\s+yours\s+today',
+    r'before\s+they[\'’]re\s+all\s+gone',
+    r'special\s+limited',
+    r'limited\s+(?:time|supply|run|offer)',
+    r'free\s+(?:edt|mini|tool|gift|sample|trial|giveaway)',
+    r'did\s+you\s+get\s+your\s+free',
+    r'send\s+me\s+my\s+free',
+    r'act\s+now\s+and\s+receive',
+    r'exclusive\s+deal',
+    r'winner|won\s+a\s+prize',
 ]
 
 BEC_PATTERNS = [
@@ -72,6 +85,11 @@ BEC_PATTERNS = [
     r'vendor\s+payment\s+instructions',
     r'executive\s+authorization',
     r'gift\s+cards?',
+    # Subtle payment diversion and invoice redirection pretexts:
+    r'(?:redirect|remit|disburse|send|route)\s+(?:the\s+|all\s+|future\s+|pending\s+)?(?:funds?|disbursement|remittance|settlement|balance|payment)',
+    r'(?:updated|new|revised)\s+(?:banking|remittance|clearing|settlement|payment|treasury)\s+(?:instructions|details|coordinates|account)',
+    r'(?:clearing\s+bank|clearing\s+account|treasury\s+account|beneficiary\s+account|remittance\s+account)',
+    r'(?:remit|forward)\s+(?:to\s+(?:the\s+)?following|to\s+our\s+new)\s+account',
 ]
 
 class ContentAnalysisResult:
@@ -142,14 +160,17 @@ def analyze_email_content(subject: str, body_text: str, sender: str) -> ContentA
         urgency_base += min(len(bec_indicators) * 20, 40)
     sentiment_urgency_score = min(int(urgency_base), 100)
 
-    # 5. Composite Content Classification
-    if len(bec_indicators) >= 2 or (len(bec_indicators) >= 1 and ml_prob > 0.6):
+    # 5. Composite Content Classification (requiring coercion/BEC co-occurrence to avoid commercial false positives)
+    has_urgency = len(flagged_phrases) > 0
+    has_bec = len(bec_indicators) > 0
+
+    if len(bec_indicators) >= 2 or (has_bec and ml_prob > 0.6):
         classification = "bec"
         confidence = max(0.85, ml_prob)
-    elif ml_prob >= 0.70 or len(flagged_phrases) >= 2:
+    elif len(flagged_phrases) >= 2 or (has_urgency and ml_prob >= 0.60) or (ml_prob >= 0.85):
         classification = "phishing"
         confidence = max(0.80, ml_prob)
-    elif ml_prob >= 0.40 or len(flagged_phrases) >= 1:
+    elif (has_urgency and ml_prob >= 0.35) or (not has_urgency and not has_bec and ml_prob >= 0.70):
         classification = "suspicious"
         confidence = 0.65
     else:

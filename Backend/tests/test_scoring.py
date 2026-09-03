@@ -136,3 +136,81 @@ def test_scoring_bounded_and_phishing():
     assert res.fraud_score >= 80
     assert res.risk_category == "phishing"
     assert len(res.score_breakdown) > 3
+
+
+def test_unauthenticated_bulk_spam_scoring():
+    # Simulates spam.eml: no SPF record, broken DKIM, no DMARC, upstream spam flags, high-abuse .bid TLD
+    headers_res = HeaderAnalysisResult(
+        spf_result="none",
+        spf_record=None,
+        spf_sender_ip="67.212.164.109",
+        dkim_result="fail",
+        dkim_domain="theultimatesurvival.bid",
+        dkim_selector="k1",
+        dkim_signature_present=True,
+        dmarc_result="none",
+        dmarc_policy="none",
+        dmarc_disposition=None,
+        relay_chain=[{"hop": 1, "ip": "67.212.164.109"}],
+        anomalies=[
+            "Upstream mail gateway tagged message as SPAM (X-VR-SPAMSTATE: SPAM)",
+            "Subject rewritten by upstream MTA filter with [SPAM] detection flag",
+        ],
+        earliest_origin_ip="67.212.164.109",
+    )
+    content_res = ContentAnalysisResult(
+        classification="phishing",
+        classification_confidence=0.80,
+        sentiment_urgency_score=60,
+        impersonation_target=None,
+        flagged_phrases=["100% free", "claim it", "Grab yours today"],
+        bec_indicators=[],
+    )
+    domain_res = DomainIntelResult(
+        domain="theultimatesurvival.bid",
+        registrar="High-Abuse TLD Registrar",
+        registered_on="2026-09-03",
+        domain_age_days=1,
+        registrant_country="US",
+        mx_valid=False,
+        raw_whois="",
+    )
+    geo_res = GeolocationResult(
+        originating_ip="67.212.164.109",
+        country="United States",
+        region="New York",
+        city="Buffalo",
+        latitude=42.88,
+        longitude=-78.87,
+        precision_confidence="country: high, city: medium",
+        isp="ColoCrossing",
+        asn="AS36352",
+    )
+    ip_rep_res = IPReputationResult(
+        ip="67.212.164.109",
+        abuse_score=0,
+        is_vpn_tor=False,
+        flag_source="AbuseIPDB",
+        isp="ColoCrossing",
+    )
+    url_results = [
+        {
+            "original": "http://theultimatesurvival.bid/zfcG0umfLpjPd4H1F",
+            "is_flagged": True,
+            "reason": "High-abuse spam/malware TLD ('.bid')",
+            "redirect_hops": 0,
+        }
+    ]
+
+    res = calculate_composite_score(
+        headers_res=headers_res,
+        content_res=content_res,
+        url_results=url_results,
+        domain_res=domain_res,
+        geo_res=geo_res,
+        ip_rep_res=ip_rep_res,
+    )
+
+    assert res.fraud_score >= 70, f"Expected spam to score >= 70, got {res.fraud_score}"
+    assert res.risk_category in ["phishing", "suspicious"]
+

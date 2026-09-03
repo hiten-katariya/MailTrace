@@ -27,6 +27,37 @@ export const CorrelationTab: React.FC<CorrelationTabProps> = ({
 }) => {
   return (
     <div className="space-y-4">
+      {/* 0. Attribution Vector Assessment Card */}
+      <EvidenceCard
+        title="Probabilistic Infrastructure Attribution Assessment"
+        subtitle="Rule-based origin vector classification derived from header authentication, domain age, and network telemetry"
+        badge={
+          <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${
+            correlation.attribution_type === 'anonymized_infrastructure'
+              ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+              : correlation.attribution_type === 'spoofed_domain'
+              ? 'bg-red-500/15 text-red-300 border border-red-500/30'
+              : correlation.attribution_type === 'compromised_account'
+              ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+              : 'bg-slate-500/15 text-slate-300 border border-slate-500/30'
+          }`}>
+            {(correlation.attribution_type || 'unattributed').replace('_', ' ')}
+          </span>
+        }
+      >
+        <div className="p-3 rounded bg-soc-inset border border-slate-800/60 font-mono text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="text-[10px] text-soc-muted uppercase">Attribution Confidence</div>
+            <div className="text-cyan-300 font-bold uppercase text-sm mt-0.5">
+              {correlation.attribution_confidence || 'low'} Confidence
+            </div>
+          </div>
+          <div className="text-left sm:text-right text-[11px] text-slate-300 max-w-md">
+            Basis: <span className="text-slate-200">{correlation.shared_indicator || 'Isolated Investigation (No Cluster Match)'}</span>
+          </div>
+        </div>
+      </EvidenceCard>
+
       {/* 1. Node-Link Infrastructure Relationship Hierarchy (Section 21) */}
       <EvidenceCard
         title="Infrastructure Correlation Hierarchy"
@@ -81,7 +112,7 @@ export const CorrelationTab: React.FC<CorrelationTabProps> = ({
                   </div>
                   <div>
                     <span className="text-[9px] text-cyan-400 uppercase font-bold block">LINKED THREAT CAMPAIGN</span>
-                    <span className="text-slate-100 font-bold">{correlation.campaign_id} (PhantomRelay)</span>
+                    <span className="text-slate-100 font-bold">{correlation.campaign_id} ({correlation.shared_indicator})</span>
                   </div>
                 </div>
 

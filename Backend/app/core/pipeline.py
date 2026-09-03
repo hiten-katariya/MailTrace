@@ -1,5 +1,6 @@
 import os
 import traceback
+from typing import Optional
 from datetime import datetime, timezone
 from sqlalchemy import select, update
 from backend.app.database import AsyncSessionLocal
@@ -17,6 +18,11 @@ from backend.app.core.geolocation import geolocate_ip
 from backend.app.core.ip_reputation import query_abuseipdb
 from backend.app.core.domain_intel import analyze_domain_intel
 from backend.app.core.scoring import calculate_composite_score
+from backend.app.core.attribution import determine_attribution
+from backend.app.core.correlation import compute_body_hash, correlate_and_cluster_case, populate_threat_intel_matches
+from backend.app.core.retention import get_or_create_retention_policy, execute_retention_purge
+
+_last_purge_timestamp: Optional[datetime] = None
 
 async def execute_case_pipeline(case_id: str, parsed_email: ParsedEmail, raw_eml_bytes: bytes):
     async with AsyncSessionLocal() as db:
@@ -36,6 +42,7 @@ async def execute_case_pipeline(case_id: str, parsed_email: ParsedEmail, raw_eml
                 "scoring": "pending",
             }
             case.pipeline_progress = progress
+            case.body_hash = compute_body_hash(parsed_email.body_text)
             await db.commit()
 
             # STAGE 1: Header & Protocol Analysis
@@ -209,17 +216,65 @@ async def execute_case_pipeline(case_id: str, parsed_email: ParsedEmail, raw_eml
             progress["scoring"] = "done"
             case.pipeline_progress = progress
 
+            # STAGE 6: Identity Attribution (STRICTLY AFTER final score/risk_category)
+            attr_type, attr_conf, attr_reason = determine_attribution(
+                spf_result=headers_res.spf_result,
+                dkim_result=headers_res.dkim_result,
+                dmarc_result=headers_res.dmarc_result,
+                domain_age_days=domain_res.domain_age_days,
+                is_vpn_tor=ip_rep_res.is_vpn_tor,
+                anomalies=headers_res.anomalies,
+                fraud_score=scoring_res.fraud_score,
+                risk_category=scoring_res.risk_category,
+                bec_indicators=content_res.bec_indicators,
+            )
+            case.attribution_type = attr_type
+            case.attribution_confidence = attr_conf
+
+            # STAGE 7: Campaign Clustering Across Shared Infrastructure
+            campaign = await correlate_and_cluster_case(
+                db=db,
+                case=case,
+                origin_ip=origin_ip,
+                domain_name=parsed_email.sender_domain,
+                target_brand=content_res.impersonation_target,
+            )
+            if campaign:
+                case.campaign_id = campaign.id
+
+            # STAGE 8: Threat Intelligence Feed Matching
+            await populate_threat_intel_matches(
+                db=db,
+                case_id=case_id,
+                origin_ip=origin_ip,
+                domain_name=parsed_email.sender_domain,
+                abuse_score=ip_rep_res.abuse_score or 0,
+                is_vpn_tor=ip_rep_res.is_vpn_tor,
+            )
+
             # Audit Log Entry
             audit_entry = AuditLog(
                 username="system_pipeline",
                 action="ingest_completed",
                 case_id=case_id,
-                details=f"Completed forensic analysis for '{parsed_email.subject}' (Score: {scoring_res.fraud_score}, Risk: {scoring_res.risk_category})",
+                details=f"Completed forensic analysis for '{parsed_email.subject}' (Score: {scoring_res.fraud_score}, Risk: {scoring_res.risk_category}, Attribution: {attr_type})",
             )
             db.add(audit_entry)
 
+            # STAGE 9: Throttled Retention Auto-Purge Check (Max once per hour)
+            global _last_purge_timestamp
+            now_utc = datetime.now(timezone.utc)
+            if _last_purge_timestamp is None or (now_utc - _last_purge_timestamp).total_seconds() > 3600:
+                try:
+                    retention_policy = await get_or_create_retention_policy(db)
+                    if retention_policy.auto_purge:
+                        await execute_retention_purge(db, retention_policy.retention_days)
+                    _last_purge_timestamp = now_utc
+                except Exception as pe:
+                    print(f"[-] Retention auto-purge check warning: {pe}")
+
             await db.commit()
-            print(f"[+] Case {case_id} pipeline completed successfully. Score: {scoring_res.fraud_score}/100 ({scoring_res.risk_category})")
+            print(f"[+] Case {case_id} pipeline completed successfully. Score: {scoring_res.fraud_score}/100 ({scoring_res.risk_category}, {attr_type})")
 
         except Exception as e:
             traceback.print_exc()
