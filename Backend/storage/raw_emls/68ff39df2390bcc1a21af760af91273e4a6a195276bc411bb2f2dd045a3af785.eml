@@ -1,0 +1,22 @@
+From: "Microsoft 365 Security" <notifications@m365-security-alerts.com>
+To: "User" <user@enterprise.org>
+Subject: Security Alert: Confirm your Identity - Microsoft 365
+Date: Wed, 02 Sep 2026 11:30:00 +0000
+Message-ID: <ms.alert.39210@outbound-relay.net>
+Return-Path: <notifications@m365-security-alerts.com>
+Reply-To: <notifications@m365-security-alerts.com>
+Received: from outbound-relay.net (outbound-relay.net [192.0.2.77])
+	by mail.enterprise.org (Postfix) with ESMTP id 558291A
+	for <user@enterprise.org>; Wed, 02 Sep 2026 11:30:04 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html>
+<body>
+<h3>Microsoft 365 Security Notification</h3>
+<p>An anomalous login attempt was blocked from Moscow, Russia.</p>
+<p>Please review and confirm your identity at our secure single sign-on portal:</p>
+<p><a href="https://micros0ft-security-portal.com/login?token=88319">https://login.microsoftonline.com/auth</a></p>
+<p>Failure to respond will result in account restriction within 24 hours.</p>
+</body>
+</html>

@@ -418,8 +418,7 @@ export async function getAlerts(): Promise<{ alerts: AlertItem[] }> {
     } catch (e) {}
   }
 
-  await delay(100);
-  const highRiskCases = casesStore.filter((c) => c.detail.fraud_score >= 80);
+  const highRiskCases = casesStore.filter((c) => c.detail.fraud_score >= 70 || c.detail.risk_category === 'bec');
   const alerts: AlertItem[] = highRiskCases.map((c, i) => ({
     alert_id: `alert-${i + 1}`,
     case_id: c.detail.case_id,

@@ -267,6 +267,8 @@ def analyze_email_headers(
         reply_dom = reply_to_email.split("@")[-1].lower() if "@" in reply_to_email else ""
         if from_dom and reply_dom and from_dom != reply_dom:
             anomalies.append(f"Reply-To domain mismatch: from '@{from_dom}' replies to '@{reply_dom}'")
+        elif from_email.lower() != reply_to_email.lower():
+            anomalies.append(f"Reply-To mailbox mismatch: sender '{from_email}' diverts replies to '{reply_to_email}'")
 
     # From / Return-Path Mismatch
     if return_path_email and from_email:

@@ -1,0 +1,22 @@
+From: "Bank Security Alert" <alerts@secure-chase-update.com>
+To: "Account Holder" <holder@client-domain.com>
+Subject: Security Alert: Account Suspended - Verification Required Immediately
+Date: Wed, 02 Sep 2026 12:45:00 +0000
+Message-ID: <tor.alert.99120@anonym-node.org>
+Return-Path: <bounce@secure-chase-update.com>
+Reply-To: <alerts@secure-chase-update.com>
+Received: from anonym-node.org (anonym-node.org [185.220.101.5])
+	by mail.client-domain.com (Postfix) with ESMTP id CC99812
+	for <holder@client-domain.com>; Wed, 02 Sep 2026 12:45:06 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Customer,
+
+Your banking profile has been restricted due to multiple unauthorized login attempts.
+
+Immediate action is required within 24 hours. Confirm your identity to restore normal account privileges.
+
+Visit http://185.220.101.5/chase/auth/login to resolve this issue.
+
+Fraud Management Division

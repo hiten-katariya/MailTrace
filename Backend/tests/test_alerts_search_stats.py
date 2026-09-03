@@ -36,25 +36,38 @@ async def test_alerts_threshold_filtering(client: AsyncClient, db_session: Async
         id="case-alert-3",
         file_hash="hash3" * 12 + "1234",
         raw_file_path="p3",
-        subject="WIRE FUNDS NOW - Acquisition",
-        sender="exec@spoofed-target.com",
-        sender_domain="spoofed-target.com",
+        subject="Critical Phishing Credential Theft",
+        sender="spoof@phishing-lookalike.com",
+        sender_domain="phishing-lookalike.com",
         received_at=now,
         status="completed",
         fraud_score=92,
+        risk_category="phishing",
+    )
+    c4 = Case(
+        id="case-alert-4",
+        file_hash="hash4" * 12 + "1234",
+        raw_file_path="p4",
+        subject="Urgent Escrow Wire Transfer Request",
+        sender="exec@corporate-office.com",
+        sender_domain="corporate-office.com",
+        received_at=now,
+        status="completed",
+        fraud_score=28,
         risk_category="bec",
     )
-    db_session.add_all([c1, c2, c3])
+    db_session.add_all([c1, c2, c3, c4])
     await db_session.commit()
 
     resp = await client.get("/alerts")
     assert resp.status_code == 200
     alerts = resp.json()["alerts"]
 
-    # Only case-alert-3 (score >= 70) should be present
-    assert len(alerts) == 1
-    assert alerts[0]["case_id"] == "case-alert-3"
-    assert alerts[0]["fraud_score"] == 92
+    # Both case-alert-3 (score >= 70) and case-alert-4 (BEC category) should be present
+    assert len(alerts) == 2
+    alert_ids = [a["case_id"] for a in alerts]
+    assert "case-alert-3" in alert_ids
+    assert "case-alert-4" in alert_ids
 
 
 @pytest.mark.asyncio

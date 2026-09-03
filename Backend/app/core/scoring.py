@@ -194,10 +194,10 @@ def calculate_composite_score(
     if content_res.classification in ["phishing", "bec"]:
         ml_contrib = int(content_res.classification_confidence * 10)
         cat4_signals.append(ScoreSignal(
-            signal="NLP Phishing Classifier Confidence",
+            signal="NLP Phishing / BEC Classifier Confidence",
             weight=10,
             contribution=ml_contrib,
-            reason=f"DistilBERT/TF-IDF statistical model evaluated text with {int(content_res.classification_confidence*100)}% phishing probability.",
+            reason=f"Statistical NLP model evaluated text with {int(content_res.classification_confidence*100)}% {content_res.classification.upper()} probability.",
             sourceModule="nlp",
         ))
 
@@ -214,12 +214,14 @@ def calculate_composite_score(
 
     # BEC Indicators
     if content_res.bec_indicators:
-        bec_str = ", ".join(content_res.bec_indicators[:2])
+        bec_count = len(content_res.bec_indicators)
+        bec_contrib = min(15, 6 + bec_count * 3)
+        bec_str = ", ".join(content_res.bec_indicators[:3])
         cat4_signals.append(ScoreSignal(
             signal="Business Email Compromise (BEC) Financial Pretext",
-            weight=5,
-            contribution=5,
-            reason=f"Detected payment diversion / executive impersonation markers: {bec_str}.",
+            weight=15,
+            contribution=bec_contrib,
+            reason=f"Detected payment diversion / executive wire transfer markers ({bec_count} indicators): {bec_str}.",
             sourceModule="nlp",
         ))
 
@@ -282,7 +284,7 @@ def calculate_composite_score(
     fraud_score = min(100, max(0, raw_total_score))
 
     # Deduce Risk Category
-    if content_res.bec_indicators and (fraud_score >= 50 or "wire" in str(content_res.bec_indicators).lower()):
+    if content_res.bec_indicators or content_res.classification == "bec":
         risk_category = "bec"
     elif fraud_score >= 70:
         risk_category = "phishing"

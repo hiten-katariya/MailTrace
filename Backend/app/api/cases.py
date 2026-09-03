@@ -701,7 +701,12 @@ async def get_case_origin(case_id: str, db: AsyncSession = Depends(get_db)):
 async def get_alerts(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Case)
-        .where(Case.fraud_score >= settings.ALERT_THRESHOLD)
+        .where(
+            or_(
+                Case.fraud_score >= settings.ALERT_THRESHOLD,
+                Case.risk_category == "bec",
+            )
+        )
         .order_by(desc(Case.received_at))
         .limit(20)
     )
