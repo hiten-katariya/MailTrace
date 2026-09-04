@@ -30,3 +30,20 @@ def test_classify_clean_business_email():
     assert res.classification == "legitimate"
     assert res.sentiment_urgency_score == 0
     assert len(res.flagged_phrases) == 0
+
+def test_classify_subtle_bec_clean_headers():
+    import os
+    from backend.app.core.ingestion import parse_raw_email
+
+    fixture_path = os.path.join(os.path.dirname(__file__), "fixtures", "subtle_bec_clean_headers.eml")
+    with open(fixture_path, "rb") as f:
+        eml_bytes = f.read()
+
+    parsed = parse_raw_email(eml_bytes)
+    res = analyze_email_content(parsed.subject, parsed.body_text, parsed.sender)
+
+    assert res.classification == "bec"
+    assert len(res.bec_indicators) >= 2
+    assert any("updated account details" in ind.lower() for ind in res.bec_indicators)
+    assert any("banking details" in ind.lower() for ind in res.bec_indicators)
+

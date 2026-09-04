@@ -6,6 +6,7 @@ from backend.app.models.audit import User, AuditLog
 from backend.app.models.campaign import Campaign
 from backend.app.models.threat_intel import ThreatIntelMatch
 from backend.app.models.retention import RetentionPolicy
+from backend.app.models.attachment import Attachment
 
 __all__ = [
     "Case",
@@ -21,4 +22,5 @@ __all__ = [
     "Campaign",
     "ThreatIntelMatch",
     "RetentionPolicy",
+    "Attachment",
 ]

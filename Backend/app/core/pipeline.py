@@ -9,10 +9,12 @@ from backend.app.models.header import Headers, RelayHop
 from backend.app.models.content import NLPFinding, URLFinding
 from backend.app.models.origin import Geolocation, DomainIntel, IPReputationCache
 from backend.app.models.audit import AuditLog
+from backend.app.models.attachment import Attachment
 
 from backend.app.core.ingestion import ParsedEmail
 from backend.app.core.header_analysis import analyze_email_headers
 from backend.app.core.content_analysis import analyze_email_content
+from backend.app.core.attachment_analysis import analyze_attachments
 from backend.app.core.url_analysis import analyze_urls
 from backend.app.core.geolocation import geolocate_ip
 from backend.app.core.ip_reputation import query_abuseipdb
@@ -131,6 +133,22 @@ async def execute_case_pipeline(case_id: str, parsed_email: ParsedEmail, raw_eml
             progress["nlp_analysis"] = "done"
             progress["geolocation"] = "in_progress"
             case.pipeline_progress = progress
+
+            # STAGE 2.5: Attachment Analysis & Malware Inspection
+            attachment_findings = analyze_attachments(parsed_email.attachments)
+            for att in attachment_findings:
+                db_att = Attachment(
+                    case_id=case_id,
+                    filename=att.filename,
+                    declared_content_type=att.declared_content_type,
+                    detected_file_type=att.detected_file_type,
+                    file_size=att.file_size,
+                    file_hash=att.file_hash,
+                    is_flagged=att.is_flagged,
+                    flag_reason=att.flag_reason,
+                )
+                db.add(db_att)
+
             await db.commit()
 
             # STAGE 3: IP Geolocation & IP Reputation
@@ -203,6 +221,7 @@ async def execute_case_pipeline(case_id: str, parsed_email: ParsedEmail, raw_eml
                 domain_res=domain_res,
                 geo_res=geo_res,
                 ip_rep_res=ip_rep_res,
+                attachment_results=attachment_findings,
             )
 
             # Update Case record with final score and verdict

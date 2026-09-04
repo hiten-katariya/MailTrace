@@ -1,0 +1,23 @@
+From: "Billing Support" <billing@spoofed-payment.com>
+To: recipient@example.com
+Subject: Overdue Invoice PDF Attached
+Date: Fri, 04 Sep 2026 12:05:00 -0000
+Message-ID: <evil-exe-9988@spoofed-payment.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="BOUNDARY_DISGUISED_EXE"
+
+--BOUNDARY_DISGUISED_EXE
+Content-Type: text/plain; charset="utf-8"
+
+Your invoice is overdue. Please open the attached PDF immediately to review settlement terms.
+
+--BOUNDARY_DISGUISED_EXE
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="invoice_august_2026.pdf.exe"
+Content-Transfer-Encoding: base64
+
+TVqQAAMAAAAEAAAA//8AALgAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAyAAAAA4fug4AtAnNIbgBTM0hVGhpcyBwcm9ncmFtIGNhbm5vdCBiZSBydW4gaW4gRE9TIG1v
+ZGUuDQ0KJAAAAAAAAABQRQAATAEDAAAAAAAAAAAAAAAAAAAAAAAA
+
+--BOUNDARY_DISGUISED_EXE--

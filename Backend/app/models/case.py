@@ -63,3 +63,4 @@ class Case(Base):
     domain_intel: Mapped[Optional["DomainIntel"]] = relationship("DomainIntel", back_populates="case", cascade="all, delete-orphan", uselist=False)
     campaign: Mapped[Optional["Campaign"]] = relationship("Campaign", back_populates="cases")
     threat_intel_matches: Mapped[List["ThreatIntelMatch"]] = relationship("backend.app.models.threat_intel.ThreatIntelMatch", back_populates="case", cascade="all, delete-orphan")
+    attachments: Mapped[List["Attachment"]] = relationship("backend.app.models.attachment.Attachment", back_populates="case", cascade="all, delete-orphan")

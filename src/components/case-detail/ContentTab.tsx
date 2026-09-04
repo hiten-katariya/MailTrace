@@ -5,6 +5,7 @@ import {
   DollarSign,
   Link,
   ShieldAlert,
+  Paperclip,
 } from 'lucide-react';
 import { CaseContent } from '../../types/case';
 import { EvidenceCard } from '../common/EvidenceCard';
@@ -200,6 +201,74 @@ export const ContentTab: React.FC<ContentTabProps> = ({ content }) => {
           </div>
         )}
       </EvidenceCard>
+
+      {/* 5. Attachment Analysis & Payload Inspection */}
+      {content.attachments && content.attachments.length > 0 && (
+        <EvidenceCard
+          title="Extracted Email Attachments & Payload Inspection"
+          subtitle="Binary signature detection, macro identification, and double-extension camouflage analysis"
+          badge={
+            <span className="px-2 py-0.5 rounded text-[9px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/25">
+              {content.attachments.length} ATTACHMENT{content.attachments.length > 1 ? 'S' : ''} SCANNED
+            </span>
+          }
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-soc-subtle border-b border-slate-800/60 text-[10px] font-mono text-soc-text-dim uppercase tracking-wider">
+                  <th className="py-2 px-3">Filename & Hash</th>
+                  <th className="py-2 px-3">Declared Type</th>
+                  <th className="py-2 px-3">Detected Signature</th>
+                  <th className="py-2 px-3 w-48">Inspection Finding</th>
+                  <th className="py-2 px-3 w-24 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/40 text-xs font-mono">
+                {content.attachments.map((att, idx) => (
+                  <tr key={idx} className="hover:bg-soc-hover/50 transition-colors">
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-1.5 font-semibold text-slate-200">
+                        <Paperclip className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                        <span className="break-all">{att.filename}</span>
+                      </div>
+                      {att.file_hash && (
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5 break-all">
+                          SHA256: {att.file_hash.substring(0, 16)}...
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-300 text-[11px]">
+                      {att.declared_content_type || 'Unknown'}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span className="text-cyan-300 text-[11px] font-mono font-medium">
+                        {att.detected_file_type || 'Unknown'}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span className="text-slate-300 text-[10px] font-sans">
+                        {att.flag_reason || 'No malicious indicators or format camouflage identified.'}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      {att.is_flagged ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-300 border border-red-500/30">
+                          MALICIOUS
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                          CLEAN
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </EvidenceCard>
+      )}
     </div>
   );
 };

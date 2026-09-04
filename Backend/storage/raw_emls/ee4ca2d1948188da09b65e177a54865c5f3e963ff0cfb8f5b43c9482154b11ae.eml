@@ -1,0 +1,26 @@
+From: "Reports Department" <reports@verifiedcompany.com>
+To: recipient@example.com
+Subject: Monthly Financial Statement PDF
+Date: Fri, 04 Sep 2026 12:00:00 -0000
+Message-ID: <clean-pdf-12345@verifiedcompany.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="BOUNDARY_CLEAN_PDF"
+
+--BOUNDARY_CLEAN_PDF
+Content-Type: text/plain; charset="utf-8"
+
+Please find your verified monthly financial statement attached.
+
+--BOUNDARY_CLEAN_PDF
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="statement_september.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2Jq
+CjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPj4KZW5kb2Jq
+CjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIg
+NzkyXQo+PgplbmRvYmoKeHJlZgowIDQKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDEwIDAw
+MDAwIG4gCjAwMDAwMDAwNjAgMDAwMDAgbiAKMDAwMDAwMDExMSAwMDAwMCBuIAp0cmFpbGVyCjw8
+Ci9TaXplIDQKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjE5NQolJUVPRg==
+
+--BOUNDARY_CLEAN_PDF--

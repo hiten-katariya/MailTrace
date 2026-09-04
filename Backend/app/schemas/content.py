@@ -1,5 +1,16 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
+class AttachmentFindingSchema(BaseModel):
+    filename: str
+    declared_content_type: Optional[str] = None
+    detected_file_type: Optional[str] = None
+    file_size: Optional[int] = 0
+    file_hash: Optional[str] = None
+    is_flagged: bool = False
+    flag_reason: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 class URLFindingSchema(BaseModel):
     original: str
@@ -8,8 +19,7 @@ class URLFindingSchema(BaseModel):
     flagged: bool = False
     reason: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CaseContent(BaseModel):
     classification: str  # 'legitimate', 'suspicious', 'phishing', 'bec'
@@ -19,6 +29,6 @@ class CaseContent(BaseModel):
     flagged_phrases: List[str]
     bec_indicators: List[str]
     urls: List[URLFindingSchema]
+    attachments: List[AttachmentFindingSchema] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

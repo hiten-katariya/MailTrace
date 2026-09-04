@@ -7,13 +7,18 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report, accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
 DATA_PATHS = [
-    os.path.join("Backend", "Data", "Training", "combined_dataset.csv"),
-    os.path.join("backend", "data", "training", "combined_dataset.csv"),
+    os.path.join(PROJECT_ROOT, "data", "Training", "combined_dataset.csv"),
+    os.path.join(PROJECT_ROOT, "Data", "Training", "combined_dataset.csv"),
+    os.path.join("data", "Training", "combined_dataset.csv"),
+    os.path.join("Data", "Training", "combined_dataset.csv"),
 ]
 MODEL_OUTPUT_PATHS = [
-    os.path.join("Backend", "models", "phishing_classifier.joblib"),
-    os.path.join("backend", "models", "phishing_classifier.joblib"),
+    os.path.join(SCRIPT_DIR, "phishing_classifier.joblib"),
+    os.path.join(PROJECT_ROOT, "models", "phishing_classifier.joblib"),
 ]
 for p in MODEL_OUTPUT_PATHS:
     os.makedirs(os.path.dirname(p), exist_ok=True)
@@ -68,21 +73,22 @@ def train_model():
     print("[+] Building TF-IDF + Multi-Layer Perceptron (MLP) architecture...")
     pipeline = Pipeline([
         ("tfidf", TfidfVectorizer(
-            max_features=12000,
+            max_features=25000,
             ngram_range=(1, 2),
+            token_pattern=r"(?u)\b\w[\w\.\-]+\w\b|\b\w+\b",
             stop_words=custom_stopwords,
             sublinear_tf=True,
             strip_accents="unicode",
             min_df=2,
         )),
         ("clf", MLPClassifier(
-            hidden_layer_sizes=(128, 64),
+            hidden_layer_sizes=(256, 128),
             activation="relu",
             solver="adam",
             alpha=1e-4,
             batch_size=256,
             learning_rate_init=0.001,
-            max_iter=30,
+            max_iter=35,
             early_stopping=True,
             validation_fraction=0.1,
             n_iter_no_change=4,

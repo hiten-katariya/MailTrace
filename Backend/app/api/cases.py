@@ -14,6 +14,7 @@ from backend.app.models.header import Headers, RelayHop
 from backend.app.models.content import NLPFinding, URLFinding
 from backend.app.models.origin import Geolocation, DomainIntel, IPReputationCache
 from backend.app.models.audit import AuditLog
+from backend.app.models.attachment import Attachment
 
 from backend.app.schemas.case import (
     CasesResponse,
@@ -30,7 +31,7 @@ from backend.app.schemas.header import (
     DMARCSchema,
     RelayHopSchema,
 )
-from backend.app.schemas.content import CaseContent, URLFindingSchema
+from backend.app.schemas.content import CaseContent, URLFindingSchema, AttachmentFindingSchema
 from backend.app.schemas.origin import CaseOrigin, GeolocationSchema, DomainIntelSchema
 from backend.app.schemas.stats import (
     CasesStatsResponse,
@@ -651,6 +652,22 @@ async def get_case_content(case_id: str, db: AsyncSession = Depends(get_db)):
         for u in urls_db
     ]
 
+    attachments_result = await db.execute(select(Attachment).where(Attachment.case_id == case_id))
+    attachments_db = attachments_result.scalars().all()
+
+    attachments_schema = [
+        AttachmentFindingSchema(
+            filename=a.filename,
+            declared_content_type=a.declared_content_type,
+            detected_file_type=a.detected_file_type,
+            file_size=a.file_size or 0,
+            file_hash=a.file_hash,
+            is_flagged=a.is_flagged,
+            flag_reason=a.flag_reason,
+        )
+        for a in attachments_db
+    ]
+
     return CaseContent(
         classification=nlp_db.classification,
         classification_confidence=nlp_db.classification_confidence,
@@ -659,6 +676,7 @@ async def get_case_content(case_id: str, db: AsyncSession = Depends(get_db)):
         flagged_phrases=nlp_db.flagged_phrases or [],
         bec_indicators=nlp_db.bec_indicators or [],
         urls=urls_schema,
+        attachments=attachments_schema,
     )
 
 

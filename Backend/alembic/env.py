@@ -1,3 +1,12 @@
+import sys, os
+sys.path.insert(0, os.path.abspath("."))
+if "backend" not in sys.modules:
+    try:
+        import backend
+    except ModuleNotFoundError:
+        import Backend as backend
+        sys.modules["backend"] = backend
+
 import asyncio
 from logging.config import fileConfig
 from sqlalchemy import pool, engine_from_config

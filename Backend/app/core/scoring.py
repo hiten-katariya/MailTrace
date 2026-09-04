@@ -51,6 +51,7 @@ def calculate_composite_score(
     domain_res: DomainIntelResult,
     geo_res: GeolocationResult,
     ip_rep_res: IPReputationResult,
+    attachment_results: Optional[List[Any]] = None,
     # Phase 4 extension hooks
     correlation_data: Optional[Dict[str, Any]] = None,
     threat_intel_matches: Optional[List[Dict[str, Any]]] = None,
@@ -58,7 +59,7 @@ def calculate_composite_score(
     signals: List[ScoreSignal] = []
 
     # ==========================================
-    # CATEGORY 1: Protocol Authentication (Max 25 pts)
+    # CATEGORY 1: Protocol Authentication (Max 20 pts)
     # ==========================================
     cat1_signals = []
     
@@ -66,8 +67,8 @@ def calculate_composite_score(
     if headers_res.dmarc_result == "fail":
         cat1_signals.append(ScoreSignal(
             signal="DMARC Policy Failure",
-            weight=15,
-            contribution=15,
+            weight=12,
+            contribution=12,
             reason="MTA disposition rejected/quarantined transmission due to unaligned sender domain policy.",
             sourceModule="header",
         ))
@@ -76,16 +77,16 @@ def calculate_composite_score(
     if headers_res.spf_result == "fail":
         cat1_signals.append(ScoreSignal(
             signal="SPF Validation Failure",
-            weight=5,
-            contribution=5,
+            weight=4,
+            contribution=4,
             reason="Sending MTA IP is not authorized in published DNS SPF TXT record.",
             sourceModule="header",
         ))
     elif headers_res.spf_result == "softfail":
         cat1_signals.append(ScoreSignal(
             signal="SPF Softfail Anomaly",
-            weight=5,
-            contribution=3,
+            weight=4,
+            contribution=2,
             reason="Sending MTA IP produced ~all softfail policy match.",
             sourceModule="header",
         ))
@@ -94,8 +95,8 @@ def calculate_composite_score(
     if headers_res.dkim_result == "fail" or (not headers_res.dkim_signature_present and headers_res.dmarc_result == "fail"):
         cat1_signals.append(ScoreSignal(
             signal="DKIM Cryptographic Signature Failure",
-            weight=5,
-            contribution=5,
+            weight=4,
+            contribution=4,
             reason="Cryptographic DKIM public key signature missing or failed RSA validation.",
             sourceModule="header",
         ))
@@ -115,8 +116,8 @@ def calculate_composite_score(
             sourceModule="header",
         ))
 
-    # Normalize Cat 1 to max 25
-    cat1_total = min(25, sum(s.contribution for s in cat1_signals))
+    # Normalize Cat 1 to max 20
+    cat1_total = min(20, sum(s.contribution for s in cat1_signals))
     signals.extend(cat1_signals)
 
     # ==========================================
@@ -288,7 +289,7 @@ def calculate_composite_score(
     signals.extend(cat4_signals)
 
     # ==========================================
-    # CATEGORY 5: URL & Payload De-obfuscation (Max 15 pts)
+    # CATEGORY 5: URL & Payload De-obfuscation (Max 10 pts)
     # ==========================================
     cat5_signals = []
     
@@ -311,8 +312,46 @@ def calculate_composite_score(
                 sourceModule="nlp",
             ))
 
-    cat5_total = min(15, sum(s.contribution for s in cat5_signals))
+    cat5_total = min(10, sum(s.contribution for s in cat5_signals))
     signals.extend(cat5_signals)
+
+    # ==========================================
+    # CATEGORY 6: Attachment Risk (Max 10 pts)
+    # ==========================================
+    cat6_signals = []
+    if attachment_results:
+        for att in attachment_results:
+            is_flagged = getattr(att, "is_flagged", False) if not isinstance(att, dict) else att.get("is_flagged", False)
+            flag_reason = getattr(att, "flag_reason", None) if not isinstance(att, dict) else att.get("flag_reason")
+            filename = getattr(att, "filename", "attachment") if not isinstance(att, dict) else att.get("filename", "attachment")
+
+            if is_flagged and flag_reason:
+                if "known malicious" in flag_reason.lower():
+                    contrib = 10
+                    sig_name = "Known Malicious Attachment Signature"
+                elif "double extension" in flag_reason.lower() or "camouflage" in flag_reason.lower() or "spoofing" in flag_reason.lower():
+                    contrib = 8
+                    sig_name = "Deceptive / Disguised Executable Attachment"
+                elif "macro-enabled" in flag_reason.lower():
+                    contrib = 6
+                    sig_name = "Macro-Enabled Document Payload"
+                elif "executable" in flag_reason.lower():
+                    contrib = 8
+                    sig_name = "High-Risk Executable File Attachment"
+                else:
+                    contrib = 5
+                    sig_name = "Suspicious Attachment Finding"
+
+                cat6_signals.append(ScoreSignal(
+                    signal=sig_name,
+                    weight=10,
+                    contribution=contrib,
+                    reason=f"Attachment '{filename}': {flag_reason}.",
+                    sourceModule="attachment",
+                ))
+
+    cat6_total = min(10, sum(s.contribution for s in cat6_signals))
+    signals.extend(cat6_signals)
 
     # ==========================================
     # PHASE 4 EXTENSION HOOKS (Optional)
@@ -339,7 +378,7 @@ def calculate_composite_score(
     # FINAL SCORE AGGREGATION & BOUNDING
     # ==========================================
     # Sum of normalized categories (strictly guaranteed <= 100)
-    raw_total_score = cat1_total + cat2_total + cat3_total + cat4_total + cat5_total
+    raw_total_score = cat1_total + cat2_total + cat3_total + cat4_total + cat5_total + cat6_total
     fraud_score = min(100, max(0, raw_total_score))
 
     # Deduce Risk Category
@@ -368,6 +407,8 @@ def calculate_composite_score(
         reasons.append(f"{domain_res.domain_age_days}-day-old domain registration")
     if flagged_urls:
         reasons.append("deceptive lookalike URLs")
+    if any(getattr(a, "is_flagged", False) if not isinstance(a, dict) else a.get("is_flagged", False) for a in (attachment_results or [])):
+        reasons.append("suspicious attachment payload")
     if content_res.bec_indicators:
         reasons.append("financial payment diversion language")
     elif content_res.flagged_phrases:

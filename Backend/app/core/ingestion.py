@@ -113,8 +113,9 @@ def parse_raw_email(content_bytes: bytes) -> ParsedEmail:
             content_type = part.get_content_type()
             content_disposition = str(part.get("Content-Disposition", ""))
 
-            if "attachment" in content_disposition:
-                filename = part.get_filename() or "attachment"
+            filename = part.get_filename()
+            if "attachment" in content_disposition or (filename and content_type not in ["text/plain", "text/html"]):
+                filename = filename or "attachment"
                 payload = part.get_payload(decode=True)
                 att_size = len(payload) if payload else 0
                 att_hash = hashlib.sha256(payload).hexdigest() if payload else ""
@@ -123,6 +124,7 @@ def parse_raw_email(content_bytes: bytes) -> ParsedEmail:
                     "content_type": content_type,
                     "size": att_size,
                     "sha256": att_hash,
+                    "payload_bytes": payload or b"",
                 })
             elif content_type == "text/plain":
                 try:

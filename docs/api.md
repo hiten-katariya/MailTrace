@@ -231,6 +231,17 @@ NLP/content analysis results.
       "flagged": true,
       "reason": "lookalike domain"
     }
+  ],
+  "attachments": [
+    {
+      "filename": "invoice.pdf.exe",
+      "declared_content_type": "application/pdf",
+      "detected_file_type": "application/x-dosexec",
+      "file_size": 45056,
+      "file_hash": "a1b2c3d4...",
+      "is_flagged": true,
+      "flag_reason": "Deceptive double extension detected: disguised as '.pdf' but executes as '.exe'; Payload camouflage: file extension '.exe' hides PE executable binary (MZ header detected)"
+    }
   ]
 }
 ```

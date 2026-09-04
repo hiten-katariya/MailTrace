@@ -69,12 +69,23 @@ export interface FlaggedUrl {
   reputation_score?: number;
 }
 
+export interface AttachmentFinding {
+  filename: string;
+  declared_content_type?: string;
+  detected_file_type?: string;
+  file_size: number;
+  file_hash: string;
+  is_flagged: boolean;
+  flag_reason?: string;
+}
+
 export interface CaseContent {
   classification: RiskCategory;
   classification_confidence: number;
   flagged_phrases: string[];
   bec_indicators: string[];
   urls: FlaggedUrl[];
+  attachments?: AttachmentFinding[];
   sentiment_urgency_score?: number;
   impersonation_target?: string;
 }

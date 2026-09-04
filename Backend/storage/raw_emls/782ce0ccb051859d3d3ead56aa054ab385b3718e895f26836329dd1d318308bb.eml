@@ -1,0 +1,23 @@
+From: "Corporate Planning" <planning@finance-partner.com>
+To: recipient@example.com
+Subject: Urgent: Review Quarterly Macros & Financials
+Date: Fri, 04 Sep 2026 12:10:00 -0000
+Message-ID: <macro-doc-5544@finance-partner.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="BOUNDARY_MACRO_DOC"
+
+--BOUNDARY_MACRO_DOC
+Content-Type: text/plain; charset="utf-8"
+
+Attached are the quarterly financials with enabled reporting macros.
+
+--BOUNDARY_MACRO_DOC
+Content-Type: application/vnd.ms-word.document.macroEnabled.12
+Content-Disposition: attachment; filename="Quarterly_Financials.docm"
+Content-Transfer-Encoding: base64
+
+UEsDBBQAAAAIAAAAAAAAAAAAAAAAAAAAAAALAAAAd29yZC92YmFQcm9qZWN0LmJpbtMzNNbTy8nP
+T85NzStxSc1Lzk8tKEpNLdI31jPUAwBQSwECFAAUAAAACAAAAAAAAAAAAAAAAAAAAAAACAAAAAAA
+AAAAAAAAtIEAAAAAd29yZC92YmFQcm9qZWN0LmJpblBLBQYAAAAAAQABAEAAAABPAAAAAAA=
+
+--BOUNDARY_MACRO_DOC--

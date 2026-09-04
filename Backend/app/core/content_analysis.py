@@ -90,6 +90,12 @@ BEC_PATTERNS = [
     r'(?:updated|new|revised)\s+(?:banking|remittance|clearing|settlement|payment|treasury)\s+(?:instructions|details|coordinates|account)',
     r'(?:clearing\s+bank|clearing\s+account|treasury\s+account|beneficiary\s+account|remittance\s+account)',
     r'(?:remit|forward)\s+(?:to\s+(?:the\s+)?following|to\s+our\s+new)\s+account',
+    # Broadened indirect payment diversion & compromised account pretexts:
+    r'(?:updated|changed|new|revised)\s+(?:account|bank(?:ing)?)\s+(?:details|information|info|number)',
+    r'(?:use|switch\s+to|send\s+to)\s+(?:the\s+)?(?:new|updated|following|below)\s+(?:account|bank)',
+    r'(?:new|updated)\s+(?:wiring|transfer|payment)\s+(?:instructions|info|details)',
+    r'(?:account|bank)\s+(?:details|information)\s+(?:have\s+)?(?:changed|been\s+updated)',
+    r'transfer\s+(?:for\s+this\s+month|this\s+month[\'’]?s\s+transfer)',
 ]
 
 class ContentAnalysisResult:

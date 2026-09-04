@@ -32,6 +32,24 @@ def get_organizational_domain(domain: str) -> str:
         return f"{ext.domain}.{ext.suffix}".lower()
     return ext.domain.lower() if ext.domain else domain.lower()
 
+TRUSTED_RECEIVING_PROVIDERS = [
+    r'^mx\.google\.com$',
+    r'^.*\.google\.com$',
+    r'^.*\.protection\.outlook\.com$',
+    r'^.*\.olc\.protection\.outlook\.com$',
+    r'^.*\.mail\.protection\.outlook\.com$',
+    r'^.*\.messagingengine\.com$',
+    r'^.*\.mimecast\.com$',
+    r'^.*\.fireeyecloud\.com$',
+    r'^.*\.pphosted\.com$',
+    r'^.*\.barracudanetworks\.com$',
+    r'^.*\.cisco\.com$',
+    r'^.*\.cloudflare\.net$',
+    r'^localhost$',
+    r'^127\.0\.0\.1$',
+    r'^mailtrace.*$',
+]
+
 def extract_auth_results_from_headers(
     raw_headers_dict: Dict[str, Any],
     raw_eml_bytes: bytes,
@@ -39,9 +57,11 @@ def extract_auth_results_from_headers(
 ) -> Tuple[Dict[str, Optional[str]], List[str]]:
     """
     RFC 8601 / RFC 7601 Trust Model:
-    1. Only the topmost (outermost) Authentication-Results header added by the boundary
-       receiving MTA is considered. Any inner/subsequent headers are discarded.
-    2. The header's authserv-id MUST match the receiving MTA of a boundary Received hop.
+    1. Only an Authentication-Results (or ARC-Authentication-Results) header added by the
+       outermost receiving mail server closest to our infrastructure is trusted.
+    2. The header's authserv-id MUST match the receiving MTA of a boundary Received hop
+       (or be a recognized trusted provider that appears as a receiving server in the relay trajectory).
+       Any header from deeper in the message or from an unverified server is rejected as forged.
     3. Any claimed DKIM pass is cryptographically cross-checked against raw_eml_bytes to prevent
        sender-forged authentication headers.
        
@@ -56,7 +76,7 @@ def extract_auth_results_from_headers(
     }
     anomalies: List[str] = []
 
-    # 1. Extract all receiving MTAs from Received: headers
+    # 1. Extract all receiving MTAs from Received: headers (topmost is boundary receiving MTA)
     received_raw = raw_headers_dict.get("Received", [])
     if isinstance(received_raw, str):
         received_raw = [received_raw]
@@ -67,16 +87,18 @@ def extract_auth_results_from_headers(
         if m_by:
             receiving_mtas.append(m_by.group(1).lower().rstrip(';,'))
 
-    # 2. Extract ONLY the topmost Authentication-Results header (outermost hop)
-    auth_raw = raw_headers_dict.get("Authentication-Results")
-    topmost_auth = None
-    if isinstance(auth_raw, list):
-        # Topmost is index 0
-        topmost_auth = str(auth_raw[0])
-    elif auth_raw:
-        topmost_auth = str(auth_raw)
+    boundary_mta = receiving_mtas[0] if receiving_mtas else None
 
-    if not topmost_auth:
+    # 2. Collect all candidate Authentication-Results headers (outermost first)
+    auth_candidates: List[str] = []
+    for key in ["Authentication-Results", "ARC-Authentication-Results"]:
+        val = raw_headers_dict.get(key)
+        if isinstance(val, list):
+            auth_candidates.extend([str(item) for item in val if item])
+        elif val:
+            auth_candidates.append(str(val))
+
+    if not auth_candidates:
         # Fall back to Received-SPF if stamped by boundary MTA
         recv_spf = str(raw_headers_dict.get("Received-SPF", "") or "")
         if recv_spf:
@@ -85,36 +107,58 @@ def extract_auth_results_from_headers(
                 verdicts["spf"] = m.group(1).lower()
         return verdicts, anomalies
 
-    # 3. Extract authserv-id from topmost Authentication-Results (RFC 8601 Section 2.2)
-    parts = topmost_auth.split(";", 1)
-    authserv_id = parts[0].strip().split()[0].lower() if parts[0].strip() else ""
+    # 3. Evaluate each Authentication-Results header against the receiving MTA trust boundary
+    trusted_auth_header: Optional[str] = None
 
-    # 4. Verify authserv-id against receiving MTAs in the relay trajectory
-    is_trusted_mta = False
-    if not receiving_mtas:
-        # Email has no Received hops (e.g. injected directly by sender)
-        is_trusted_mta = False
-    else:
-        for mta in receiving_mtas:
-            if (
-                authserv_id == mta
-                or mta.endswith("." + authserv_id)
-                or authserv_id.endswith("." + mta)
-                or (get_organizational_domain(authserv_id) and get_organizational_domain(authserv_id) == get_organizational_domain(mta))
+    for candidate in auth_candidates:
+        # In ARC-Authentication-Results, header begins with instance tag 'i=1; authserv-id; ...'
+        header_content = candidate.strip()
+        if re.match(r'^i=\d+\s*;', header_content, re.IGNORECASE):
+            header_content = header_content.split(";", 1)[1].strip()
+
+        parts = header_content.split(";", 1)
+        authserv_id = parts[0].strip().split()[0].lower() if parts[0].strip() else ""
+
+        is_trusted = False
+        if not receiving_mtas:
+            # Email has no Received hops (e.g. forged directly into header block by sender)
+            is_trusted = False
+        else:
+            # Check A: Does authserv-id match the boundary receiving MTA?
+            if boundary_mta and (
+                authserv_id == boundary_mta
+                or boundary_mta.endswith("." + authserv_id)
+                or authserv_id.endswith("." + boundary_mta)
+                or (get_organizational_domain(authserv_id) and get_organizational_domain(authserv_id) == get_organizational_domain(boundary_mta))
             ):
-                is_trusted_mta = True
-                break
+                is_trusted = True
+            # Check B: Is authserv-id a well-known trusted provider AND present in the receiving MTA trajectory?
+            elif any(re.match(pattern, authserv_id, re.IGNORECASE) for pattern in TRUSTED_RECEIVING_PROVIDERS):
+                for mta in receiving_mtas:
+                    if (
+                        authserv_id == mta
+                        or mta.endswith("." + authserv_id)
+                        or authserv_id.endswith("." + mta)
+                        or (get_organizational_domain(authserv_id) and get_organizational_domain(authserv_id) == get_organizational_domain(mta))
+                    ):
+                        is_trusted = True
+                        break
 
-    # If authserv-id cannot be verified against receiving hops, treat as untrusted/forged
-    if not is_trusted_mta:
-        mta_display = f" ({', '.join(receiving_mtas[:2])})" if receiving_mtas else " (no Received hops)"
-        anomalies.append(
-            f"Forged or untrusted Authentication-Results header detected: authserv-id '{authserv_id}' "
-            f"does not match receiving boundary MTA{mta_display}"
-        )
+        if is_trusted:
+            if trusted_auth_header is None:
+                trusted_auth_header = candidate
+        else:
+            mta_display = f" (boundary: '{boundary_mta}')" if boundary_mta else " (no Received hops)"
+            anomalies.append(
+                f"Forged or untrusted Authentication-Results header detected: authserv-id '{authserv_id}' "
+                f"does not match receiving boundary MTA{mta_display}"
+            )
+
+    if not trusted_auth_header:
         return verdicts, anomalies
 
-    # 5. Parse claims from verified topmost Authentication-Results
+    # 4. Parse claims ONLY from the verified trusted boundary Authentication-Results header
+    parts = trusted_auth_header.split(";", 1)
     auth_body = parts[1] if len(parts) > 1 else ""
 
     # Check SPF
@@ -267,24 +311,34 @@ def query_dns_txt(domain: str) -> List[str]:
         pass
     return records
 
-def check_spf(sender_domain: Optional[str], origin_ip: Optional[str], raw_eml_bytes: bytes) -> Tuple[str, Optional[str]]:
+def check_spf(sender_domain: Optional[str], origin_ip: Optional[str], raw_eml_bytes: bytes, client_ip_hint: Optional[str] = None) -> Tuple[str, Optional[str]]:
     if not sender_domain:
         return "none", None
 
-    if not origin_ip or origin_ip.startswith("127."):
+    # Prefer external client IP from boundary Received-SPF if origin_ip is internal/missing
+    eval_ip = origin_ip
+    if (not eval_ip or eval_ip.startswith("127.") or eval_ip.startswith("10.") or eval_ip.startswith("192.168.")) and client_ip_hint:
+        eval_ip = client_ip_hint
+
+    if not eval_ip or eval_ip.startswith("127."):
         return "neutral", None
 
     # 1. Primary RFC-compliant recursive SPF evaluation via pyspf
     if spf and hasattr(spf, 'check2'):
         try:
-            result, code, explanation = spf.check2(i=origin_ip, s=f"postmaster@{sender_domain}", h=sender_domain)
-            res_str = result.lower()
+            res = spf.check2(i=eval_ip, s=f"postmaster@{sender_domain}", h=sender_domain)
+            if isinstance(res, (tuple, list)):
+                res_str = str(res[0]).lower()
+                explanation = str(res[1]) if len(res) > 1 else ""
+            else:
+                res_str = str(res).lower()
+                explanation = ""
             if res_str in ["pass", "fail", "softfail", "neutral", "none"]:
                 return res_str, f"pyspf: {explanation}"
         except Exception:
             pass
 
-    # 2. Heuristic fallback using direct DNS TXT query if pyspf is unavailable or fails
+    # 2. Recursive fallback using direct DNS TXT queries (supports include: and redirect=)
     spf_record = None
     txt_records = query_dns_txt(sender_domain)
     for rec in txt_records:
@@ -295,9 +349,31 @@ def check_spf(sender_domain: Optional[str], origin_ip: Optional[str], raw_eml_by
     if not spf_record:
         return "none", None
 
-    if f"ip4:{origin_ip}" in spf_record or "+all" in spf_record:
+    if f"ip4:{eval_ip}" in spf_record or "+all" in spf_record:
         return "pass", spf_record
-    elif "-all" in spf_record:
+
+    # Follow redirect=
+    redirect_match = re.search(r'redirect=([^\s]+)', spf_record)
+    if redirect_match:
+        redir_target = redirect_match.group(1)
+        redir_records = query_dns_txt(redir_target)
+        for r_rec in redir_records:
+            if r_rec.startswith("v=spf1"):
+                if f"ip4:{eval_ip}" in r_rec or "+all" in r_rec:
+                    return "pass", f"redirect={redir_target}: {r_rec}"
+                for r_inc in re.findall(r'include:([^\s]+)', r_rec):
+                    for r_inc_rec in query_dns_txt(r_inc):
+                        if r_inc_rec.startswith("v=spf1") and f"ip4:{eval_ip}" in r_inc_rec:
+                            return "pass", f"included from {r_inc}: {r_inc_rec}"
+
+    # Follow include:
+    for include_match in re.findall(r'include:([^\s]+)', spf_record):
+        inc_records = query_dns_txt(include_match)
+        for inc_rec in inc_records:
+            if inc_rec.startswith("v=spf1") and f"ip4:{eval_ip}" in inc_rec:
+                return "pass", f"included from {include_match}: {inc_rec}"
+
+    if "-all" in spf_record:
         return "fail", spf_record
     elif "~all" in spf_record:
         return "softfail", spf_record
@@ -391,11 +467,19 @@ def analyze_email_headers(
     return_path_dom = return_path_email.split("@")[-1].lower() if "@" in return_path_email else None
     eval_spf_domain = return_path_dom or sender_domain
 
+    # Extract client-ip hint from Received-SPF header if present
+    client_ip_hint = None
+    recv_spf_header = str(raw_headers_dict.get("Received-SPF", "") or "")
+    if recv_spf_header:
+        m_ip = re.search(r'client-ip=([0-9\.]+)', recv_spf_header)
+        if m_ip:
+            client_ip_hint = m_ip.group(1)
+
     if parsed_auth["spf"]:
         spf_res = parsed_auth["spf"]
         spf_rec = "Received-SPF header verified"
     else:
-        spf_res, spf_rec = check_spf(eval_spf_domain, earliest_origin_ip, raw_eml_bytes)
+        spf_res, spf_rec = check_spf(eval_spf_domain, earliest_origin_ip, raw_eml_bytes, client_ip_hint=client_ip_hint)
 
     if parsed_auth["dkim"]:
         dkim_res = parsed_auth["dkim"]
