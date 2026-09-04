@@ -1,0 +1,20 @@
+From: "IT Support Helpdesk" <support@legit-company.com>
+To: "Employee" <emp@legit-company.com>
+Subject: Critical Notice: Password Expiration within 24 Hours
+Date: Wed, 02 Sep 2026 11:00:00 +0000
+Message-ID: <it.notice.291039@gateway-relay.com>
+Return-Path: <support@legit-company.com>
+Reply-To: <credential-harvest@stealth-inbox.ru>
+Received: from gateway-relay.com (gateway-relay.com [198.51.100.88])
+	by in.legit-company.com (Postfix) with ESMTP id 9A772B1
+	for <emp@legit-company.com>; Wed, 02 Sep 2026 11:00:10 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Colleague,
+
+Your corporate single-sign-on (SSO) password expires today.
+
+Action is required immediately. To prevent account deactivation and loss of email access, reply directly to this email or verify your credentials now.
+
+IT Security Operations

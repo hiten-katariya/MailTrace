@@ -23,6 +23,8 @@ from backend.app.schemas.case import (
     IngestResponse,
     CaseStatusResponse,
     ScoreSignal,
+    BatchDeleteRequest,
+    DeleteCaseResponse,
 )
 from backend.app.schemas.header import (
     CaseHeaders,
@@ -837,3 +839,88 @@ async def get_case_correlation(case_id: str, db: AsyncSession = Depends(get_db))
         attribution_confidence=case.attribution_confidence or "low",
         attribution_reason=case.verdict_summary,
     )
+
+
+# =======================================================
+# 12. Delete Single Case: DELETE /cases/{id}
+# =======================================================
+@router.delete("/cases/{case_id}", response_model=DeleteCaseResponse)
+async def delete_case(case_id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Case).where(Case.id == case_id))
+    case = result.scalar_one_or_none()
+    if not case:
+        raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
+
+    # Clean up raw .eml file on disk if exists
+    if case.raw_file_path and os.path.exists(case.raw_file_path):
+        try:
+            os.remove(case.raw_file_path)
+        except Exception as e:
+            print(f"Warning: could not delete raw file {case.raw_file_path}: {e}")
+
+    # Record audit log
+    audit_entry = AuditLog(
+        username="analyst",
+        action="delete_case",
+        case_id=case.id,
+        details=f"Deleted case {case.id} (Subject: '{case.subject[:50]}')",
+    )
+    db.add(audit_entry)
+
+    # Cascade delete in database
+    await db.delete(case)
+    await db.commit()
+
+    return DeleteCaseResponse(
+        success=True,
+        message=f"Case {case_id} successfully deleted",
+        case_id=case_id,
+        deleted_count=1,
+    )
+
+
+# =======================================================
+# 13. Batch Delete Cases: POST /cases/batch-delete
+# =======================================================
+@router.post("/cases/batch-delete", response_model=DeleteCaseResponse)
+async def batch_delete_cases(
+    payload: BatchDeleteRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    if not payload.case_ids:
+        return DeleteCaseResponse(
+            success=True,
+            message="No case IDs provided",
+            deleted_count=0,
+        )
+
+    result = await db.execute(select(Case).where(Case.id.in_(payload.case_ids)))
+    cases_to_delete = result.scalars().all()
+    deleted_ids = []
+
+    for c in cases_to_delete:
+        if c.raw_file_path and os.path.exists(c.raw_file_path):
+            try:
+                os.remove(c.raw_file_path)
+            except Exception:
+                pass
+        deleted_ids.append(c.id)
+        await db.delete(c)
+
+    if deleted_ids:
+        audit_entry = AuditLog(
+            username="analyst",
+            action="batch_delete_cases",
+            case_id=deleted_ids[0],
+            details=f"Batch deleted {len(deleted_ids)} cases: {', '.join(deleted_ids[:5])}",
+        )
+        db.add(audit_entry)
+        await db.commit()
+
+    return DeleteCaseResponse(
+        success=True,
+        message=f"Successfully deleted {len(deleted_ids)} cases",
+        case_id=deleted_ids[0] if deleted_ids else None,
+        deleted_count=len(deleted_ids),
+    )
+

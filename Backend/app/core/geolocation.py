@@ -38,18 +38,38 @@ def get_mmdb_path() -> Optional[str]:
             return c
     return None
 
+import ipaddress
+
 def geolocate_ip(ip: str) -> GeolocationResult:
-    if not ip or ip.startswith("127.") or ip.startswith("10.") or ip.startswith("192.168.") or ip == "localhost":
+    if not ip or ip == "localhost":
+        ip = "127.0.0.1"
+
+    # Validate that IP string is well-formed IPv4 or IPv6
+    try:
+        parsed_ip = ipaddress.ip_address(ip)
+        if parsed_ip.is_loopback or parsed_ip.is_private:
+            return GeolocationResult(
+                originating_ip=ip,
+                country="Local Loopback" if parsed_ip.is_loopback else "Private Network",
+                region="Private Network",
+                city="Internal Node",
+                latitude=0.0,
+                longitude=0.0,
+                precision_confidence="internal: high",
+                isp="Internal / Loopback",
+                asn="AS0",
+            )
+    except ValueError:
         return GeolocationResult(
-            originating_ip=ip or "127.0.0.1",
-            country="Local Loopback",
-            region="Private Network",
-            city="Internal Node",
-            latitude=0.0,
-            longitude=0.0,
-            precision_confidence="internal: high",
-            isp="Internal / Loopback",
-            asn="AS0",
+            originating_ip=ip,
+            country="Unknown Country",
+            region="Unknown Region",
+            city="Unknown City",
+            latitude=None,
+            longitude=None,
+            precision_confidence="country: low, city: low",
+            isp="Invalid / Unroutable IP",
+            asn=None,
         )
 
     mmdb_path = get_mmdb_path()

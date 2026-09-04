@@ -1,0 +1,30 @@
+Received: by mx.google.com with SMTPS id legit-hop-1234 for <cfo@clientcompany.com>;
+        Fri, 04 Sep 2026 11:30:00 -0700 (PDT)
+Received: from mail-relay.acmecorp.com (mail-relay.acmecorp.com. [209.85.220.41])
+        by mx.google.com with ESMTP id relay-xyz-987;
+        Fri, 04 Sep 2026 11:29:58 -0700 (PDT)
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@acmecorp.com header.s=google header.b=AbCdEfGh;
+       spf=pass (google.com: domain of sarah.finance@acmecorp.com designates 209.85.220.41 as permitted sender) smtp.mailfrom=sarah.finance@acmecorp.com;
+       dmarc=pass (p=REJECT sp=REJECT dis=none) header.from=acmecorp.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=acmecorp.com; s=google; t=1725450000;
+        h=to:from:subject:date:message-id:mime-version;
+        bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+        b=AbCdEfGhIjKlMnOpQrStUvWxYz0123456789+DummySignatureForTestingPurposesOnly=
+From: "Sarah Jenkins" <sarah.finance@acmecorp.com>
+To: "Michael Chen" <cfo@clientcompany.com>
+Subject: Monthly Settlement Invoice & Payment Instructions
+Date: Fri, 04 Sep 2026 11:29:50 -0700
+Message-ID: <invoice-settle-20260904@acmecorp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+Hi Michael,
+
+Please use the updated account details for this month's transfer. 
+The new banking details have been confirmed by our treasury department for all future disbursements.
+
+Best regards,
+Sarah Jenkins
+Finance & Accounts | Acme Corporation

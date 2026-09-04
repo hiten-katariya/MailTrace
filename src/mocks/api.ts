@@ -142,6 +142,90 @@ export async function getCases(params: CasesQueryParams = {}): Promise<CasesResp
 }
 
 /**
+ * DELETE /cases/{case_id}
+ */
+export async function deleteCase(caseId: string): Promise<{ success: boolean; message: string; case_id: string }> {
+  if (!USE_MOCKS) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/cases/${caseId}`, {
+        method: 'DELETE',
+      });
+      if (resp.ok) {
+        casesStore = casesStore.filter((c) => c.detail.case_id !== caseId);
+        return await resp.json();
+      }
+    } catch (e) {
+      console.warn(`Backend DELETE /cases/${caseId} failed, falling back to local store:`, e);
+    }
+  }
+
+  await delay(120);
+  casesStore = casesStore.filter((c) => c.detail.case_id !== caseId);
+
+  auditStore.unshift({
+    id: `audit-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    user: 'analyst',
+    action: 'delete_case',
+    case_id: caseId,
+    details: `Deleted case ${caseId} from incident queue`,
+  });
+
+  return {
+    success: true,
+    message: `Case ${caseId} successfully deleted`,
+    case_id: caseId,
+  };
+}
+
+/**
+ * POST /cases/batch-delete
+ */
+export async function deleteCases(caseIds: string[]): Promise<{ success: boolean; deleted_count: number; case_ids: string[] }> {
+  if (!caseIds || caseIds.length === 0) {
+    return { success: true, deleted_count: 0, case_ids: [] };
+  }
+
+  if (!USE_MOCKS) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/cases/batch-delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ case_ids: caseIds }),
+      });
+      if (resp.ok) {
+        const idSet = new Set(caseIds);
+        casesStore = casesStore.filter((c) => !idSet.has(c.detail.case_id));
+        return await resp.json();
+      }
+    } catch (e) {
+      console.warn('Backend POST /cases/batch-delete failed, falling back to local store:', e);
+    }
+  }
+
+  await delay(150);
+  const idSet = new Set(caseIds);
+  const prevLen = casesStore.length;
+  casesStore = casesStore.filter((c) => !idSet.has(c.detail.case_id));
+  const deletedCount = prevLen - casesStore.length;
+
+  auditStore.unshift({
+    id: `audit-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    user: 'analyst',
+    action: 'batch_delete_cases',
+    case_id: caseIds[0],
+    details: `Batch deleted ${caseIds.length} cases from incident queue`,
+  });
+
+  return {
+    success: true,
+    deleted_count: deletedCount,
+    case_ids: caseIds,
+  };
+}
+
+/**
  * GET /cases/{case_id}
  */
 export async function getCaseById(caseId: string): Promise<CaseDetail> {

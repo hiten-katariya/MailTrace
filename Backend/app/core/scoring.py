@@ -134,11 +134,27 @@ def calculate_composite_score(
                 reason=anomaly,
                 sourceModule="header",
             ))
-        elif "Return-Path" in anomaly:
+        elif "return-path" in anomaly.lower():
             cat2_signals.append(ScoreSignal(
                 signal="Return-Path Envelope Spoofing",
                 weight=7,
                 contribution=7,
+                reason=anomaly,
+                sourceModule="header",
+            ))
+        elif "forged or untrusted authentication-results" in anomaly.lower() or "forged authentication-results" in anomaly.lower():
+            cat2_signals.append(ScoreSignal(
+                signal="Forged Authentication-Results Header Injected",
+                weight=10,
+                contribution=10,
+                reason=anomaly,
+                sourceModule="header",
+            ))
+        elif "alignment mismatch" in anomaly.lower():
+            cat2_signals.append(ScoreSignal(
+                signal="Authentication Domain Alignment Mismatch",
+                weight=8,
+                contribution=8,
                 reason=anomaly,
                 sourceModule="header",
             ))
@@ -243,10 +259,11 @@ def calculate_composite_score(
         if is_fully_authenticated and not content_res.flagged_phrases and not content_res.bec_indicators:
             pass
         else:
-            ml_contrib = int(content_res.classification_confidence * 10)
+            scale_max = 18 if content_res.classification_confidence >= 0.90 else 14
+            ml_contrib = int(content_res.classification_confidence * scale_max)
             cat4_signals.append(ScoreSignal(
                 signal="NLP Phishing / BEC Classifier Confidence",
-                weight=10,
+                weight=18,
                 contribution=ml_contrib,
                 reason=f"Statistical NLP model evaluated text with {int(content_res.classification_confidence*100)}% {content_res.classification.upper()} probability.",
                 sourceModule="nlp",
@@ -384,9 +401,9 @@ def calculate_composite_score(
     # Deduce Risk Category
     if content_res.bec_indicators or content_res.classification == "bec":
         risk_category = "bec"
-    elif fraud_score >= 70:
+    elif fraud_score >= 60 or (content_res.classification == "phishing" and not is_fully_authenticated and (fraud_score >= 35 or (content_res.classification_confidence >= 0.85 and fraud_score >= 25))):
         risk_category = "phishing"
-    elif fraud_score >= 40:
+    elif fraud_score >= 35 or (content_res.classification == "phishing" and not is_fully_authenticated) or (content_res.classification == "suspicious" and fraud_score >= 20):
         risk_category = "suspicious"
     else:
         risk_category = "legitimate"
@@ -403,6 +420,10 @@ def calculate_composite_score(
     reasons = []
     if headers_res.dmarc_result == "fail":
         reasons.append("failed DMARC alignment")
+    if is_completely_unauthenticated:
+        reasons.append("unauthenticated sender (no SPF/DMARC)")
+    if any("Return-Path" in a for a in headers_res.anomalies):
+        reasons.append("Return-Path envelope spoofing")
     if domain_res.domain_age_days is not None and domain_res.domain_age_days < 7:
         reasons.append(f"{domain_res.domain_age_days}-day-old domain registration")
     if flagged_urls:
@@ -413,6 +434,8 @@ def calculate_composite_score(
         reasons.append("financial payment diversion language")
     elif content_res.flagged_phrases:
         reasons.append("coercive psychological urgency")
+    elif content_res.classification == "phishing" and content_res.classification_confidence >= 0.75:
+        reasons.append(f"high-confidence phishing content ({int(content_res.classification_confidence*100)}%)")
     if ip_rep_res.is_vpn_tor:
         reasons.append("anonymized VPN/Tor origin node")
 
@@ -420,7 +443,10 @@ def calculate_composite_score(
         verdict_summary = f"Likely {risk_category.upper()} — {', '.join(reasons)}."
     else:
         if risk_category == "legitimate":
-            verdict_summary = "Verified legitimate — valid SPF/DKIM/DMARC authentication, established domain, and standard conversational tone."
+            if is_fully_authenticated:
+                verdict_summary = "Verified legitimate — valid SPF/DKIM/DMARC authentication, established domain, and standard conversational tone."
+            else:
+                verdict_summary = "Low risk — unauthenticated sender but benign content."
         else:
             verdict_summary = "Anomalous email — suspicious indicators detected across headers and content."
 

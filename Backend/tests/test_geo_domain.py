@@ -45,9 +45,10 @@ async def test_vpn_tor_origin_mocked():
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             pass
 
-    with patch("backend.app.core.ip_reputation.httpx.AsyncClient", side_effect=MockAsyncClientContext):
-        res = await query_abuseipdb("185.220.101.5")
-        assert res.is_vpn_tor is True
-        assert res.abuse_score == 95
-        assert "AbuseIPDB" in res.flag_source
-        assert res.isp == "Tor Exit Router Network"
+    with patch("backend.app.core.ip_reputation.settings.ABUSEIPDB_API_KEY", "dummy-test-key"):
+        with patch("backend.app.core.ip_reputation.httpx.AsyncClient", side_effect=MockAsyncClientContext):
+            res = await query_abuseipdb("185.220.101.5")
+            assert res.is_vpn_tor is True
+            assert res.abuse_score == 95
+            assert "AbuseIPDB" in res.flag_source
+            assert res.isp == "Tor Exit Router Network"

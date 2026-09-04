@@ -1,0 +1,8 @@
+From: spoof@paypal.com
+To: victim@company.com
+Subject: Unauthorized Security Warning
+Authentication-Results: fake-mta.attacker.net; spf=pass dkim=pass dmarc=pass
+Received: from evil-attacker.com (evil-attacker.com [185.220.101.5]) by mail.victim-company.com with ESMTP id 998877; Wed, 02 Sep 2026 12:00:00 +0000
+Return-Path: <bounce@evil-attacker.com>
+
+Please verify your credentials immediately.

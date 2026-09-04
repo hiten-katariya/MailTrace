@@ -3,3 +3,4 @@
 *.env
 *Backend/Data
 *Backend/.env
+*Backend/Storage

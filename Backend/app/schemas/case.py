@@ -67,3 +67,12 @@ class CaseStatusResponse(BaseModel):
             "scoring": "pending",
         }
     )
+
+class BatchDeleteRequest(BaseModel):
+    case_ids: List[str]
+
+class DeleteCaseResponse(BaseModel):
+    success: bool = True
+    message: str = "Success"
+    case_id: Optional[str] = None
+    deleted_count: Optional[int] = 1

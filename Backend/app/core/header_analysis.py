@@ -1,4 +1,5 @@
 import re
+import ipaddress
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional, Tuple
 from email.utils import parseaddr, parsedate_to_datetime
@@ -164,13 +165,24 @@ def extract_auth_results_from_headers(
     # Check SPF
     m_spf = re.search(r'\bspf=(pass|fail|softfail|neutral|none)\b', auth_body, re.IGNORECASE)
     if m_spf:
-        verdicts["spf"] = m_spf.group(1).lower()
+        m_spf_domain = re.search(r'smtp\.mailfrom=(?:[^\s@;]+@)?([a-zA-Z0-9\.\-]+)', auth_body, re.IGNORECASE)
+        if m_spf_domain and sender_domain and get_organizational_domain(m_spf_domain.group(1)) != get_organizational_domain(sender_domain):
+            anomalies.append(
+                f"SPF domain alignment mismatch: Authentication-Results evaluates '{m_spf_domain.group(1)}', but sender is '@{sender_domain}'"
+            )
+        else:
+            verdicts["spf"] = m_spf.group(1).lower()
 
     # Check DKIM
     m_dkim = re.search(r'\bdkim=(pass|fail|none)\b', auth_body, re.IGNORECASE)
     if m_dkim:
         claimed_dkim = m_dkim.group(1).lower()
-        if claimed_dkim == "pass":
+        m_dkim_domain = re.search(r'(?:header\.d|header\.i)=(?:[^\s@;]+@)?([a-zA-Z0-9\.\-]+)', auth_body, re.IGNORECASE)
+        if m_dkim_domain and sender_domain and get_organizational_domain(m_dkim_domain.group(1)) != get_organizational_domain(sender_domain):
+            anomalies.append(
+                f"DKIM domain alignment mismatch: Authentication-Results claims pass for '{m_dkim_domain.group(1)}', but sender is '@{sender_domain}'"
+            )
+        elif claimed_dkim == "pass":
             # Cryptographic Cross-Check: Verify that a valid DKIM signature actually exists
             has_dkim_sig = b"DKIM-Signature:" in raw_eml_bytes or b"dkim-signature:" in raw_eml_bytes
             if not has_dkim_sig:
@@ -183,10 +195,16 @@ def extract_auth_results_from_headers(
     # Check DMARC
     m_dmarc = re.search(r'\bdmarc=(pass|fail|none)\b', auth_body, re.IGNORECASE)
     if m_dmarc:
-        verdicts["dmarc"] = m_dmarc.group(1).lower()
-        m_policy = re.search(r'p=(none|quarantine|reject)', auth_body, re.IGNORECASE)
-        if m_policy:
-            verdicts["dmarc_policy"] = m_policy.group(1).lower()
+        m_dmarc_domain = re.search(r'header\.from=(?:[^\s@;]+@)?([a-zA-Z0-9\.\-]+)', auth_body, re.IGNORECASE)
+        if m_dmarc_domain and sender_domain and get_organizational_domain(m_dmarc_domain.group(1)) != get_organizational_domain(sender_domain):
+            anomalies.append(
+                f"DMARC alignment mismatch: Authentication-Results evaluated '{m_dmarc_domain.group(1)}', not sender domain '@{sender_domain}'"
+            )
+        else:
+            verdicts["dmarc"] = m_dmarc.group(1).lower()
+            m_policy = re.search(r'p=(none|quarantine|reject)', auth_body, re.IGNORECASE)
+            if m_policy:
+                verdicts["dmarc_policy"] = m_policy.group(1).lower()
 
     return verdicts, anomalies
 
@@ -222,13 +240,22 @@ class HeaderAnalysisResult:
         self.earliest_origin_ip = earliest_origin_ip
 
 def extract_ip_from_text(text: str) -> Optional[str]:
-    # Match IPv4 addresses (excluding standard internal non-routable 127.0.0.1 where possible if external IP is present)
-    ip_pattern = re.compile(r'\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b')
+    # Match standard IPv4 addresses without leading zeros on octets
+    ip_pattern = re.compile(r'\b(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\b')
     matches = ip_pattern.findall(text)
-    for ip in matches:
+    valid_ips = []
+    for candidate in matches:
+        try:
+            parsed = ipaddress.ip_address(candidate)
+            if isinstance(parsed, ipaddress.IPv4Address):
+                valid_ips.append(candidate)
+        except ValueError:
+            continue
+
+    for ip in valid_ips:
         if not ip.startswith("127."):
             return ip
-    return matches[0] if matches else None
+    return valid_ips[0] if valid_ips else None
 
 def parse_received_headers(raw_headers: Dict[str, Any]) -> List[Dict[str, Any]]:
     received_raw = raw_headers.get("Received", [])
@@ -300,7 +327,8 @@ def query_dns_txt(domain: str) -> List[str]:
     records = []
     try:
         resolver = dns.resolver.Resolver()
-        resolver.lifetime = 3.0
+        resolver.lifetime = 2.0
+        resolver.timeout = 2.0
         # Include Google and Cloudflare DNS to prevent local ISP resolution timeouts
         resolver.nameservers = ['8.8.8.8', '1.1.1.1'] + [ns for ns in resolver.nameservers if ns not in ['8.8.8.8', '1.1.1.1']]
         answers = resolver.resolve(domain, 'TXT')
@@ -326,7 +354,7 @@ def check_spf(sender_domain: Optional[str], origin_ip: Optional[str], raw_eml_by
     # 1. Primary RFC-compliant recursive SPF evaluation via pyspf
     if spf and hasattr(spf, 'check2'):
         try:
-            res = spf.check2(i=eval_ip, s=f"postmaster@{sender_domain}", h=sender_domain)
+            res = spf.check2(i=eval_ip, s=f"postmaster@{sender_domain}", h=sender_domain, timeout=2.0, querytime=2.0)
             if isinstance(res, (tuple, list)):
                 res_str = str(res[0]).lower()
                 explanation = str(res[1]) if len(res) > 1 else ""
@@ -395,7 +423,7 @@ def check_dkim(raw_eml_bytes: bytes, sender_domain: Optional[str]) -> Tuple[str,
 
     if dkim:
         try:
-            is_valid = dkim.verify(raw_eml_bytes)
+            is_valid = dkim.verify(raw_eml_bytes, timeout=2.0)
             if is_valid:
                 return "pass", signing_domain, selector, True
             else:
@@ -460,9 +488,19 @@ def analyze_email_headers(
     reply_to = str(raw_headers_dict.get("Reply-To", ""))
     return_path = str(raw_headers_dict.get("Return-Path", ""))
 
-    _, from_email = parseaddr(from_header)
-    _, reply_to_email = parseaddr(reply_to)
-    _, return_path_email = parseaddr(return_path)
+    def clean_email(raw_val: str) -> str:
+        if not raw_val:
+            return ""
+        _, parsed_em = parseaddr(raw_val)
+        if parsed_em and "@" in parsed_em:
+            return parsed_em
+        # Fallback regex for addresses containing '=' or other characters parsed poorly by parseaddr
+        m = re.search(r'[\w\.\+\-\=]+@[\w\.\-]+', raw_val)
+        return m.group(0) if m else ""
+
+    from_email = clean_email(from_header)
+    reply_to_email = clean_email(reply_to)
+    return_path_email = clean_email(return_path)
 
     return_path_dom = return_path_email.split("@")[-1].lower() if "@" in return_path_email else None
     eval_spf_domain = return_path_dom or sender_domain

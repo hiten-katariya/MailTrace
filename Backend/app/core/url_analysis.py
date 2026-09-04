@@ -100,6 +100,12 @@ def is_lookalike_domain(domain: str) -> tuple[bool, Optional[str]]:
     if ext.suffix and f".{ext.suffix.lower()}" in ABUSE_TLDS:
         return True, f"High-abuse spam/malware TLD ('.{ext.suffix.lower()}')"
 
+    # Disposable/obfuscated redirection domain patterns on cheap or personal TLDs (e.g. .me, .xyz, .top, .tk)
+    DISPOSABLE_TLDS = (".me", ".xyz", ".top", ".club", ".tk", ".ml", ".ga", ".cf", ".live", ".guru", ".space")
+    if ext.suffix and f".{ext.suffix.lower()}" in DISPOSABLE_TLDS:
+        if len(registered_domain) > 15 and any(c.isdigit() for c in registered_domain):
+            return True, f"High-risk obfuscated/disposable domain pattern on '.{ext.suffix.lower()}'"
+
     # Check if domain uses raw IP
     if re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', domain):
         return True, "IP address used as host in URL"

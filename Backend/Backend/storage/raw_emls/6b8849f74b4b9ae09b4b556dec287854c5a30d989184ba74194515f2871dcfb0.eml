@@ -1,0 +1,21 @@
+Received: by mx.google.com with SMTPS id abc12345 for <victim@example.com>;
+        Fri, 04 Sep 2026 10:00:00 -0700 (PDT)
+Received: from mail.attacker-controlled-server.com (mail.attacker-controlled-server.com. [198.51.100.25])
+        by mx.google.com with ESMTP id xyz67890;
+        Fri, 04 Sep 2026 09:59:58 -0700 (PDT)
+Authentication-Results: mx.fake.com;
+       spf=pass (fake.com: domain of admin@spoofed-bank.com designates 198.51.100.25 as permitted sender) smtp.mailfrom=admin@spoofed-bank.com;
+       dkim=pass header.i=@spoofed-bank.com;
+       dmarc=pass (p=REJECT sp=REJECT dis=none) header.from=spoofed-bank.com
+From: "Bank Security" <admin@spoofed-bank.com>
+To: victim@example.com
+Subject: Urgent Security Update - Verify Your Account
+Date: Fri, 04 Sep 2026 09:59:50 -0700
+Message-ID: <attack-99887766@attacker-controlled-server.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+Dear customer,
+
+Please verify your credentials immediately at our portal.
+This is a critical security notification.

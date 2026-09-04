@@ -3,7 +3,7 @@ import pytest
 from backend.app.core.ingestion import parse_raw_email
 from backend.app.core.header_analysis import analyze_email_headers, parse_received_headers
 
-FIXTURES_DIR = os.path.join("backend", "tests", "fixtures")
+FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
 def test_clean_business_email_headers():
     fixture_path = os.path.join(FIXTURES_DIR, "clean_business_email.eml")

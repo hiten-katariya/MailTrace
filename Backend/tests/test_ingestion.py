@@ -2,7 +2,7 @@ import os
 import pytest
 from httpx import AsyncClient
 
-FIXTURES_DIR = os.path.join("backend", "tests", "fixtures")
+FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
 @pytest.mark.asyncio
 async def test_end_to_end_upload_and_status(client: AsyncClient):

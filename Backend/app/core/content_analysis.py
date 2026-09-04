@@ -31,13 +31,13 @@ TARGET_BRANDS = [
     ("Microsoft", [r'\bmicrosoft\b', r'\bm365\b', r'\boffice\s*365\b', r'\boutlook\b', r'\bazure\b']),
     ("PayPal", [r'\bpaypal\b', r'\bpaypa[1l]\b']),
     ("Apple", [r'\bapple\b', r'\bicloud\b', r'\bapple\s*id\b']),
-    ("Amazon", [r'\bamazon\b', r'\bprime\b', r'\baws\b']),
+    ("Amazon", [r'\bamazon\b', r'\bamazon\s*prime\b', r'\baws\b']),
     ("Okta", [r'\bokta\b', r'\bauth0\b', r'\bsso\b', r'\bmfa\s*verification\b']),
     ("Workday", [r'\bworkday\b', r'\bpayroll\b', r'\bhr\s*portal\b']),
     ("Google", [r'\bgoogle\b', r'\bgsuite\b', r'\bgmail\b', r'\bgoogle\s*workspace\b']),
     ("QuickBooks", [r'\bquickbooks\b', r'\bintuit\b', r'\binvoice\b']),
     ("DocuSign", [r'\bdocusign\b', r'\bsign\s*document\b']),
-    ("Chase / Financial", [r'\bchase\b', r'\bbank\s*of\s*america\b', r'\bwells\s*fargo\b', r'\bciti\b', r'\bwire\s*transfer\b']),
+    ("Banking / Financial Institution", [r'\bbradesco\b', r'\bitau\b', r'\bsantander\b', r'\bcaixa\b', r'\bbanco\b', r'\blivelo\b', r'\bchase\b', r'\bbank\s*of\s*america\b', r'\bwells\s*fargo\b', r'\bciti\b', r'\bbarclays\b', r'\bhsbc\b', r'\bwire\s*transfer\b']),
     ("Executive Pretext", [r'\bceo\b', r'\bcfo\b', r'\bboard\s*of\s*directors\b', r'\bstrictly\s*confidential\b']),
 ]
 
@@ -69,6 +69,31 @@ URGENCY_PATTERNS = [
     r'act\s+now\s+and\s+receive',
     r'exclusive\s+deal',
     r'winner|won\s+a\s+prize',
+    # Web3 / Crypto wallet and airdrop lures
+    r'wallet\s+(?:has\s+been\s+)?(?:blocked|suspended|restricted|locked|compromised)',
+    r'connect\s+(?:your\s+)?wallet',
+    r'airdrop\s+(?:is\s+)?(?:now\s+)?live',
+    r'claim\s+(?:your\s+)?(?:reward|tokens?|airdrop|nft)',
+    r'seed\s+phrase|recovery\s+phrase|private\s+keys?',
+    # Mailbox quota, cloud storage, and German honeypot alerts
+    r'storage\s+(?:is\s+)?(?:full|exceeded|almost\s+full|limit)',
+    r'mailbox\s+(?:is\s+)?(?:full|exceeded)',
+    r'speicher\s+(?:ist\s+)?(?:belegt|voll)',
+    r'upgrade\s+durchf[üu]hren',
+    # Evasion and obfuscated account login alerts
+    r'unusual\s+(?:sign[\.\s_\-]*in|log[\.\s_\-]*in|iog\s+in)\s+activity',
+    r'someone\s+tried\s+to\s+(?:log|iog|sign)\s+in',
+    # Multilingual reward, points expiration, and banking alerts
+    r'(?:expiram|expira|expirando)\s+(?:hoje|agora|em\s+breve)',
+    r'resgate\s+(?:agora|seus\s+pontos|seu\s+pr[eê]mio)',
+    r'pontos\s+(?:livelo|esfera|vantagens|fidelidade)',
+    r'evite\s+a\s+perda',
+    r'bloqueio\s+(?:de\s+)?(?:conta|cart[aã]o|acesso)',
+    r'atualize\s+(?:seus?\s+)?(?:dados|cadastro)',
+    r'dringend|sofort\s+handeln',
+    r'konto\s+(?:wird\s+)?gesperrt',
+    r'sicherheitswarnung|letzte\s+mahnung',
+    r'jetzt\s+gewinndaten\s+eintragen',
 ]
 
 BEC_PATTERNS = [
@@ -173,10 +198,10 @@ def analyze_email_content(subject: str, body_text: str, sender: str) -> ContentA
     if len(bec_indicators) >= 2 or (has_bec and ml_prob > 0.6):
         classification = "bec"
         confidence = max(0.85, ml_prob)
-    elif len(flagged_phrases) >= 2 or (has_urgency and ml_prob >= 0.60) or (ml_prob >= 0.85):
+    elif len(flagged_phrases) >= 2 or (has_urgency and ml_prob >= 0.50) or (ml_prob >= 0.75):
         classification = "phishing"
         confidence = max(0.80, ml_prob)
-    elif (has_urgency and ml_prob >= 0.35) or (not has_urgency and not has_bec and ml_prob >= 0.70):
+    elif (has_urgency and ml_prob >= 0.30) or (not has_urgency and not has_bec and ml_prob >= 0.55):
         classification = "suspicious"
         confidence = 0.65
     else:
