@@ -13,6 +13,7 @@ class RetentionPolicy(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
     retention_days: Mapped[int] = mapped_column(Integer, default=90)
     auto_purge: Mapped[bool] = mapped_column(Boolean, default=True)
+    auto_trash_on_purge: Mapped[bool] = mapped_column(Boolean, default=False)
     mask_pii: Mapped[bool] = mapped_column(Boolean, default=True)
     mask_sender_email: Mapped[bool] = mapped_column(Boolean, default=True)
     mask_recipient: Mapped[bool] = mapped_column(Boolean, default=True)

@@ -54,6 +54,11 @@ class Case(Base):
     attribution_confidence: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)  # 'high', 'medium', 'low'
     is_purged: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # Gmail Live Scanning & Ingestion Source Metadata
+    source: Mapped[str] = mapped_column(String(32), default="upload", nullable=False, index=True)  # 'upload', 'gmail'
+    gmail_account: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    gmail_message_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
+
     # Relationships
     headers: Mapped[Optional["Headers"]] = relationship("Headers", back_populates="case", cascade="all, delete-orphan", uselist=False)
     relay_hops: Mapped[List["RelayHop"]] = relationship("RelayHop", back_populates="case", cascade="all, delete-orphan", order_by="RelayHop.hop_number")

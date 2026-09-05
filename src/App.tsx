@@ -6,8 +6,9 @@ import { CaseDetailPage } from './pages/CaseDetailPage';
 import { CampaignPage } from './pages/CampaignPage';
 import { UploadPage } from './pages/UploadPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { LiveMailboxPage } from './pages/LiveMailboxPage';
 
-export type NavigationTab = 'dashboard' | 'upload' | 'campaigns' | 'settings' | 'case-detail';
+export type NavigationTab = 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings' | 'case-detail';
 
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
@@ -41,8 +42,8 @@ export function App() {
     setCurrentTab('case-detail');
   };
 
-  const handleNavigate = (tab: 'dashboard' | 'upload' | 'campaigns' | 'settings') => {
-    if (tab === 'dashboard') {
+  const handleNavigate = (tab: 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings') => {
+    if (tab === 'dashboard' || tab === 'live-mailbox') {
       setSelectedCaseId(null);
     }
     setCurrentTab(tab);
@@ -67,6 +68,13 @@ export function App() {
       <main className="flex-1 pb-12">
         {currentTab === 'dashboard' && (
           <DashboardPage onSelectCase={handleSelectCase} />
+        )}
+
+        {currentTab === 'live-mailbox' && (
+          <LiveMailboxPage
+            onSelectCase={handleSelectCase}
+            onNavigateToSettings={() => setCurrentTab('settings')}
+          />
         )}
 
         {currentTab === 'case-detail' && selectedCaseId && (

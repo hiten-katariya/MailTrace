@@ -10,14 +10,15 @@ import {
   Shield,
   Activity,
   Terminal,
+  Mail,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getAlerts } from '../../mocks/api';
 import { ScoreBadge } from './ScoreBadge';
 
 interface NavbarProps {
-  currentTab: 'dashboard' | 'upload' | 'campaigns' | 'settings' | 'case-detail';
-  onNavigate: (tab: 'dashboard' | 'upload' | 'campaigns' | 'settings') => void;
+  currentTab: 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings' | 'case-detail';
+  onNavigate: (tab: 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings') => void;
   onSelectCase?: (caseId: string) => void;
   onLogout: () => void;
   activeAnalystName?: string;
@@ -113,6 +114,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <LayoutDashboard className="w-3.5 h-3.5 text-cyan-400/80" />
               <span>Case Triage</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('live-mailbox')}
+              className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors ${
+                currentTab === 'live-mailbox'
+                  ? 'bg-cyan-500/10 text-cyan-300 font-semibold border-b-2 border-cyan-400'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+              }`}
+            >
+              <Mail className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Live Mailbox</span>
             </button>
 
             <button

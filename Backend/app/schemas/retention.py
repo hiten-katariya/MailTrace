@@ -6,6 +6,7 @@ class RetentionPolicySchema(BaseModel):
 
     retention_days: int
     auto_purge: bool
+    auto_trash_on_purge: bool = False
     mask_pii: bool
     mask_sender_email: bool
     mask_recipient: bool
@@ -14,6 +15,7 @@ class RetentionPolicySchema(BaseModel):
 class RetentionPolicyUpdate(BaseModel):
     retention_days: Optional[int] = None
     auto_purge: Optional[bool] = None
+    auto_trash_on_purge: Optional[bool] = None
     mask_pii: Optional[bool] = None
     mask_sender_email: Optional[bool] = None
     mask_recipient: Optional[bool] = None

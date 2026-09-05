@@ -10,6 +10,8 @@ export interface ScoreSignal {
   sourceModule?: 'header' | 'nlp' | 'origin' | 'domain' | 'correlation';
 }
 
+export type CaseSource = 'upload' | 'gmail';
+
 export interface CaseSummary {
   case_id: string;
   subject: string;
@@ -21,6 +23,18 @@ export interface CaseSummary {
   spf: ProtocolStatus;
   dkim: ProtocolStatus;
   dmarc: ProtocolStatus;
+  source?: CaseSource;
+  gmail_account?: string | null;
+  gmail_message_id?: string | null;
+}
+
+export interface GmailStatus {
+  connected: boolean;
+  email?: string | null;
+  status: string;
+  connected_at?: string | null;
+  last_polled_at?: string | null;
+  error_message?: string | null;
 }
 
 export interface CaseDetail extends CaseSummary {

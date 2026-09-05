@@ -21,7 +21,18 @@ export const SettingsPage: React.FC = () => {
 
   const [retentionDays, setRetentionDays] = useState<number>(settings?.retention_days || 90);
   const [autoPurge, setAutoPurge] = useState<boolean>(settings?.auto_purge ?? true);
+  const [autoTrashOnPurge, setAutoTrashOnPurge] = useState<boolean>(settings?.auto_trash_on_purge ?? false);
   const [maskPii, setMaskPii] = useState<boolean>(settings?.mask_pii ?? true);
+
+  // Synchronize when query loads
+  React.useEffect(() => {
+    if (settings) {
+      setRetentionDays(settings.retention_days);
+      setAutoPurge(settings.auto_purge);
+      setAutoTrashOnPurge(settings.auto_trash_on_purge ?? false);
+      setMaskPii(settings.mask_pii);
+    }
+  }, [settings]);
 
   const updateMutation = useMutation({
     mutationFn: updateRetentionSettings,
@@ -38,6 +49,7 @@ export const SettingsPage: React.FC = () => {
     updateMutation.mutate({
       retention_days: retentionDays,
       auto_purge: autoPurge,
+      auto_trash_on_purge: autoTrashOnPurge,
       mask_pii: maskPii,
     });
   };
@@ -117,6 +129,38 @@ export const SettingsPage: React.FC = () => {
                 onChange={(e) => setAutoPurge(e.target.checked)}
                 className="w-4 h-4 accent-cyan-400 cursor-pointer"
               />
+            </div>
+
+            {/* Gmail Auto-Trash on Purge Switch & Clear Plain-Language Disclosure */}
+            <div className="p-2.5 rounded bg-soc-inset border border-slate-800/60 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-200 font-semibold block">Move Expired Mail to Gmail Trash</span>
+                    <span className="px-1.5 py-0.2 text-[9px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 rounded">
+                      gmail.modify
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-sans block mt-0.5">
+                    Mirrors local raw file deletion by moving expired messages to Gmail Trash
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={autoTrashOnPurge}
+                  onChange={(e) => setAutoTrashOnPurge(e.target.checked)}
+                  className="w-4 h-4 accent-cyan-400 cursor-pointer"
+                />
+              </div>
+
+              {autoTrashOnPurge && (
+                <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-[11px] font-sans text-amber-200/90 leading-relaxed">
+                  <span className="font-semibold text-amber-300 font-mono text-[10px] block mb-0.5 uppercase tracking-wider">
+                    Retention Trash Policy Notice:
+                  </span>
+                  Emails older than {retentionDays} days from connected Gmail accounts will be moved to Gmail Trash. This can be undone from Gmail within its normal trash retention period.
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between pt-1">

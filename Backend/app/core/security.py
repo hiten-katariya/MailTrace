@@ -57,3 +57,69 @@ async def get_current_user(
     result = await db.execute(select(User).where(User.username == username))
     user = result.scalar_one_or_none()
     return user
+
+# ======================================================================
+# GMAIL OAUTH TOKEN ENCRYPTION & CSRF PROTECTION (FERNET)
+# ======================================================================
+import secrets
+import base64
+import hashlib
+from cryptography.fernet import Fernet
+
+_oauth_states: dict[str, datetime] = {}
+
+def get_fernet_cipher() -> Fernet:
+    key = settings.TOKEN_ENCRYPTION_KEY.strip() if settings.TOKEN_ENCRYPTION_KEY else ""
+    if not key:
+        derived = base64.urlsafe_b64encode(hashlib.sha256(settings.SECRET_KEY.encode()).digest())
+        return Fernet(derived)
+    try:
+        return Fernet(key.encode("utf-8"))
+    except Exception:
+        derived = base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest())
+        return Fernet(derived)
+
+def encrypt_token(plaintext_token: str) -> str:
+    """
+    Encrypts sensitive tokens at rest using Fernet (AES-128-CBC + HMAC-SHA256).
+    Never logs or exposes the token in application logs.
+    """
+    if not plaintext_token:
+        return ""
+    cipher = get_fernet_cipher()
+    return cipher.encrypt(plaintext_token.encode("utf-8")).decode("utf-8")
+
+def decrypt_token(encrypted_token: str) -> str:
+    """
+    Decrypts an encrypted token at rest.
+    Never logs or exposes the token in application logs.
+    """
+    if not encrypted_token:
+        return ""
+    cipher = get_fernet_cipher()
+    return cipher.decrypt(encrypted_token.encode("utf-8")).decode("utf-8")
+
+def generate_oauth_state() -> str:
+    """
+    Generates a cryptographically secure random CSRF state token valid for 10 minutes.
+    """
+    state = secrets.token_urlsafe(32)
+    now = datetime.now(timezone.utc)
+    # Prune expired states older than 10 minutes
+    expired_keys = [k for k, exp in _oauth_states.items() if (now - exp).total_seconds() > 600]
+    for k in expired_keys:
+        _oauth_states.pop(k, None)
+    _oauth_states[state] = now
+    return state
+
+def verify_oauth_state(state: Optional[str]) -> bool:
+    """
+    Verifies and consumes a single-use CSRF state token.
+    """
+    if not state:
+        return False
+    now = datetime.now(timezone.utc)
+    creation_time = _oauth_states.pop(state, None)
+    if not creation_time:
+        return False
+    return (now - creation_time).total_seconds() <= 600

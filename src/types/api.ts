@@ -18,6 +18,7 @@ export interface CasesQueryParams {
   spf?: string;
   dkim?: string;
   dmarc?: string;
+  source?: string;
 }
 
 export interface IngestResponse {
@@ -55,6 +56,7 @@ export interface AlertItem {
 export interface RetentionSettings {
   retention_days: number;
   auto_purge: boolean;
+  auto_trash_on_purge?: boolean;
   mask_pii: boolean;
   export_compliance_level: 'standard' | 'restricted' | 'law_enforcement';
 }

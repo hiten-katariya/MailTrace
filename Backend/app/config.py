@@ -35,11 +35,18 @@ class Settings(BaseSettings):
     # Alerting
     ALERT_THRESHOLD: int = 70
     
+    # Google OAuth & Gmail Live Scanning
+    GOOGLE_CLIENT_ID: str = Field(default="", description="Google OAuth 2.0 Client ID")
+    GOOGLE_CLIENT_SECRET: str = Field(default="", description="Google OAuth 2.0 Client Secret")
+    GOOGLE_REDIRECT_URI: str = Field(default="http://localhost:5173/auth/google/callback", description="OAuth Authorized Redirect URI")
+    TOKEN_ENCRYPTION_KEY: str = Field(default="", description="Fernet 32-byte url-safe key for encrypting refresh tokens at rest")
+    GMAIL_POLL_INTERVAL_SECONDS: int = Field(default=15, description="Interval in seconds for polling Gmail API")
+    
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"]
     
     class Config:
-        env_file = "backend/.env"
+        env_file = ("backend/.env", ".env")
         env_file_encoding = "utf-8"
         extra = "ignore"
 

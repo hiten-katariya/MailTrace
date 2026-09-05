@@ -3,6 +3,7 @@ import { AuditLogEntry, RetentionSettings } from '../types/api';
 export const INITIAL_RETENTION_SETTINGS: RetentionSettings = {
   retention_days: 90,
   auto_purge: true,
+  auto_trash_on_purge: false,
   mask_pii: true,
   export_compliance_level: 'standard',
 };

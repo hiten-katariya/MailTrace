@@ -7,6 +7,7 @@ from backend.app.models.campaign import Campaign
 from backend.app.models.threat_intel import ThreatIntelMatch
 from backend.app.models.retention import RetentionPolicy
 from backend.app.models.attachment import Attachment
+from backend.app.models.gmail import GmailAccount
 
 __all__ = [
     "Case",
@@ -23,4 +24,5 @@ __all__ = [
     "ThreatIntelMatch",
     "RetentionPolicy",
     "Attachment",
+    "GmailAccount",
 ]

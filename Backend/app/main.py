@@ -19,9 +19,21 @@ async def lifespan(app: FastAPI):
         print("[+] Preloaded ML phishing classification model into memory.")
     else:
         print("[-] Warning: ML phishing model not found yet. Run train_classifier.py.")
+
+    # Start background Gmail polling scheduler
+    try:
+        from backend.app.core.gmail_poller import start_gmail_scheduler, stop_gmail_scheduler
+        await start_gmail_scheduler()
+    except Exception as ge:
+        print(f"[-] Warning: Failed to start Gmail scheduler: {ge}")
         
     yield
     # Shutdown
+    try:
+        from backend.app.core.gmail_poller import stop_gmail_scheduler
+        await stop_gmail_scheduler()
+    except Exception:
+        pass
     try:
         await async_engine.dispose()
     except Exception:
@@ -53,6 +65,8 @@ app.add_middleware(
 
 # Mount API routes
 app.include_router(api_router, prefix=settings.API_V1_STR)
+if settings.API_V1_STR != "/api":
+    app.include_router(api_router, prefix="/api")
 
 @app.get("/health", tags=["Health"])
 async def health_check():

@@ -1,6 +1,6 @@
 import os
 import traceback
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime, timezone
 from sqlalchemy import select, update
 from backend.app.database import AsyncSessionLocal
@@ -26,8 +26,15 @@ from backend.app.core.retention import get_or_create_retention_policy, execute_r
 
 _last_purge_timestamp: Optional[datetime] = None
 
-async def execute_case_pipeline(case_id: str, parsed_email: ParsedEmail, raw_eml_bytes: bytes):
-    async with AsyncSessionLocal() as db:
+async def execute_case_pipeline(
+    case_id: str,
+    parsed_email: ParsedEmail,
+    raw_eml_bytes: bytes,
+    source: Optional[str] = None,
+    gmail_account: Optional[str] = None,
+    db: Optional[Any] = None,
+):
+    async def _execute(db):
         try:
             # 1. Fetch Case record
             result = await db.execute(select(Case).where(Case.id == case_id))
@@ -35,6 +42,12 @@ async def execute_case_pipeline(case_id: str, parsed_email: ParsedEmail, raw_eml
             if not case:
                 print(f"Case {case_id} not found for background pipeline.")
                 return
+
+            effective_source = source or case.source or "upload"
+            if source and case.source != source:
+                case.source = source
+            if gmail_account and not case.gmail_account:
+                case.gmail_account = gmail_account
 
             progress = {
                 "header_analysis": "in_progress",
@@ -295,6 +308,27 @@ async def execute_case_pipeline(case_id: str, parsed_email: ParsedEmail, raw_eml
             await db.commit()
             print(f"[+] Case {case_id} pipeline completed successfully. Score: {scoring_res.fraud_score}/100 ({scoring_res.risk_category}, {attr_type})")
 
+            # SSE Live Push to SOC Dashboard
+            try:
+                from backend.app.core.sse import sse_manager
+                case_summary = {
+                    "case_id": case.id,
+                    "subject": case.subject,
+                    "sender": case.sender,
+                    "received_at": case.received_at.isoformat() if case.received_at else "",
+                    "fraud_score": case.fraud_score or 0,
+                    "risk_category": case.risk_category or "legitimate",
+                    "status": case.status or "completed",
+                    "source": case.source or "upload",
+                    "gmail_account": case.gmail_account,
+                    "spf": headers_res.spf_result,
+                    "dkim": headers_res.dkim_result,
+                    "dmarc": headers_res.dmarc_result,
+                }
+                await sse_manager.broadcast("case_completed", case_summary)
+            except Exception as se:
+                print(f"[-] SSE broadcast warning: {se}")
+
         except Exception as e:
             traceback.print_exc()
             print(f"[-] Pipeline failed for case {case_id}: {e}")
@@ -307,3 +341,9 @@ async def execute_case_pipeline(case_id: str, parsed_email: ParsedEmail, raw_eml
                     await db.commit()
             except Exception:
                 pass
+
+    if db is not None:
+        await _execute(db)
+    else:
+        async with AsyncSessionLocal() as session:
+            await _execute(session)

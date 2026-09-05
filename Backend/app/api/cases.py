@@ -50,6 +50,8 @@ from backend.app.core.retention import get_or_create_retention_policy, mask_emai
 from backend.app.core.ingestion import parse_raw_email
 from backend.app.core.pipeline import execute_case_pipeline
 from backend.app.core.reporting import generate_pdf_report, build_json_report
+from sse_starlette.sse import EventSourceResponse
+from backend.app.core.sse import sse_manager
 
 router = APIRouter(tags=["Cases & Ingestion"])
 
@@ -267,9 +269,14 @@ async def list_cases(
     sort_by: str = Query("date"),  # 'date', 'score', 'sender'
     sort_order: str = Query("desc"),  # 'asc', 'desc'
     search: Optional[str] = Query(None),
+    source: Optional[str] = Query(None),  # 'upload', 'gmail'
     db: AsyncSession = Depends(get_db),
 ):
     query = select(Case).options(selectinload(Case.headers))
+
+    # Source filter
+    if source and source != "all":
+        query = query.where(Case.source == source)
 
     # Search filter (PostgreSQL ILIKE & full-text match across subject, sender, id, sender_domain)
     if search and search.strip():
@@ -336,6 +343,8 @@ async def list_cases(
                 spf=spf_val,
                 dkim=dkim_val,
                 dmarc=dmarc_val,
+                source=c.source or "upload",
+                gmail_account=c.gmail_account,
             )
         )
 
@@ -345,6 +354,20 @@ async def list_cases(
         limit=limit,
         cases=case_summaries,
     )
+
+
+# =======================================================
+# 4.5. Live Real-Time Stream: GET /cases/stream
+# Must be defined BEFORE /cases/{case_id} so FastAPI does not
+# treat 'stream' as a case_id parameter!
+# =======================================================
+@router.get("/cases/stream")
+async def stream_cases():
+    """
+    Server-Sent Events (SSE) live push endpoint.
+    Streams newly analyzed cases and keep-alive pings to the SOC dashboard.
+    """
+    return EventSourceResponse(sse_manager.subscribe())
 
 
 # =======================================================
@@ -406,6 +429,8 @@ async def get_case_detail(case_id: str, db: AsyncSession = Depends(get_db)):
         spf=spf_val,
         dkim=dkim_val,
         dmarc=dmarc_val,
+        source=case.source or "upload",
+        gmail_account=case.gmail_account,
     )
 
 

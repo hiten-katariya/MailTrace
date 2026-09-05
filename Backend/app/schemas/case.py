@@ -19,6 +19,8 @@ class CaseSummary(BaseModel):
     spf: str
     dkim: str
     dmarc: str
+    source: Optional[str] = "upload"
+    gmail_account: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -38,6 +40,8 @@ class CaseDetail(BaseModel):
     spf: Optional[str] = "none"
     dkim: Optional[str] = "none"
     dmarc: Optional[str] = "none"
+    source: Optional[str] = "upload"
+    gmail_account: Optional[str] = None
 
     class Config:
         from_attributes = True

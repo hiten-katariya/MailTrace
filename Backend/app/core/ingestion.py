@@ -204,3 +204,95 @@ def parse_raw_email(content_bytes: bytes) -> ParsedEmail:
         extracted_urls=list(extracted_urls),
         attachments=attachments,
     )
+
+
+async def process_raw_email_bytes(
+    content_bytes: bytes,
+    source: str = "upload",
+    gmail_account: Optional[str] = None,
+    gmail_message_id: Optional[str] = None,
+    db: Optional[Any] = None,
+):
+    """
+    Unified entry point for ingesting raw email bytes (from uploads, directory batches, or live Gmail polling).
+    Parses MIME, creates Case in database, and executes the complete analysis pipeline.
+    """
+    from backend.app.database import AsyncSessionLocal
+    from backend.app.models.case import Case
+    from backend.app.models.audit import AuditLog
+    from backend.app.core.pipeline import execute_case_pipeline
+
+    parsed = parse_raw_email(content_bytes)
+
+    async def _run_in_session(session):
+        case = Case(
+            file_hash=parsed.file_hash,
+            raw_file_path=parsed.raw_file_path,
+            subject=parsed.subject,
+            sender=parsed.sender,
+            sender_domain=parsed.sender_domain,
+            recipient=parsed.recipient,
+            received_at=parsed.received_at,
+            status="pending",
+            fraud_score=0,
+            risk_category="legitimate",
+            source=source,
+            gmail_account=gmail_account,
+            gmail_message_id=gmail_message_id,
+            pipeline_progress={
+                "header_analysis": "pending",
+                "nlp_analysis": "pending",
+                "geolocation": "pending",
+                "domain_intel": "pending",
+                "scoring": "pending",
+            },
+        )
+        session.add(case)
+        await session.commit()
+        await session.refresh(case)
+
+        audit_entry = AuditLog(
+            username=f"{source}_service",
+            action="case_ingest",
+            case_id=case.id,
+            details=f"Ingested email from {source} ({gmail_account or 'direct'}) - SHA256: {parsed.file_hash[:16]}...",
+        )
+        session.add(audit_entry)
+        await session.commit()
+
+        # Execute full analysis pipeline
+        await execute_case_pipeline(case.id, parsed, content_bytes, source=source, gmail_account=gmail_account, db=session)
+        await session.refresh(case)
+        return case
+
+    if db is not None:
+        return await _run_in_session(db)
+    else:
+        async with AsyncSessionLocal() as session:
+            return await _run_in_session(session)
+
+
+async def process_eml_directory(directory_path: str, limit: Optional[int] = None) -> List[Any]:
+    """
+    Scans a directory of .eml files and passes them through process_raw_email_bytes.
+    """
+    cases = []
+    if not os.path.exists(directory_path):
+        return cases
+
+    eml_files = [f for f in os.listdir(directory_path) if f.lower().endswith(".eml")]
+    if limit is not None:
+        eml_files = eml_files[:limit]
+
+    for fname in eml_files:
+        fpath = os.path.join(directory_path, fname)
+        try:
+            with open(fpath, "rb") as f:
+                content_bytes = f.read()
+            case = await process_raw_email_bytes(content_bytes, source="upload")
+            cases.append(case)
+        except Exception as e:
+            print(f"[-] Error processing {fname}: {e}")
+
+    return cases
+

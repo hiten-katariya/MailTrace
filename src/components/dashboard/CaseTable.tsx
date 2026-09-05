@@ -27,6 +27,8 @@ interface CaseTableProps {
   onSelectCase: (caseId: string) => void;
   onDeleteCase?: (caseId: string) => void;
   onDeleteCases?: (caseIds: string[]) => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
   isLoading?: boolean;
 }
 
@@ -35,6 +37,8 @@ export const CaseTable: React.FC<CaseTableProps> = ({
   onSelectCase,
   onDeleteCase,
   onDeleteCases,
+  onRefresh,
+  isRefreshing = false,
   isLoading = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -287,6 +291,19 @@ export const CaseTable: React.FC<CaseTableProps> = ({
           <span className="text-[10px] text-slate-400 ml-1">
             <strong className="text-slate-200 font-mono">{sortedCases.length}</strong> total
           </span>
+
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing || isLoading}
+              className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 text-[11px] font-mono transition-colors disabled:opacity-50 ml-1"
+              title="Refresh case table"
+            >
+              <RefreshCw className={`w-3 h-3 text-cyan-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -425,6 +442,22 @@ export const CaseTable: React.FC<CaseTableProps> = ({
                     <td className="py-2.5 px-3.5">
                       <div className="flex items-center gap-2 mb-0.5">
                         <RiskChip category={caseItem.risk_category} size="sm" />
+                        {caseItem.source === 'gmail' ? (
+                          <span
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-red-500/10 text-red-400 border border-red-500/20"
+                            title={caseItem.gmail_account ? `From Gmail: ${caseItem.gmail_account}` : 'Ingested from Gmail Live Scanning'}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                            GMAIL
+                          </span>
+                        ) : (
+                          <span
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-800/80 text-slate-400 border border-slate-700/60"
+                            title="Ingested via manual .eml file upload"
+                          >
+                            UPLOAD
+                          </span>
+                        )}
                       </div>
                       <p className="font-medium text-slate-100 group-hover:text-cyan-200 transition-colors line-clamp-1 text-xs">
                         {caseItem.subject}

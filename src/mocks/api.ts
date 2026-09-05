@@ -79,14 +79,12 @@ export async function getCases(params: CasesQueryParams = {}): Promise<CasesResp
       if (params.sort_by) searchParams.set('sort_by', params.sort_by);
       if (params.sort_order) searchParams.set('sort_order', params.sort_order);
       if (params.search) searchParams.set('search', params.search);
+      if (params.source) searchParams.set('source', params.source);
 
       const resp = await fetch(`${API_BASE_URL}/cases?${searchParams.toString()}`);
       if (resp.ok) {
         const data = await resp.json();
-        // If backend has cases, return them; otherwise combine or return
-        if (data.cases && data.cases.length > 0) {
-          return data;
-        }
+        return data;
       }
     } catch (e) {
       console.warn('Backend /cases unavailable, falling back to mock cases:', e);
@@ -95,6 +93,10 @@ export async function getCases(params: CasesQueryParams = {}): Promise<CasesResp
 
   await delay(150);
   let filtered = casesStore.map((c) => c.detail);
+
+  if (params.source && params.source !== 'all') {
+    filtered = filtered.filter((c) => c.source === params.source);
+  }
 
   if (params.search && params.search.trim() !== '') {
     const query = params.search.toLowerCase().trim();
@@ -677,3 +679,71 @@ export async function getAuditLogs(caseId?: string): Promise<{ logs: AuditLogEnt
   }
   return { logs: auditStore };
 }
+
+/**
+ * Gmail Integration Endpoints
+ */
+
+export function getLiveStreamUrl(): string {
+  return `${API_BASE_URL}/cases/stream`;
+}
+
+export async function getGmailAuthUrl(): Promise<{ auth_url: string; state: string }> {
+  const resp = await fetch(`${API_BASE_URL}/gmail/auth-url`);
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: 'Failed to fetch auth URL' }));
+    throw new Error(err.detail || 'Failed to fetch Google auth URL');
+  }
+  return await resp.json();
+}
+
+export async function sendGmailCallback(code: string, state: string): Promise<any> {
+  const resp = await fetch(`${API_BASE_URL}/gmail/callback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, state }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: 'Failed to exchange OAuth code' }));
+    throw new Error(err.detail || 'Failed to exchange authorization code');
+  }
+  return await resp.json();
+}
+
+export async function getGmailStatus(): Promise<{
+  connected: boolean;
+  email?: string | null;
+  status: string;
+  connected_at?: string | null;
+  last_polled_at?: string | null;
+  error_message?: string | null;
+}> {
+  try {
+    const resp = await fetch(`${API_BASE_URL}/gmail/status`);
+    if (resp.ok) {
+      return await resp.json();
+    }
+  } catch (e) {
+    console.warn('Backend /gmail/status unavailable:', e);
+  }
+  return {
+    connected: false,
+    email: null,
+    status: 'disconnected',
+    connected_at: null,
+    last_polled_at: null,
+    error_message: null,
+  };
+}
+
+export async function disconnectGmail(): Promise<{ success: boolean; message: string }> {
+  const resp = await fetch(`${API_BASE_URL}/gmail/disconnect`, {
+    method: 'POST',
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: 'Failed to disconnect Gmail' }));
+    throw new Error(err.detail || 'Failed to disconnect Gmail');
+  }
+  return await resp.json();
+}
+

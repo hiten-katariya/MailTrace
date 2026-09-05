@@ -15,6 +15,7 @@ async def get_retention_settings(db: AsyncSession = Depends(get_db)):
     return RetentionPolicySchema(
         retention_days=policy.retention_days,
         auto_purge=policy.auto_purge,
+        auto_trash_on_purge=getattr(policy, "auto_trash_on_purge", False),
         mask_pii=policy.mask_pii,
         mask_sender_email=policy.mask_sender_email,
         mask_recipient=policy.mask_recipient,
@@ -36,6 +37,9 @@ async def update_retention_settings(
     if update_data.auto_purge is not None:
         policy.auto_purge = update_data.auto_purge
         changes.append(f"auto_purge={update_data.auto_purge}")
+    if update_data.auto_trash_on_purge is not None:
+        policy.auto_trash_on_purge = update_data.auto_trash_on_purge
+        changes.append(f"auto_trash_on_purge={update_data.auto_trash_on_purge}")
     if update_data.mask_pii is not None:
         policy.mask_pii = update_data.mask_pii
         changes.append(f"mask_pii={update_data.mask_pii}")
@@ -62,6 +66,7 @@ async def update_retention_settings(
     return RetentionPolicySchema(
         retention_days=policy.retention_days,
         auto_purge=policy.auto_purge,
+        auto_trash_on_purge=getattr(policy, "auto_trash_on_purge", False),
         mask_pii=policy.mask_pii,
         mask_sender_email=policy.mask_sender_email,
         mask_recipient=policy.mask_recipient,

@@ -1,4 +1,5 @@
 import re
+import os
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Tuple
 from sqlalchemy import select, delete, and_
@@ -19,6 +20,7 @@ async def get_or_create_retention_policy(db: AsyncSession) -> RetentionPolicy:
             id=1,
             retention_days=90,
             auto_purge=True,
+            auto_trash_on_purge=False,
             mask_pii=True,
             mask_sender_email=True,
             mask_recipient=True,
@@ -62,8 +64,10 @@ def mask_email_address(email_str: Optional[str]) -> Optional[str]:
 async def execute_retention_purge(db: AsyncSession, retention_days: int) -> Tuple[int, datetime]:
     """
     Purges derived forensic analysis rows for cases older than retention_days,
+    removes raw .eml from local disk, optionally moves expired Gmail messages to Trash if auto_trash_on_purge is True,
     while ALWAYS preserving the immutable Case record and raw file hash (FR7.4).
     """
+    policy = await get_or_create_retention_policy(db)
     cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
     
     # Query cases older than cutoff that have not been purged yet
@@ -78,7 +82,7 @@ async def execute_retention_purge(db: AsyncSession, retention_days: int) -> Tupl
     
     purged_count = len(cases_to_purge)
     for c in cases_to_purge:
-        # Wipe derived child tables explicitly
+        # 1. Wipe derived child tables explicitly
         await db.execute(delete(Headers).where(Headers.case_id == c.id))
         await db.execute(delete(RelayHop).where(RelayHop.case_id == c.id))
         await db.execute(delete(NLPFinding).where(NLPFinding.case_id == c.id))
@@ -86,7 +90,36 @@ async def execute_retention_purge(db: AsyncSession, retention_days: int) -> Tupl
         await db.execute(delete(Geolocation).where(Geolocation.case_id == c.id))
         await db.execute(delete(DomainIntel).where(DomainIntel.case_id == c.id))
 
-        # Sanitize personal metadata in the Case record itself
+        # 2. Local raw .eml file removal
+        if c.raw_file_path and os.path.exists(c.raw_file_path):
+            try:
+                os.remove(c.raw_file_path)
+            except Exception as pe:
+                print(f"[-] Could not delete raw file {c.raw_file_path}: {pe}")
+
+        # 3. For source='gmail' cases: optionally move message to Gmail Trash if auto_trash_on_purge is enabled
+        if c.source == "gmail" and getattr(policy, "auto_trash_on_purge", False) and c.gmail_message_id and c.gmail_account:
+            try:
+                from backend.app.core.gmail_poller import trash_gmail_message
+                await trash_gmail_message(c.gmail_account, c.gmail_message_id, db)
+                audit_trash = AuditLog(
+                    username="retention_daemon",
+                    action="gmail_message_trashed",
+                    case_id=c.id,
+                    details=f"Moved Gmail message {c.gmail_message_id} to Gmail Trash for account {c.gmail_account}",
+                )
+                db.add(audit_trash)
+            except Exception as ge:
+                print(f"[-] Gmail trash API call failed for case {c.id} (msg {c.gmail_message_id}): {ge}")
+                audit_trash_fail = AuditLog(
+                    username="retention_daemon",
+                    action="gmail_trash_failed",
+                    case_id=c.id,
+                    details=f"Failed to trash Gmail message {c.gmail_message_id}: {str(ge)}",
+                )
+                db.add(audit_trash_fail)
+
+        # 4. Sanitize personal metadata in the Case record itself
         c.subject = "[PURGED - COMPLIANCE RETENTION]"
         c.sender = mask_email_address(c.sender) or "[PURGED]"
         if c.recipient:
@@ -95,7 +128,7 @@ async def execute_retention_purge(db: AsyncSession, retention_days: int) -> Tupl
         c.verdict_summary = f"Derived analysis purged per {retention_days}-day compliance retention policy. Evidence SHA-256 lock retained."
         c.is_purged = True
 
-        # Audit log entry for chain of custody
+        # 5. Audit log entry for chain of custody
         audit_entry = AuditLog(
             username="retention_daemon",
             action="case_purged",
@@ -108,3 +141,4 @@ async def execute_retention_purge(db: AsyncSession, retention_days: int) -> Tupl
         await db.commit()
 
     return purged_count, cutoff
+
