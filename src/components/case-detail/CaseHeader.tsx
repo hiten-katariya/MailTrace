@@ -130,7 +130,7 @@ export const CaseHeader: React.FC<CaseHeaderProps> = ({
               <div className="text-[10px] text-slate-400 font-sans">Synthesizing headers, NLP cues, and threat intel...</div>
             </div>
           ) : (
-            <ScoreBadge score={caseDetail.fraud_score} size="lg" />
+            <ScoreBadge score={caseDetail.fraud_score} riskCategory={caseDetail.risk_category} size="lg" />
           )}
         </div>
       </div>

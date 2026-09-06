@@ -17,5 +17,12 @@ class Attachment(Base):
     is_flagged: Mapped[bool] = mapped_column(Boolean, default=False)
     flag_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
+    # Quishing & OCR Forensics
+    has_qr_code: Mapped[bool] = mapped_column(Boolean, default=False)
+    qr_decoded_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ocr_extracted_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    image_only_lure_flag: Mapped[bool] = mapped_column(Boolean, default=False)
+
     # Relationship
     case: Mapped["Case"] = relationship("Case", back_populates="attachments")
+

@@ -9,6 +9,10 @@ class AttachmentFindingSchema(BaseModel):
     file_hash: Optional[str] = None
     is_flagged: bool = False
     flag_reason: Optional[str] = None
+    has_qr_code: bool = False
+    qr_decoded_url: Optional[str] = None
+    ocr_extracted_text: Optional[str] = None
+    image_only_lure_flag: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -30,5 +34,8 @@ class CaseContent(BaseModel):
     bec_indicators: List[str]
     urls: List[URLFindingSchema]
     attachments: List[AttachmentFindingSchema] = []
+    image_only_lure: bool = False
+    quishing_detected: bool = False
 
     model_config = ConfigDict(from_attributes=True)
+

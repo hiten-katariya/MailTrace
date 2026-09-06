@@ -15,6 +15,7 @@ from backend.app.core.ingestion import ParsedEmail
 from backend.app.core.header_analysis import analyze_email_headers
 from backend.app.core.content_analysis import analyze_email_content
 from backend.app.core.attachment_analysis import analyze_attachments
+from backend.app.core.image_analysis import analyze_email_images
 from backend.app.core.url_analysis import analyze_urls
 from backend.app.core.geolocation import geolocate_ip
 from backend.app.core.ip_reputation import query_abuseipdb
@@ -147,9 +148,27 @@ async def execute_case_pipeline(
             progress["geolocation"] = "in_progress"
             case.pipeline_progress = progress
 
-            # STAGE 2.5: Attachment Analysis & Malware Inspection
+            # STAGE 2.5: Attachment Analysis, Malware Inspection & Quishing/OCR
             attachment_findings = analyze_attachments(parsed_email.attachments)
+            image_results = await analyze_email_images(parsed_email)
+
+            image_findings_by_hash = {f.file_hash: f for f in image_results.findings}
+            image_findings_by_name = {f.filename: f for f in image_results.findings}
+
+            saved_attachment_hashes = set()
             for att in attachment_findings:
+                img_match = image_findings_by_hash.get(att.file_hash) or image_findings_by_name.get(att.filename)
+                has_qr = img_match.has_qr_code if img_match else False
+                qr_url = img_match.qr_decoded_url if img_match else None
+                ocr_text = img_match.ocr_extracted_text if img_match else None
+                img_lure = img_match.image_only_lure_flag if img_match else image_results.image_only_lure
+
+                is_flagged = att.is_flagged
+                flag_reason = att.flag_reason
+                if img_match and img_match.is_flagged:
+                    is_flagged = True
+                    flag_reason = f"{flag_reason}; {img_match.flag_reason}" if flag_reason else img_match.flag_reason
+
                 db_att = Attachment(
                     case_id=case_id,
                     filename=att.filename,
@@ -157,10 +176,35 @@ async def execute_case_pipeline(
                     detected_file_type=att.detected_file_type,
                     file_size=att.file_size,
                     file_hash=att.file_hash,
-                    is_flagged=att.is_flagged,
-                    flag_reason=att.flag_reason,
+                    is_flagged=is_flagged,
+                    flag_reason=flag_reason,
+                    has_qr_code=has_qr,
+                    qr_decoded_url=qr_url,
+                    ocr_extracted_text=ocr_text,
+                    image_only_lure_flag=img_lure,
                 )
                 db.add(db_att)
+                saved_attachment_hashes.add(att.file_hash)
+
+            # Persist inline images (e.g. data URIs or inline MIME images) not already in attachments
+            for img_f in image_results.findings:
+                if img_f.file_hash not in saved_attachment_hashes:
+                    db_att = Attachment(
+                        case_id=case_id,
+                        filename=img_f.filename,
+                        declared_content_type=img_f.content_type,
+                        detected_file_type=img_f.content_type,
+                        file_size=img_f.file_size,
+                        file_hash=img_f.file_hash,
+                        is_flagged=img_f.is_flagged,
+                        flag_reason=img_f.flag_reason,
+                        has_qr_code=img_f.has_qr_code,
+                        qr_decoded_url=img_f.qr_decoded_url,
+                        ocr_extracted_text=img_f.ocr_extracted_text,
+                        image_only_lure_flag=img_f.image_only_lure_flag,
+                    )
+                    db.add(db_att)
+                    saved_attachment_hashes.add(img_f.file_hash)
 
             await db.commit()
 
@@ -235,6 +279,7 @@ async def execute_case_pipeline(
                 geo_res=geo_res,
                 ip_rep_res=ip_rep_res,
                 attachment_results=attachment_findings,
+                image_results=image_results,
             )
 
             # Update Case record with final score and verdict

@@ -1,0 +1,45 @@
+Subject: Urgent: Scan QR Code to Authenticate Access
+From: security-noreply@identity-verify-m365.com
+To: analyst@target-corp.com
+Date: Sun, 06 Sep 2026 10:15:00 +0000
+Message-ID: <quishing-qr-test-01@identity-verify-m365.com>
+MIME-Version: 1.0
+Received: from mail.identity-verify-m365.com (198.51.100.22) by
+ mta.target-corp.com; Sun, 06 Sep 2026 10:15:05 +0000
+Authentication-Results: mta.target-corp.com; dkim=none; spf=fail
+ (mta.target-corp.com: domain of identity-verify-m365.com does not designate
+ 198.51.100.22 as permitted sender)
+ smtp.mailfrom=security-noreply@identity-verify-m365.com; dmarc=fail
+ action=none header.from=identity-verify-m365.com;
+Content-Type: multipart/mixed; boundary="===============4188182802499967460=="
+
+--===============4188182802499967460==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Your Microsoft 365 security session has expired.
+To restore your corporate access, scan the secure QR code attached below usin=
+g your mobile device authenticator.
+Failure to verify within 24 hours will result in account suspension.
+
+--===============4188182802499967460==
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="m365_authenticator_qr.png"
+MIME-Version: 1.0
+
+iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAACl0lEQVR4nO1bS26DMBAdD0hZwg16
+FOdmVW+Gj5IDVIJlpURTzfhHqGRAqlJc5i0cjN/C8st8bA+GYA8c7qIDKL8MXBlfQvll4Mr4Esov
+A1fGl1B+GbgyvoTyz7A+JqAFcP3DmOtkDEBsPK4vnM924A7uifmWGGN863ppGjJXaGSIjj3/zcCT
+8qdooXYEIBpZ2u7L0OCtu331fLYCNzM9lD8FLYluLQSvnKHrUwYene/YNQNwEIaGxH7/dD4rwDXC
+yflt+O04wE4Axkqk7e4tuLcvIx068PxR+VvWx0mKLKY7sVeeLgT2duH86uHT52f+ZqDyD2C/lPrk
++oa7d8mfIRj26+aDyv/V9QG/+bF0BxqgIXbN/olI3nE3Y9D1LwMPxocg3BikBTvmDW/D+RU3nfwF
+VN9a9YUgLb/gJ5Y22vScp/Zbsb7EDllU5ahLQW5RWs48VN+K9QWRkZ10DMIisjhuCcLqnyvWl4KM
+wWr9E0OeNL+qXt9B/HN2w5I/j2LJ0o1XEJo/V6oviK0+J1ld3CnlTZLqW6W+MDNT8dRJbvD+WfWt
+Wl9aHm0k10wpHKt/rrh+4122RrdLOIx0b/f5/aAdH3r+XP/5lc1FHN5dN8GwZU+s9luvvuAVFF8c
+DzREUM9JZ5aaX9Wpb0ZQ1e9/m9BNcqu+tddP0gc3AxfpWDmplHIdn3i9bj7bgTu4p/bPKQjn1JmS
+Oev9wn+pnyS/CebU2UiRLJdu5Eh82PlvBZ6M3y76RnyxL+KYDDc9i5xKPI42f1T+rvWhwZdOckzu
+pQg6ZFr6/cK/qJ8ETqhmJVeu/2yJy2XVfuu+/xXErS9jfmap9wu16mv0++6q9ELlF4Hl4R9Qfhm4
+Mr6E8svAlfEllF9G7evzDR28GDxLKjl2AAAAAElFTkSuQmCC
+
+--===============4188182802499967460==--

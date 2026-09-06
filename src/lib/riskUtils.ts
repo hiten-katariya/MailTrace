@@ -1,6 +1,6 @@
 import { RiskCategory, ProtocolStatus, ConfidenceLevel } from '../types/case';
 
-export function getRiskLevelFromScore(score: number): {
+export function getRiskLevelFromScore(score: number, explicitCategory?: RiskCategory): {
   category: RiskCategory;
   label: string;
   badgeBg: string;
@@ -8,6 +8,49 @@ export function getRiskLevelFromScore(score: number): {
   borderColor: string;
   barColor: string;
 } {
+  // If explicit riskCategory from backend is passed, align directly with backend verdict
+  if (explicitCategory) {
+    if (explicitCategory === 'bec') {
+      return {
+        category: 'bec',
+        label: 'BEC / Impersonation',
+        badgeBg: 'bg-rose-500/10',
+        textColor: 'text-rose-400',
+        borderColor: 'border-rose-500/25',
+        barColor: '#F43F5E',
+      };
+    }
+    if (explicitCategory === 'phishing') {
+      return {
+        category: 'phishing',
+        label: 'Critical Phish',
+        badgeBg: 'bg-red-500/10',
+        textColor: 'text-red-400',
+        borderColor: 'border-red-500/25',
+        barColor: '#EF4444',
+      };
+    }
+    if (explicitCategory === 'suspicious') {
+      return {
+        category: 'suspicious',
+        label: 'Suspicious',
+        badgeBg: 'bg-amber-500/10',
+        textColor: 'text-amber-400',
+        borderColor: 'border-amber-500/25',
+        barColor: '#F59E0B',
+      };
+    }
+    return {
+      category: 'legitimate',
+      label: 'Verified Clean',
+      badgeBg: 'bg-emerald-500/10',
+      textColor: 'text-emerald-400',
+      borderColor: 'border-emerald-500/25',
+      barColor: '#10B981',
+    };
+  }
+
+  // Consistent fallback thresholds matching backend (70+ phishing, 20-69 suspicious, <20 clean)
   if (score >= 70) {
     return {
       category: 'phishing',
@@ -18,7 +61,7 @@ export function getRiskLevelFromScore(score: number): {
       barColor: '#EF4444',
     };
   }
-  if (score >= 40) {
+  if (score >= 20) {
     return {
       category: 'suspicious',
       label: 'Suspicious',

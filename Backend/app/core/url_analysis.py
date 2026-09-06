@@ -121,8 +121,8 @@ def is_lookalike_domain(domain: str) -> tuple[bool, Optional[str]]:
         if normalized == brand:
             return True, f"Homoglyph typosquatting of '{brand}' (e.g. {domain})"
 
-        # Brand embedded inside a deceptive domain (e.g. microsoft-verify-auth.com, login-paypal.com)
-        if brand in registered_domain:
+        # Brand embedded inside a deceptive domain (e.g. microsoft-verify-auth.com, login-paypal.com, paypa1-security.com)
+        if brand in normalized or brand in registered_domain:
             return True, f"Deceptive brand impersonation containing '{brand}'"
 
         # Edit distance of 1 (e.g. micorsoft, paypall, aple)

@@ -642,7 +642,7 @@ export const LiveMailboxPage: React.FC<LiveMailboxPageProps> = ({
                       <div className="flex items-start sm:items-center gap-3.5 min-w-0">
                         {/* Score Visualization */}
                         <div className="shrink-0">
-                          <ScoreBadge score={item.fraud_score} size="sm" />
+                          <ScoreBadge score={item.fraud_score} riskCategory={item.risk_category} size="sm" />
                         </div>
 
                         {/* Subject, Sender & Verdict */}

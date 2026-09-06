@@ -240,9 +240,28 @@ NLP/content analysis results.
       "file_size": 45056,
       "file_hash": "a1b2c3d4...",
       "is_flagged": true,
-      "flag_reason": "Deceptive double extension detected: disguised as '.pdf' but executes as '.exe'; Payload camouflage: file extension '.exe' hides PE executable binary (MZ header detected)"
+      "flag_reason": "Deceptive double extension detected: disguised as '.pdf' but executes as '.exe'; Payload camouflage: file extension '.exe' hides PE executable binary (MZ header detected)",
+      "has_qr_code": false,
+      "qr_decoded_url": null,
+      "ocr_extracted_text": null,
+      "image_only_lure_flag": false
+    },
+    {
+      "filename": "m365_qr_verification.png",
+      "declared_content_type": "image/png",
+      "detected_file_type": "image/png",
+      "file_size": 18432,
+      "file_hash": "b2c3d4e5...",
+      "is_flagged": true,
+      "flag_reason": "Quishing hazard: QR code decodes to flagged lookalike/malicious URL 'https://login.paypa1-security.com/signin' (lookalike domain)",
+      "has_qr_code": true,
+      "qr_decoded_url": "https://login.paypa1-security.com/signin",
+      "ocr_extracted_text": "Scan this QR code to confirm your account access immediately.",
+      "image_only_lure_flag": true
     }
-  ]
+  ],
+  "image_only_lure": true,
+  "quishing_detected": true
 }
 ```
 

@@ -7,7 +7,7 @@ export interface ScoreSignal {
   weight: number;
   contribution: number;
   reason?: string;
-  sourceModule?: 'header' | 'nlp' | 'origin' | 'domain' | 'correlation';
+  sourceModule?: 'header' | 'nlp' | 'origin' | 'domain' | 'correlation' | 'attachment' | 'image';
 }
 
 export type CaseSource = 'upload' | 'gmail';
@@ -91,6 +91,10 @@ export interface AttachmentFinding {
   file_hash: string;
   is_flagged: boolean;
   flag_reason?: string;
+  has_qr_code?: boolean;
+  qr_decoded_url?: string | null;
+  ocr_extracted_text?: string | null;
+  image_only_lure_flag?: boolean;
 }
 
 export interface CaseContent {
@@ -102,6 +106,8 @@ export interface CaseContent {
   attachments?: AttachmentFinding[];
   sentiment_urgency_score?: number;
   impersonation_target?: string;
+  image_only_lure?: boolean;
+  quishing_detected?: boolean;
 }
 
 export interface DomainIntel {

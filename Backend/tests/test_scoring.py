@@ -214,3 +214,29 @@ def test_unauthenticated_bulk_spam_scoring():
     assert res.fraud_score >= 70, f"Expected spam to score >= 70, got {res.fraud_score}"
     assert res.risk_category in ["phishing", "suspicious"]
 
+
+def test_risk_category_bucket_consistency():
+    """Asserts risk_category is strictly derived from composite fraud_score buckets across the entire 0-100 scale."""
+    from backend.app.core.scoring import get_risk_category
+
+    for score in range(0, 20):
+        assert get_risk_category(score) == "legitimate", f"Score {score} should be legitimate"
+    for score in range(20, 70):
+        assert get_risk_category(score) == "suspicious", f"Score {score} should be suspicious"
+    for score in range(70, 101):
+        assert get_risk_category(score) == "phishing", f"Score {score} should be phishing"
+
+    # Assert BEC override applies regardless of score
+    for score in (5, 37, 75):
+        assert get_risk_category(score, bec_indicators=["wire transfer"]) == "bec"
+        assert get_risk_category(score, content_classification="bec") == "bec"
+
+
+def test_score_37_returns_suspicious_preventing_verdict_contradiction():
+    """Asserts that a score of 37 without BEC indicators returns 'suspicious', preventing verdict contradiction."""
+    from backend.app.core.scoring import get_risk_category
+
+    cat = get_risk_category(37, bec_indicators=[])
+    assert cat == "suspicious", f"Expected 'suspicious' for score 37, got '{cat}'"
+
+

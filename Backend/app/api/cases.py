@@ -691,9 +691,20 @@ async def get_case_content(case_id: str, db: AsyncSession = Depends(get_db)):
             file_hash=a.file_hash,
             is_flagged=a.is_flagged,
             flag_reason=a.flag_reason,
+            has_qr_code=getattr(a, "has_qr_code", False),
+            qr_decoded_url=getattr(a, "qr_decoded_url", None),
+            ocr_extracted_text=getattr(a, "ocr_extracted_text", None),
+            image_only_lure_flag=getattr(a, "image_only_lure_flag", False),
         )
         for a in attachments_db
     ]
+
+    has_image_only_lure = any(getattr(a, "image_only_lure_flag", False) for a in attachments_db)
+    has_quishing = any(
+        (getattr(a, "has_qr_code", False) and getattr(a, "is_flagged", False))
+        or "quishing" in (getattr(a, "flag_reason", "") or "").lower()
+        for a in attachments_db
+    )
 
     return CaseContent(
         classification=nlp_db.classification,
@@ -704,6 +715,8 @@ async def get_case_content(case_id: str, db: AsyncSession = Depends(get_db)):
         bec_indicators=nlp_db.bec_indicators or [],
         urls=urls_schema,
         attachments=attachments_schema,
+        image_only_lure=has_image_only_lure,
+        quishing_detected=has_quishing,
     )
 
 

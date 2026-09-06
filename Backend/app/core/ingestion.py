@@ -1,4 +1,5 @@
 import os
+import re
 import email
 from email import policy
 from email.parser import BytesParser
@@ -174,8 +175,11 @@ def parse_raw_email(content_bytes: bytes) -> ParsedEmail:
     elif html_clean_text and len(html_clean_text) > len(body_text) * 1.5:
         body_text = f"{body_text}\n\n{html_clean_text}"
 
+    # Strip collection infrastructure artifacts (e.g. honeypot recipient address, mailing list footers)
+    body_text = re.sub(r'phishing@pot(?:\.internal|\.com)?', '', body_text, flags=re.IGNORECASE)
+    body_text = re.sub(r'spamassassin-(?:sightings|talk)(?:@lists\.sourceforge\.net|\s+mailing\s+list)?', '', body_text, flags=re.IGNORECASE)
+
     # Extract URLs from HTML hrefs and plain text
-    import re
     url_pattern = re.compile(r'https?://[^\s<>"\')]+', re.IGNORECASE)
     extracted_urls = set()
 

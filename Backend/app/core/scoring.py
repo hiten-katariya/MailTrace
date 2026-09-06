@@ -43,6 +43,33 @@ class CompositeScoringResult:
         self.confidence = confidence
         self.verdict_summary = verdict_summary
         self.score_breakdown = score_breakdown
+def get_risk_category(
+    fraud_score: int,
+    bec_indicators: Optional[List[str]] = None,
+    content_classification: Optional[str] = None,
+) -> str:
+    """
+    Centralized, single source of truth mapping composite fraud_score to risk_category.
+
+    Defined buckets:
+      - 70-100: 'phishing' (aligned with ALERT_THRESHOLD = 70)
+      - 20-69:  'suspicious' (score brackets 21-40, 41-60, 61-80)
+      - 0-19:   'legitimate'
+
+    Sole exception:
+      - Explicit BEC indicators or content classification == 'bec' -> 'bec'
+    """
+    if (bec_indicators and len(bec_indicators) > 0) or content_classification == "bec":
+        return "bec"
+
+    score = min(100, max(0, fraud_score))
+    if score >= 70:
+        return "phishing"
+    elif score >= 20:
+        return "suspicious"
+    else:
+        return "legitimate"
+
 
 def calculate_composite_score(
     headers_res: HeaderAnalysisResult,
@@ -52,6 +79,7 @@ def calculate_composite_score(
     geo_res: GeolocationResult,
     ip_rep_res: IPReputationResult,
     attachment_results: Optional[List[Any]] = None,
+    image_results: Optional[Any] = None,
     # Phase 4 extension hooks
     correlation_data: Optional[Dict[str, Any]] = None,
     threat_intel_matches: Optional[List[Dict[str, Any]]] = None,
@@ -333,7 +361,7 @@ def calculate_composite_score(
     signals.extend(cat5_signals)
 
     # ==========================================
-    # CATEGORY 6: Attachment Risk (Max 10 pts)
+    # CATEGORY 6: Attachment & Image/Quishing Risk (Max 10 pts)
     # ==========================================
     cat6_signals = []
     if attachment_results:
@@ -355,6 +383,15 @@ def calculate_composite_score(
                 elif "executable" in flag_reason.lower():
                     contrib = 8
                     sig_name = "High-Risk Executable File Attachment"
+                elif "quishing" in flag_reason.lower() or "qr code" in flag_reason.lower():
+                    contrib = 10
+                    sig_name = "Malicious QR Code Destination (Quishing)"
+                elif "ocr" in flag_reason.lower() or "screenshot" in flag_reason.lower():
+                    contrib = 6
+                    sig_name = "OCR Extracted Phishing / BEC Image Text"
+                elif "image-only lure" in flag_reason.lower():
+                    contrib = 4
+                    sig_name = "Image-Only Visual Lure (Text Evasion)"
                 else:
                     contrib = 5
                     sig_name = "Suspicious Attachment Finding"
@@ -366,6 +403,68 @@ def calculate_composite_score(
                     reason=f"Attachment '{filename}': {flag_reason}.",
                     sourceModule="attachment",
                 ))
+
+    # Evaluate Image & Quishing Results
+    if image_results:
+        findings = getattr(image_results, "findings", []) if not isinstance(image_results, dict) else image_results.get("findings", [])
+        for f in findings:
+            has_qr = getattr(f, "has_qr_code", False) if not isinstance(f, dict) else f.get("has_qr_code", False)
+            qr_url = getattr(f, "qr_decoded_url", None) if not isinstance(f, dict) else f.get("qr_decoded_url")
+            qr_urls = getattr(f, "qr_url_findings", []) if not isinstance(f, dict) else f.get("qr_url_findings", [])
+            ocr_analysis = getattr(f, "ocr_analysis", None) if not isinstance(f, dict) else f.get("ocr_analysis")
+            fname = getattr(f, "filename", "image") if not isinstance(f, dict) else f.get("filename", "image")
+
+            # 1. QR Code findings
+            if has_qr and qr_url:
+                flagged_qr_urls = [u for u in qr_urls if (u.get("is_flagged") if isinstance(u, dict) else getattr(u, "is_flagged", False))]
+                if flagged_qr_urls:
+                    first_u = flagged_qr_urls[0]
+                    u_reason = first_u.get("reason", "suspicious destination") if isinstance(first_u, dict) else getattr(first_u, "reason", "suspicious destination")
+                    cat6_signals.append(ScoreSignal(
+                        signal="Malicious QR Code Destination (Quishing)",
+                        weight=10,
+                        contribution=10,
+                        reason=f"Decoded QR code in '{fname}' directs to flagged lookalike/phishing destination: '{qr_url}' ({u_reason}).",
+                        sourceModule="image",
+                    ))
+                else:
+                    cat6_signals.append(ScoreSignal(
+                        signal="Embedded QR Code Payload Detected",
+                        weight=4,
+                        contribution=2,
+                        reason=f"Image '{fname}' contains a QR code with destination '{qr_url}'.",
+                        sourceModule="image",
+                    ))
+
+            # 2. OCR Text findings
+            if ocr_analysis:
+                cls_name = ocr_analysis.get("classification", "")
+                if cls_name in ("phishing", "bec"):
+                    cat6_signals.append(ScoreSignal(
+                        signal="OCR Extracted Phishing / BEC Image Text",
+                        weight=6,
+                        contribution=6,
+                        reason=f"Visual image '{fname}' OCR analysis classified content as {cls_name.upper()} with {int(ocr_analysis.get('confidence', 0.8)*100)}% confidence.",
+                        sourceModule="image",
+                    ))
+                elif ocr_analysis.get("flagged_phrases"):
+                    cat6_signals.append(ScoreSignal(
+                        signal="OCR Extracted Coercive Text Cues",
+                        weight=4,
+                        contribution=4,
+                        reason=f"Visual image '{fname}' OCR extracted urgency/threat phrases: {', '.join(ocr_analysis['flagged_phrases'][:2])}.",
+                        sourceModule="image",
+                    ))
+
+        # 3. Image-Only Evasion Signal
+        if getattr(image_results, "image_only_lure", False) if not isinstance(image_results, dict) else image_results.get("image_only_lure", False):
+            cat6_signals.append(ScoreSignal(
+                signal="Image-Only Visual Lure (Text Evasion)",
+                weight=5,
+                contribution=3,
+                reason="Email contains substantial visual imagery with minimal/no plain text body to evade NLP perimeter filters.",
+                sourceModule="image",
+            ))
 
     cat6_total = min(10, sum(s.contribution for s in cat6_signals))
     signals.extend(cat6_signals)
@@ -398,15 +497,12 @@ def calculate_composite_score(
     raw_total_score = cat1_total + cat2_total + cat3_total + cat4_total + cat5_total + cat6_total
     fraud_score = min(100, max(0, raw_total_score))
 
-    # Deduce Risk Category
-    if content_res.bec_indicators or content_res.classification == "bec":
-        risk_category = "bec"
-    elif fraud_score >= 60 or (content_res.classification == "phishing" and not is_fully_authenticated and (fraud_score >= 35 or (content_res.classification_confidence >= 0.85 and fraud_score >= 25))):
-        risk_category = "phishing"
-    elif fraud_score >= 35 or (content_res.classification == "phishing" and not is_fully_authenticated) or (content_res.classification == "suspicious" and fraud_score >= 20):
-        risk_category = "suspicious"
-    else:
-        risk_category = "legitimate"
+    # Deduce Risk Category via single source of truth
+    risk_category = get_risk_category(
+        fraud_score=fraud_score,
+        bec_indicators=content_res.bec_indicators,
+        content_classification=content_res.classification,
+    )
 
     # Deduce Confidence
     if fraud_score >= 75 or fraud_score <= 25:
@@ -430,6 +526,10 @@ def calculate_composite_score(
         reasons.append("deceptive lookalike URLs")
     if any(getattr(a, "is_flagged", False) if not isinstance(a, dict) else a.get("is_flagged", False) for a in (attachment_results or [])):
         reasons.append("suspicious attachment payload")
+    if image_results and getattr(image_results, "quishing_detected", False):
+        reasons.append("quishing QR code / visual lure detected")
+    elif image_results and getattr(image_results, "image_only_lure", False):
+        reasons.append("image-only filter evasion lure")
     if content_res.bec_indicators:
         reasons.append("financial payment diversion language")
     elif content_res.flagged_phrases:

@@ -1,9 +1,11 @@
 import React from 'react';
 import { ShieldAlert, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { getRiskLevelFromScore } from '../../lib/riskUtils';
+import { RiskCategory } from '../../types/case';
 
 interface ScoreBadgeProps {
   score: number;
+  riskCategory?: RiskCategory;
   size?: 'sm' | 'md' | 'lg';
   showBar?: boolean;
   showIcon?: boolean;
@@ -12,16 +14,21 @@ interface ScoreBadgeProps {
 
 export const ScoreBadge: React.FC<ScoreBadgeProps> = ({
   score,
+  riskCategory,
   size = 'md',
   showBar = false,
   showIcon = true,
   className = '',
 }) => {
-  const risk = getRiskLevelFromScore(score);
+  const risk = getRiskLevelFromScore(score, riskCategory);
 
   const getIcon = () => {
-    if (score >= 70) return <ShieldAlert className={size === 'lg' ? 'w-5 h-5 text-red-400' : 'w-3.5 h-3.5 text-red-400'} />;
-    if (score >= 40) return <AlertTriangle className={size === 'lg' ? 'w-5 h-5 text-amber-400' : 'w-3.5 h-3.5 text-amber-400'} />;
+    if (risk.category === 'phishing' || risk.category === 'bec') {
+      return <ShieldAlert className={size === 'lg' ? 'w-5 h-5 text-red-400' : 'w-3.5 h-3.5 text-red-400'} />;
+    }
+    if (risk.category === 'suspicious') {
+      return <AlertTriangle className={size === 'lg' ? 'w-5 h-5 text-amber-400' : 'w-3.5 h-3.5 text-amber-400'} />;
+    }
     return <ShieldCheck className={size === 'lg' ? 'w-5 h-5 text-emerald-400' : 'w-3.5 h-3.5 text-emerald-400'} />;
   };
 

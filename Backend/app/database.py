@@ -63,6 +63,16 @@ async def init_db():
                 await conn.execute(text("ALTER TABLE retention_policy ADD COLUMN IF NOT EXISTS auto_trash_on_purge BOOLEAN DEFAULT FALSE"))
             except Exception:
                 pass
+            for col_name, col_def in [
+                ("has_qr_code", "BOOLEAN DEFAULT FALSE"),
+                ("qr_decoded_url", "TEXT"),
+                ("ocr_extracted_text", "TEXT"),
+                ("image_only_lure_flag", "BOOLEAN DEFAULT FALSE"),
+            ]:
+                try:
+                    await conn.execute(text(f"ALTER TABLE attachments ADD COLUMN IF NOT EXISTS {col_name} {col_def}"))
+                except Exception:
+                    pass
         print(f"[+] Connected successfully to database: {settings.DATABASE_URL.split('@')[-1] if '@' in settings.DATABASE_URL else settings.DATABASE_URL}")
     except Exception as e:
         print(f"[-] PostgreSQL connection error: {e}")
@@ -87,6 +97,16 @@ async def init_db():
                 await conn.execute(text("ALTER TABLE retention_policy ADD COLUMN auto_trash_on_purge BOOLEAN DEFAULT FALSE"))
             except Exception:
                 pass
+            for col_name, col_def in [
+                ("has_qr_code", "BOOLEAN DEFAULT FALSE"),
+                ("qr_decoded_url", "TEXT"),
+                ("ocr_extracted_text", "TEXT"),
+                ("image_only_lure_flag", "BOOLEAN DEFAULT FALSE"),
+            ]:
+                try:
+                    await conn.execute(text(f"ALTER TABLE attachments ADD COLUMN {col_name} {col_def}"))
+                except Exception:
+                    pass
         print("[+] SQLite database initialized successfully at backend/data/mailtrace.db")
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

@@ -3,7 +3,7 @@ import joblib
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report, accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 
@@ -25,7 +25,7 @@ for p in MODEL_OUTPUT_PATHS:
 
 def train_model():
     print("=" * 60)
-    print("=== Training TF-IDF + MLP (Multi-Layer Perceptron) Neural Network ===")
+    print("=== Training TF-IDF + Logistic Regression Phishing Classifier ===")
     print("=" * 60)
 
     data_path = None
@@ -63,17 +63,24 @@ def train_model():
 
     from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
     custom_stopwords = list(ENGLISH_STOP_WORDS.union({
+        # Baseline Enron & spam filters
         "enron", "dmdx", "handyboard", "linguistics", "9fans", "ra", "houston",
         "kaminski", "skilling", "vince", "shirley", "ect", "diet", "pills", "cialis",
         "viagra", "vicodin", "xanax", "valium", "2001", "2000", "1999", "1998", "1997",
-        "mike", "john", "hb", "eol", "pm", "ur", "kent"
+        "mike", "john", "hb", "eol", "pm", "ur", "kent",
+        # Temporal leakage tokens (disjoint collection eras 1997-2002 vs 2020-2026)
+        "2002", "2003", "2004", "2005", "2020", "2021", "2022", "2023", "2024", "2025", "2026",
+        # Dataset / corpus-name leakage tokens
+        "spamassassin", "spamassassin-sightings", "sightings", "pot",
+        # Lingering Enron artifacts
+        "hou", "hpl", "713", "enron.com", "louise", "jim", "mark"
     }))
 
-    # Construct MLP Neural Network Pipeline
-    print("[+] Building TF-IDF + Multi-Layer Perceptron (MLP) architecture...")
+    # Construct Logistic Regression Pipeline (Approved Baseline)
+    print("[+] Building TF-IDF + Logistic Regression architecture...")
     pipeline = Pipeline([
         ("tfidf", TfidfVectorizer(
-            max_features=25000,
+            max_features=12000,
             ngram_range=(1, 2),
             token_pattern=r"(?u)\b\w[\w\.\-]+\w\b|\b\w+\b",
             stop_words=custom_stopwords,
@@ -81,19 +88,11 @@ def train_model():
             strip_accents="unicode",
             min_df=2,
         )),
-        ("clf", MLPClassifier(
-            hidden_layer_sizes=(256, 128),
-            activation="relu",
-            solver="adam",
-            alpha=1e-4,
-            batch_size=256,
-            learning_rate_init=0.001,
-            max_iter=35,
-            early_stopping=True,
-            validation_fraction=0.1,
-            n_iter_no_change=4,
+        ("clf", LogisticRegression(
+            C=2.0,
+            max_iter=1000,
+            class_weight="balanced",
             random_state=42,
-            verbose=True,
         )),
     ])
 

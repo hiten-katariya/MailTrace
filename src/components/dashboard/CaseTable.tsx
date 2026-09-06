@@ -428,7 +428,7 @@ export const CaseTable: React.FC<CaseTableProps> = ({
 
                     {/* Score & Category Column */}
                     <td className="py-2.5 px-3.5">
-                      <ScoreBadge score={caseItem.fraud_score} size="md" showBar />
+                      <ScoreBadge score={caseItem.fraud_score} riskCategory={caseItem.risk_category} size="md" showBar />
                     </td>
 
                     {/* Case ID */}
