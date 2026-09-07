@@ -372,7 +372,16 @@ async def analyze_email_images(parsed_email) -> ImageAnalysisResult:
                 "impersonation_target": c_res.impersonation_target,
             }
 
-            if c_res.classification in ("phishing", "bec"):
+            # A visual screenshot lure must contain actual coercive indicators, flagged phrases,
+            # or substantial text (>= 6 words) classified as phishing/bec by NLP
+            words = ocr_text.split()
+            is_lure_text = (
+                (c_res.classification in ("phishing", "bec") and (len(words) >= 6 or c_res.flagged_phrases or c_res.sentiment_urgency_score > 30))
+                or bool(c_res.flagged_phrases)
+                or bool(c_res.bec_indicators)
+            )
+
+            if is_lure_text and c_res.classification in ("phishing", "bec"):
                 quishing_detected = True
                 flag_reasons.append(
                     f"Visual screenshot lure: OCR extracted {c_res.classification.upper()} text ({int(c_res.classification_confidence*100)}% confidence)"

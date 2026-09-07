@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getCampaigns, getCampaignById } from '../mocks/api';
+import { getCampaigns, getCampaignById, getCases } from '../mocks/api';
 import { CampaignCard } from '../components/campaign/CampaignCard';
 import { CampaignClusterTimeline } from '../components/campaign/CampaignClusterTimeline';
 import { Layers, RefreshCw } from 'lucide-react';
@@ -36,6 +36,11 @@ export const CampaignPage: React.FC<CampaignPageProps> = ({
     queryKey: ['campaign-detail', selectedCampaignId],
     queryFn: () => getCampaignById(selectedCampaignId),
     enabled: !!selectedCampaignId,
+  });
+
+  const { data: casesData } = useQuery({
+    queryKey: ['cases-all-summary'],
+    queryFn: () => getCases({ limit: 100 }),
   });
 
   return (
@@ -88,6 +93,7 @@ export const CampaignPage: React.FC<CampaignPageProps> = ({
           ) : (
             <CampaignClusterTimeline
               campaign={campaignDetail}
+              cases={casesData?.cases || []}
               onSelectCase={onSelectCase}
             />
           )}
