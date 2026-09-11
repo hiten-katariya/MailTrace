@@ -5,12 +5,14 @@ import { Dropzone } from '../components/upload/Dropzone';
 import { PipelineProgress } from '../components/upload/PipelineProgress';
 import { Upload } from 'lucide-react';
 import { IngestResponse } from '../types/api';
+import { useNavigate } from 'react-router-dom';
 
 interface UploadPageProps {
-  onCaseCreated: (caseId: string) => void;
+  onCaseCreated?: (caseId: string) => void;
 }
 
 export const UploadPage: React.FC<UploadPageProps> = ({ onCaseCreated }) => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [ingestResult, setIngestResult] = useState<IngestResponse | null>(null);
 
@@ -52,7 +54,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onCaseCreated }) => {
             filename={ingestResult.filename || 'uploaded_email.eml'}
             caseId={ingestResult.case_id}
             fileHash={ingestResult.file_hash}
-            onComplete={(id) => onCaseCreated(id)}
+            onComplete={(id) => (onCaseCreated ? onCaseCreated(id) : navigate(`/case/${id}`))}
           />
 
           <div className="text-center pt-1">

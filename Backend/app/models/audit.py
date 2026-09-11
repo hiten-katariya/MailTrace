@@ -12,11 +12,18 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True, index=True)
+    hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     full_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    role: Mapped[str] = mapped_column(String(32), default="analyst")  # 'analyst', 'investigator', 'admin'
+    role: Mapped[str] = mapped_column(String(32), default="user")  # 'user', 'admin'
+    auth_provider: Mapped[str] = mapped_column(String(32), default="local")  # 'local', 'google'
+    google_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, unique=True, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=get_utc_now, server_default=func.now())
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == "admin" or (bool(self.email) and self.email.lower() == "hiten8411jdrravi@gmail.com")
 
 
 class AuditLog(Base):

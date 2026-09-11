@@ -50,7 +50,7 @@ async def get_google_auth_url():
         "client_id": settings.GOOGLE_CLIENT_ID,
         "redirect_uri": settings.GOOGLE_REDIRECT_URI,
         "response_type": "code",
-        "scope": "https://www.googleapis.com/auth/gmail.modify",
+        "scope": "https://www.googleapis.com/auth/gmail.readonly",
         "access_type": "offline",
         "prompt": "consent",
         "state": state,

@@ -391,7 +391,7 @@ async def test_gmail_api_endpoints(client: AsyncClient, db_session):
     auth_data = auth_resp.json()
     assert "auth_url" in auth_data
     assert "accounts.google.com" in auth_data["auth_url"]
-    assert "gmail.modify" in auth_data["auth_url"]
+    assert "gmail.readonly" in auth_data["auth_url"]
     assert "state" in auth_data
 
     # 2. GET /api/gmail/status

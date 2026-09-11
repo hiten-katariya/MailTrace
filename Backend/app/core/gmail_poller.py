@@ -208,20 +208,21 @@ async def poll_gmail_account(account_id: str, db_override: Optional[Any] = None)
                 await _run_poll(db)
 
 
-def schedule_gmail_account(account_id: str):
+def schedule_gmail_account(account_id: str, poll_interval_seconds: Optional[int] = None):
     """Registers an APScheduler interval job for an active Gmail account."""
+    interval = poll_interval_seconds or settings.GMAIL_POLL_INTERVAL_SECONDS
     job_id = f"gmail_poll_{account_id}"
     if not scheduler.get_job(job_id):
         scheduler.add_job(
             poll_gmail_account,
             "interval",
-            seconds=settings.GMAIL_POLL_INTERVAL_SECONDS,
+            seconds=interval,
             id=job_id,
             args=[account_id],
             max_instances=1,
             replace_existing=True,
         )
-        print(f"[+] Scheduled Gmail polling for account {account_id} every {settings.GMAIL_POLL_INTERVAL_SECONDS}s")
+        print(f"[+] Scheduled Gmail polling for account {account_id} every {interval}s")
 
 
 def unschedule_gmail_account(account_id: str):

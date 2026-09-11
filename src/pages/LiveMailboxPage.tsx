@@ -30,9 +30,10 @@ import { ScoreBadge } from '../components/common/ScoreBadge';
 import { RiskChip } from '../components/common/RiskChip';
 import { ConfidenceTag } from '../components/common/ConfidenceTag';
 import { EvidenceCard } from '../components/common/EvidenceCard';
+import { useNavigate } from 'react-router-dom';
 
 interface LiveMailboxPageProps {
-  onSelectCase: (caseId: string) => void;
+  onSelectCase?: (caseId: string) => void;
   onNavigateToSettings?: () => void;
 }
 
@@ -40,6 +41,7 @@ export const LiveMailboxPage: React.FC<LiveMailboxPageProps> = ({
   onSelectCase,
   onNavigateToSettings,
 }) => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // 1. Single Shared Coarse Clock for all message timestamps (updates every 5s)
@@ -415,14 +417,14 @@ export const LiveMailboxPage: React.FC<LiveMailboxPageProps> = ({
             <div className="p-3.5 rounded-lg bg-soc-inset border border-slate-800 text-xs space-y-2">
               <div className="flex items-center gap-2 text-cyan-300 font-mono text-[11px] font-semibold">
                 <Shield className="w-4 h-4 text-cyan-400" />
-                <span>Scope & Trash Capability Disclosure (gmail.modify)</span>
+                <span>Scope & Security Disclosure (gmail.readonly)</span>
               </div>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Connecting your Gmail account grants MailTrace read and modify access (
+                Connecting your Gmail account grants MailTrace strictly read-only access (
                 <code className="px-1 py-0.5 rounded bg-slate-800 text-cyan-300 font-mono text-[10px]">
-                  https://www.googleapis.com/auth/gmail.modify
+                  https://www.googleapis.com/auth/gmail.readonly
                 </code>
-                ) to monitor incoming messages and run real-time threat forensics. When the 'Move Expired Mail to Gmail Trash' retention setting is enabled, emails older than your configured retention period will be moved to your Gmail Trash (recoverable within Google's standard 30-day trash window). MailTrace will never permanently delete messages or send emails on your behalf.
+                ) to inspect incoming messages and run real-time threat forensics. MailTrace operates with zero write or delete permissions and can never modify, send, compose, or delete any messages in your inbox.
               </p>
             </div>
 
@@ -520,14 +522,12 @@ export const LiveMailboxPage: React.FC<LiveMailboxPageProps> = ({
             <span>
               Retention threshold ({retentionDays} days) can be modified in the main Settings & Compliance page.
             </span>
-            {onNavigateToSettings && (
-              <button
-                onClick={onNavigateToSettings}
-                className="text-cyan-400 hover:text-cyan-300 font-mono underline"
-              >
-                Go to Compliance Settings →
-              </button>
-            )}
+            <button
+              onClick={() => onNavigateToSettings ? onNavigateToSettings() : navigate('/settings')}
+              className="text-cyan-400 hover:text-cyan-300 font-mono underline cursor-pointer"
+            >
+              Go to Compliance Settings →
+            </button>
           </div>
         </div>
       )}
@@ -628,7 +628,7 @@ export const LiveMailboxPage: React.FC<LiveMailboxPageProps> = ({
                 return (
                   <div
                     key={item.case_id}
-                    onClick={() => onSelectCase(item.case_id)}
+                    onClick={() => (onSelectCase ? onSelectCase(item.case_id) : navigate(`/case/${item.case_id}`))}
                     className={`group relative p-3.5 rounded-lg bg-soc-panel hover:bg-soc-hover border transition-all cursor-pointer shadow-sm hover:shadow-md ${
                       isHighlighted
                         ? 'border-cyan-400 bg-cyan-950/20 ring-1 ring-cyan-400/50 scale-[1.005]'

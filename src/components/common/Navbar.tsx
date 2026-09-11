@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   ShieldAlert,
   Upload,
@@ -11,28 +12,46 @@ import {
   Activity,
   Terminal,
   Mail,
+  Crown,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getAlerts } from '../../mocks/api';
 import { ScoreBadge } from './ScoreBadge';
+import { useAuth } from '../../context/AuthContext';
 
 interface NavbarProps {
-  currentTab: 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings' | 'case-detail';
-  onNavigate: (tab: 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings') => void;
+  currentTab?: 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings' | 'case-detail';
+  onNavigate?: (tab: 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings') => void;
   onSelectCase?: (caseId: string) => void;
-  onLogout: () => void;
+  onLogout?: () => void;
   activeAnalystName?: string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  currentTab,
+  currentTab: propTab,
   onNavigate,
   onSelectCase,
   onLogout,
-  activeAnalystName = 'Alex Rivera (Analyst-01)',
+  activeAnalystName,
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, isAdmin, logout } = useAuth();
+
   const [showAlertsMenu, setShowAlertsMenu] = useState(false);
   const [timeUtc, setTimeUtc] = useState(new Date().toISOString().substring(11, 19) + ' UTC');
+
+  // Determine active tab from location or prop
+  const currentPath = location.pathname;
+  let activeTab = propTab;
+  if (!activeTab) {
+    if (currentPath.startsWith('/dashboard') || currentPath.startsWith('/case/')) activeTab = 'dashboard';
+    else if (currentPath.startsWith('/live-mailbox')) activeTab = 'live-mailbox';
+    else if (currentPath.startsWith('/upload')) activeTab = 'upload';
+    else if (currentPath.startsWith('/campaigns')) activeTab = 'campaigns';
+    else if (currentPath.startsWith('/settings')) activeTab = 'settings';
+    else activeTab = 'dashboard';
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -49,6 +68,25 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const alerts = alertsData?.alerts || [];
   const criticalCount = alerts.length;
+
+  const handleNavClick = (tab: 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings') => {
+    if (onNavigate) {
+      onNavigate(tab);
+    } else {
+      navigate(`/${tab}`);
+    }
+  };
+
+  const handleLogoutClick = () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      logout();
+      navigate('/sign-in');
+    }
+  };
+
+  const displayName = activeAnalystName || user?.name || user?.username || 'Security Analyst';
 
   return (
     <header className="sticky top-0 z-50 bg-[#0A0F18]/95 backdrop-blur-md border-b border-slate-800/40">
@@ -81,7 +119,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Brand Logo & Tagline */}
         <div className="flex items-center gap-8">
           <div
-            onClick={() => onNavigate('dashboard')}
+            onClick={() => handleNavClick('dashboard')}
             className="flex items-center gap-2.5 cursor-pointer group"
           >
             <div className="flex items-center justify-center w-7 h-7 rounded bg-cyan-500/10 border border-cyan-500/30 group-hover:border-cyan-400 transition-colors shadow-soc-subtle">
@@ -105,9 +143,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-1">
             <button
-              onClick={() => onNavigate('dashboard')}
-              className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors ${
-                currentTab === 'dashboard' || currentTab === 'case-detail'
+              onClick={() => handleNavClick('dashboard')}
+              className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors cursor-pointer ${
+                activeTab === 'dashboard' || activeTab === 'case-detail'
                   ? 'bg-cyan-500/10 text-cyan-300 font-semibold border-b-2 border-cyan-400'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
               }`}
@@ -117,9 +155,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
-              onClick={() => onNavigate('live-mailbox')}
-              className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors ${
-                currentTab === 'live-mailbox'
+              onClick={() => handleNavClick('live-mailbox')}
+              className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors cursor-pointer ${
+                activeTab === 'live-mailbox'
                   ? 'bg-cyan-500/10 text-cyan-300 font-semibold border-b-2 border-cyan-400'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
               }`}
@@ -129,9 +167,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
-              onClick={() => onNavigate('upload')}
-              className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors ${
-                currentTab === 'upload'
+              onClick={() => handleNavClick('upload')}
+              className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors cursor-pointer ${
+                activeTab === 'upload'
                   ? 'bg-cyan-500/10 text-cyan-300 font-semibold border-b-2 border-cyan-400'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
               }`}
@@ -141,9 +179,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
-              onClick={() => onNavigate('campaigns')}
-              className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors ${
-                currentTab === 'campaigns'
+              onClick={() => handleNavClick('campaigns')}
+              className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors cursor-pointer ${
+                activeTab === 'campaigns'
                   ? 'bg-cyan-500/10 text-cyan-300 font-semibold border-b-2 border-cyan-400'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
               }`}
@@ -152,17 +190,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Campaign Clusters</span>
             </button>
 
-            <button
-              onClick={() => onNavigate('settings')}
-              className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors ${
-                currentTab === 'settings'
-                  ? 'bg-cyan-500/10 text-cyan-300 font-semibold border-b-2 border-cyan-400'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5 text-slate-400" />
-              <span>Compliance & Audit</span>
-            </button>
+            {/* PART 7: Hide Compliance & Audit from non-admin users */}
+            {isAdmin && (
+              <button
+                onClick={() => handleNavClick('settings')}
+                className={`relative flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono tracking-wide transition-colors cursor-pointer ${
+                  activeTab === 'settings'
+                    ? 'bg-cyan-500/10 text-cyan-300 font-semibold border-b-2 border-cyan-400'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                <span>Compliance & Audit</span>
+              </button>
+            )}
           </nav>
         </div>
 
@@ -172,7 +213,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowAlertsMenu(!showAlertsMenu)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-soc-panel hover:bg-soc-hover border border-slate-800/60 hover:border-slate-700 transition-colors text-xs font-mono"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-soc-panel hover:bg-soc-hover border border-slate-800/60 hover:border-slate-700 transition-colors text-xs font-mono cursor-pointer"
             >
               <Bell className="w-3.5 h-3.5 text-amber-400" />
               <span className="text-slate-300 hidden sm:inline">Alerts</span>
@@ -204,7 +245,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                       key={alert.alert_id}
                       onClick={() => {
                         setShowAlertsMenu(false);
-                        if (onSelectCase) onSelectCase(alert.case_id);
+                        if (onSelectCase) {
+                          onSelectCase(alert.case_id);
+                        } else {
+                          navigate(`/case/${alert.case_id}`);
+                        }
                       }}
                       className="p-2 rounded bg-soc-inset hover:bg-soc-hover border border-slate-800/60 hover:border-slate-700 cursor-pointer transition-colors"
                     >
@@ -227,17 +272,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Active Analyst Session Info */}
+          {/* Active User Session Info */}
           <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-soc-panel border border-slate-800/60 rounded text-xs">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-            <span className="text-slate-300 font-mono text-[11px]">{activeAnalystName}</span>
+            <div className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-amber-400' : 'bg-cyan-400'}`} />
+            <span className="text-slate-300 font-mono text-[11px] truncate max-w-[140px]">{displayName}</span>
+            {isAdmin && (
+              <span className="px-1 py-0.2 text-[8px] font-mono uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded flex items-center gap-0.5">
+                <Crown className="w-2.5 h-2.5" />
+                ADMIN
+              </span>
+            )}
           </div>
 
           {/* Logout Button */}
           <button
-            onClick={onLogout}
+            onClick={handleLogoutClick}
             title="Sign Out of Forensic Console"
-            className="flex items-center gap-1 p-1.5 rounded bg-soc-panel hover:bg-red-950/40 text-slate-400 hover:text-red-400 border border-slate-800/60 hover:border-red-500/30 transition-colors"
+            className="flex items-center gap-1 p-1.5 rounded bg-soc-panel hover:bg-red-950/40 text-slate-400 hover:text-red-400 border border-slate-800/60 hover:border-red-500/30 transition-colors cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>

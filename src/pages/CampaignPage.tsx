@@ -4,16 +4,30 @@ import { getCampaigns, getCampaignById, getCases } from '../mocks/api';
 import { CampaignCard } from '../components/campaign/CampaignCard';
 import { CampaignClusterTimeline } from '../components/campaign/CampaignClusterTimeline';
 import { Layers, RefreshCw } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface CampaignPageProps {
   initialCampaignId?: string;
-  onSelectCase: (caseId: string) => void;
+  onSelectCase?: (caseId: string) => void;
 }
 
 export const CampaignPage: React.FC<CampaignPageProps> = ({
   initialCampaignId,
   onSelectCase,
 }) => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryCampaignId = searchParams.get('id') || undefined;
+  const effectiveInitialId = initialCampaignId || queryCampaignId;
+
+  const handleCaseSelect = (caseId: string) => {
+    if (onSelectCase) {
+      onSelectCase(caseId);
+    } else {
+      navigate(`/case/${caseId}`);
+    }
+  };
+
   const { data: campaignsData, isLoading } = useQuery({
     queryKey: ['campaigns'],
     queryFn: getCampaigns,
@@ -21,16 +35,16 @@ export const CampaignPage: React.FC<CampaignPageProps> = ({
 
   const campaigns = campaignsData?.campaigns || [];
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>(
-    initialCampaignId || 'camp-3391'
+    effectiveInitialId || 'camp-3391'
   );
 
   useEffect(() => {
-    if (initialCampaignId) {
-      setSelectedCampaignId(initialCampaignId);
+    if (effectiveInitialId) {
+      setSelectedCampaignId(effectiveInitialId);
     } else if (campaigns.length > 0 && !selectedCampaignId) {
       setSelectedCampaignId(campaigns[0].campaign_id);
     }
-  }, [initialCampaignId, campaigns]);
+  }, [effectiveInitialId, campaigns]);
 
   const { data: campaignDetail, isLoading: isDetailLoading } = useQuery({
     queryKey: ['campaign-detail', selectedCampaignId],
@@ -94,7 +108,7 @@ export const CampaignPage: React.FC<CampaignPageProps> = ({
             <CampaignClusterTimeline
               campaign={campaignDetail}
               cases={casesData?.cases || []}
-              onSelectCase={onSelectCase}
+              onSelectCase={handleCaseSelect}
             />
           )}
         </div>

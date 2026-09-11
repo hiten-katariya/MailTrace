@@ -16,17 +16,27 @@ import { ThreatCharts } from '../components/dashboard/ThreatCharts';
 import { CaseTable } from '../components/dashboard/CaseTable';
 import { LiveActivityStream } from '../components/dashboard/LiveActivityStream';
 import { RefreshCw, Radio, CheckCircle, Mail, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardPageProps {
-  onSelectCase: (caseId: string) => void;
+  onSelectCase?: (caseId: string) => void;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectCase }) => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [lastRefreshed, setLastRefreshed] = useState<string>('just now');
   const [notification, setNotification] = useState<string | null>(null);
   const [isConnectingGmail, setIsConnectingGmail] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+
+  const handleCaseSelect = (caseId: string) => {
+    if (onSelectCase) {
+      onSelectCase(caseId);
+    } else {
+      navigate(`/case/${caseId}`);
+    }
+  };
 
   const { data: casesData, isLoading: isCasesLoading, isRefetching: isCasesRefetching, refetch: refetchCases } = useQuery({
     queryKey: ['cases'],
@@ -276,11 +286,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectCase }) =>
 
       {/* 4. Live Activity Stream & Incident Queue */}
       <div className="space-y-5">
-        <LiveActivityStream onSelectCase={onSelectCase} />
+        <LiveActivityStream onSelectCase={handleCaseSelect} />
 
         <CaseTable
           cases={cases}
-          onSelectCase={onSelectCase}
+          onSelectCase={handleCaseSelect}
           onDeleteCase={(id) => deleteSingleMutation.mutate(id)}
           onDeleteCases={(ids) => deleteBatchMutation.mutate(ids)}
           onRefresh={handleManualRefresh}

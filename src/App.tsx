@@ -1,106 +1,35 @@
-import { useState } from 'react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Navbar } from './components/common/Navbar';
-import { LoginPage } from './pages/LoginPage';
+
+// Pages
+import { LandingPage } from './pages/LandingPage';
+import { SignInPage } from './pages/SignInPage';
+import { SignUpPage } from './pages/SignUpPage';
+import { GoogleCallbackPage } from './pages/GoogleCallbackPage';
+import { GmailOnboarding } from './components/auth/GmailOnboarding';
 import { DashboardPage } from './pages/DashboardPage';
 import { CaseDetailPage } from './pages/CaseDetailPage';
 import { CampaignPage } from './pages/CampaignPage';
 import { UploadPage } from './pages/UploadPage';
-import { SettingsPage } from './pages/SettingsPage';
 import { LiveMailboxPage } from './pages/LiveMailboxPage';
+import { SettingsPage } from './pages/SettingsPage';
 
-export type NavigationTab = 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings' | 'case-detail';
-
-export function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
-  const [activeAnalyst, setActiveAnalyst] = useState<string>('Alex Rivera (Analyst-01)');
-  const [currentTab, setCurrentTab] = useState<NavigationTab>('dashboard');
-  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | undefined>(undefined);
-
-  const handleLoginSuccess = (analystName: string) => {
-    setActiveAnalyst(analystName);
-    setIsAuthenticated(true);
-    setCurrentTab('dashboard');
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-  };
-
-  const handleSelectCase = (caseId: string) => {
-    setSelectedCaseId(caseId);
-    setCurrentTab('case-detail');
-  };
-
-  const handleViewCampaign = (campaignId: string) => {
-    setSelectedCampaignId(campaignId);
-    setCurrentTab('campaigns');
-  };
-
-  const handleCaseCreated = (caseId: string) => {
-    setSelectedCaseId(caseId);
-    setCurrentTab('case-detail');
-  };
-
-  const handleNavigate = (tab: 'dashboard' | 'live-mailbox' | 'upload' | 'campaigns' | 'settings') => {
-    if (tab === 'dashboard' || tab === 'live-mailbox') {
-      setSelectedCaseId(null);
-    }
-    setCurrentTab(tab);
-  };
-
-  if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-  }
-
+/**
+ * Enterprise SOC Application Shell
+ * Wraps protected authenticated routes with the real-time SOC status Navbar and footer.
+ */
+function AppShell() {
   return (
     <div className="min-h-screen bg-soc-bg text-soc-text font-sans flex flex-col selection:bg-cyan-500/20 selection:text-cyan-300">
-      {/* Top SOC Navbar */}
-      <Navbar
-        currentTab={currentTab}
-        onNavigate={handleNavigate}
-        onSelectCase={handleSelectCase}
-        onLogout={handleLogout}
-        activeAnalystName={activeAnalyst}
-      />
+      <Navbar />
 
-      {/* Main Content View */}
       <main className="flex-1 pb-12">
-        {currentTab === 'dashboard' && (
-          <DashboardPage onSelectCase={handleSelectCase} />
-        )}
-
-        {currentTab === 'live-mailbox' && (
-          <LiveMailboxPage
-            onSelectCase={handleSelectCase}
-            onNavigateToSettings={() => setCurrentTab('settings')}
-          />
-        )}
-
-        {currentTab === 'case-detail' && selectedCaseId && (
-          <CaseDetailPage
-            caseId={selectedCaseId}
-            onBack={() => setCurrentTab('dashboard')}
-            onSelectCase={handleSelectCase}
-            onViewCampaign={handleViewCampaign}
-          />
-        )}
-
-        {currentTab === 'campaigns' && (
-          <CampaignPage
-            initialCampaignId={selectedCampaignId}
-            onSelectCase={handleSelectCase}
-          />
-        )}
-
-        {currentTab === 'upload' && (
-          <UploadPage onCaseCreated={handleCaseCreated} />
-        )}
-
-        {currentTab === 'settings' && <SettingsPage />}
+        <Outlet />
       </main>
 
-      {/* Footer */}
       <footer className="py-4 border-t border-soc-border bg-soc-subtle/60 text-center font-mono text-[11px] text-soc-muted">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div>
@@ -112,6 +41,60 @@ export function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Public Unauthenticated Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/sign-in" element={<SignInPage />} />
+          <Route path="/sign-up" element={<SignUpPage />} />
+          <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+
+          {/* Onboarding Route (requires active session) */}
+          <Route
+            path="/gmail-onboarding"
+            element={
+              <ProtectedRoute>
+                <GmailOnboarding />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected SOC Console Routes */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppShell />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/live-mailbox" element={<LiveMailboxPage />} />
+            <Route path="/upload" element={<UploadPage />} />
+            <Route path="/campaigns" element={<CampaignPage />} />
+            <Route path="/case/:caseId" element={<CaseDetailPage />} />
+
+            {/* Admin-only Route */}
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <SettingsPage />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
+          {/* Wildcard Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

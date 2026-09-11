@@ -73,6 +73,23 @@ async def init_db():
                     await conn.execute(text(f"ALTER TABLE attachments ADD COLUMN IF NOT EXISTS {col_name} {col_def}"))
                 except Exception:
                     pass
+            for col_name, col_def in [
+                ("email", "VARCHAR"),
+                ("auth_provider", "VARCHAR DEFAULT 'local'"),
+                ("google_id", "VARCHAR"),
+            ]:
+                try:
+                    await conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_def}"))
+                except Exception:
+                    pass
+            try:
+                await conn.execute(text("ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL"))
+            except Exception:
+                pass
+            try:
+                await conn.execute(text("DELETE FROM users WHERE username IN ('analyst1', 'lead_investigator', 'analyst2') OR role IN ('analyst', 'investigator')"))
+            except Exception:
+                pass
         print(f"[+] Connected successfully to database: {settings.DATABASE_URL.split('@')[-1] if '@' in settings.DATABASE_URL else settings.DATABASE_URL}")
     except Exception as e:
         print(f"[-] PostgreSQL connection error: {e}")
@@ -107,6 +124,19 @@ async def init_db():
                     await conn.execute(text(f"ALTER TABLE attachments ADD COLUMN {col_name} {col_def}"))
                 except Exception:
                     pass
+            for col_name, col_def in [
+                ("email", "VARCHAR"),
+                ("auth_provider", "VARCHAR DEFAULT 'local'"),
+                ("google_id", "VARCHAR"),
+            ]:
+                try:
+                    await conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_def}"))
+                except Exception:
+                    pass
+            try:
+                await conn.execute(text("DELETE FROM users WHERE username IN ('analyst1', 'lead_investigator', 'analyst2') OR role IN ('analyst', 'investigator')"))
+            except Exception:
+                pass
         print("[+] SQLite database initialized successfully at backend/data/mailtrace.db")
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

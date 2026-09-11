@@ -16,7 +16,7 @@ import {
   CaseCorrelation,
 } from '../types/case';
 import { CampaignSummary, CampaignDetail } from '../types/campaign';
-import { LoginResponse } from '../types/auth';
+import { LoginResponse, SignupResponse, User } from '../types/auth';
 import { MOCK_CASES, FullCaseRecord } from './casesData';
 import { MOCK_CAMPAIGNS } from './campaignsData';
 import { MOCK_AUDIT_LOGS, INITIAL_RETENTION_SETTINGS } from './auditData';
@@ -34,34 +34,206 @@ let auditStore: AuditLogEntry[] = [...MOCK_AUDIT_LOGS];
 // Helper to simulate realistic async network latency (100 - 250ms) when on mocks
 const delay = (ms = 150) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export function getAuthToken(): string | null {
+  try {
+    return localStorage.getItem('mailtrace_token');
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthToken(token: string | null): void {
+  try {
+    if (token) {
+      localStorage.setItem('mailtrace_token', token);
+    } else {
+      localStorage.removeItem('mailtrace_token');
+    }
+  } catch (e) {
+    console.warn('Unable to access localStorage:', e);
+  }
+}
+
+export function getAuthHeaders(customHeaders?: Record<string, string>): HeadersInit {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(customHeaders || {}),
+  };
+}
+
 /**
  * POST /auth/login
  */
-export async function login(username: string, password: string): Promise<LoginResponse> {
+export async function login(identifier: string, password: string): Promise<LoginResponse> {
+  const isEmail = identifier.includes('@');
   if (!USE_MOCKS) {
     try {
       const resp = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          email: isEmail ? identifier : undefined,
+          username: !isEmail ? identifier : undefined,
+          password,
+        }),
       });
       if (resp.ok) {
-        return await resp.json();
+        const data = await resp.json();
+        if (data.access_token) {
+          setAuthToken(data.access_token);
+        }
+        return data;
+      } else {
+        const err = await resp.json().catch(() => ({ detail: 'Invalid credentials' }));
+        throw new Error(err.detail || 'Authentication failed');
       }
-    } catch (e) {
+    } catch (e: any) {
+      if (e.message && !e.message.includes('fetch')) {
+        throw e;
+      }
       console.warn('Backend unavailable, falling back to mock login:', e);
     }
   }
 
   await delay(200);
-  if (!username || !password) {
-    throw new Error('Username and password are required');
+  if (!identifier || !password) {
+    throw new Error('Email/Username and password are required');
   }
+
+  const token = `mock_jwt_token_${identifier}_${Date.now()}`;
+  setAuthToken(token);
+  const isAdmin = identifier.toLowerCase() === 'hiten8411jdrravi@gmail.com';
   return {
-    access_token: `mock_jwt_token_${username}_${Date.now()}`,
+    access_token: token,
     token_type: 'bearer',
     expires_in: 28800,
+    user: {
+      username: isEmail ? identifier.split('@')[0] : identifier,
+      email: isEmail ? identifier : `${identifier}@mailtrace.local`,
+      name: isEmail ? identifier.split('@')[0] : 'Alex Rivera (Analyst-01)',
+      role: isAdmin ? 'admin' : 'user',
+      is_admin: isAdmin,
+      gmail_connected: false,
+      auth_provider: 'local',
+    },
   };
+}
+
+/**
+ * POST /auth/signup
+ */
+export async function signup(name: string, email: string, password: string): Promise<SignupResponse> {
+  if (!USE_MOCKS) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.access_token) {
+          setAuthToken(data.access_token);
+        }
+        return data;
+      } else {
+        const err = await resp.json().catch(() => ({ detail: 'Registration failed' }));
+        throw new Error(err.detail || 'Signup failed');
+      }
+    } catch (e: any) {
+      if (e.message && !e.message.includes('fetch')) {
+        throw e;
+      }
+      console.warn('Backend unavailable, falling back to mock signup:', e);
+    }
+  }
+
+  await delay(200);
+  const token = `mock_jwt_token_${email}_${Date.now()}`;
+  setAuthToken(token);
+  const isAdmin = email.toLowerCase() === 'hiten8411jdrravi@gmail.com';
+  return {
+    access_token: token,
+    token_type: 'bearer',
+    expires_in: 28800,
+    user: {
+      username: email.split('@')[0],
+      email,
+      name,
+      role: isAdmin ? 'admin' : 'user',
+      is_admin: isAdmin,
+      gmail_connected: false,
+      auth_provider: 'local',
+    },
+  };
+}
+
+/**
+ * GET /auth/me
+ */
+export async function getCurrentUser(): Promise<User> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  if (!USE_MOCKS) {
+    try {
+      const resp = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: getAuthHeaders(),
+      });
+      if (resp.ok) {
+        return await resp.json();
+      }
+    } catch (e) {
+      console.warn('Backend /auth/me unavailable, using fallback mock user:', e);
+    }
+  }
+
+  await delay(100);
+  return {
+    username: 'sec_operator',
+    email: 'operator@mailtrace.local',
+    name: 'Security Operator',
+    role: 'user',
+    is_admin: false,
+    gmail_connected: false,
+    auth_provider: 'local',
+  };
+}
+
+/**
+ * GET /auth/google/auth-url
+ */
+export async function getGoogleSignInUrl(): Promise<{ auth_url: string; state: string }> {
+  const resp = await fetch(`${API_BASE_URL}/auth/google/auth-url`);
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: 'Failed to fetch Google auth URL' }));
+    throw new Error(err.detail || 'Failed to fetch Google sign-in URL');
+  }
+  return await resp.json();
+}
+
+/**
+ * POST /auth/google/callback
+ */
+export async function sendGoogleSignInCallback(code: string, state: string): Promise<SignupResponse> {
+  const resp = await fetch(`${API_BASE_URL}/auth/google/callback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, state }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: 'Google authorization failed' }));
+    throw new Error(err.detail || 'Failed to authenticate with Google');
+  }
+  const data = await resp.json();
+  if (data.access_token) {
+    setAuthToken(data.access_token);
+  }
+  return data;
 }
 
 /**

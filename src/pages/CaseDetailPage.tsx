@@ -22,20 +22,40 @@ import {
   Network,
   RefreshCw,
 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 
 interface CaseDetailPageProps {
-  caseId: string;
-  onBack: () => void;
-  onSelectCase: (caseId: string) => void;
-  onViewCampaign: (campaignId: string) => void;
+  caseId?: string;
+  onBack?: () => void;
+  onSelectCase?: (caseId: string) => void;
+  onViewCampaign?: (campaignId: string) => void;
 }
 
 export const CaseDetailPage: React.FC<CaseDetailPageProps> = ({
-  caseId,
+  caseId: propCaseId,
   onBack,
   onSelectCase,
   onViewCampaign,
 }) => {
+  const { caseId: paramCaseId } = useParams<{ caseId: string }>();
+  const navigate = useNavigate();
+  const caseId = propCaseId || paramCaseId || '';
+
+  const handleBack = () => {
+    if (onBack) onBack();
+    else navigate('/dashboard');
+  };
+
+  const handleSelectCase = (id: string) => {
+    if (onSelectCase) onSelectCase(id);
+    else navigate(`/case/${id}`);
+  };
+
+  const handleViewCampaign = (campaignId: string) => {
+    if (onViewCampaign) onViewCampaign(campaignId);
+    else navigate(`/campaigns?id=${campaignId}`);
+  };
+
   const [activeTab, setActiveTab] = useState<'overview' | 'headers' | 'content' | 'origin' | 'correlation'>('overview');
   const [isReportOpen, setIsReportOpen] = useState(false);
 
@@ -111,7 +131,7 @@ export const CaseDetailPage: React.FC<CaseDetailPageProps> = ({
       {/* Case Header */}
       <CaseHeader
         caseDetail={caseDetail}
-        onBack={onBack}
+        onBack={handleBack}
         onOpenReport={() => setIsReportOpen(true)}
       />
 
@@ -160,8 +180,8 @@ export const CaseDetailPage: React.FC<CaseDetailPageProps> = ({
         {activeTab === 'correlation' && correlation && (
           <CorrelationTab
             correlation={correlation}
-            onSelectLinkedCase={onSelectCase}
-            onViewCampaign={onViewCampaign}
+            onSelectLinkedCase={handleSelectCase}
+            onViewCampaign={handleViewCampaign}
           />
         )}
       </div>
