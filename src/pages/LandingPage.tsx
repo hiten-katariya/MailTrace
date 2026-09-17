@@ -6,6 +6,8 @@ import ScrollReveal from '../components/ui/ScrollReveal';
 import LetterGlitch from '../components/ui/LetterGlitch';
 import SpecularButton from '../components/ui/SpecularButton';
 import ScrollAnimation from '../components/ui/you-can-scroll';
+import CybeeLockHero from '../components/ui/CybeeLockHero';
+import BlockchainTexture from '../components/ui/BlockchainTexture';
 import {
   Shield,
   ArrowRight,
@@ -26,6 +28,10 @@ import {
   Mail,
   Sliders,
   Terminal,
+  Crosshair,
+  Wifi,
+  Layers,
+  Search,
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
@@ -47,12 +53,12 @@ export const LandingPage: React.FC = () => {
       setBootStep(prev => (prev < bootMessages.length - 1 ? prev + 1 : prev));
     }, 1050);
 
-    // Trigger smooth fade-out at 5500ms (increased by 3 seconds)
+    // Trigger smooth fade-out at 5500ms (5.5s intro)
     const fadeTimer = setTimeout(() => {
       setIsGlitchFading(true);
     }, 5500);
 
-    // Completely unmount LetterGlitch and stop canvas loop at 6100ms (increased by 3 seconds)
+    // Completely unmount LetterGlitch and stop canvas loop at 6100ms
     const stopTimer = setTimeout(() => {
       setShowGlitchIntro(false);
     }, 6100);
@@ -79,9 +85,16 @@ export const LandingPage: React.FC = () => {
     setTimeout(() => setShowGlitchIntro(false), 500);
   };
 
+  const scrollToSensor = () => {
+    const el = document.getElementById('sensor');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#06090F] text-slate-100 font-sans selection:bg-cyan-500/20 selection:text-cyan-300">
-      {/* 0. INTRO BOOTLOADER GLITCH SCREEN (RUNS ON SITE OPEN, THEN STOPS & UNMOUNTS) */}
+    <div className="min-h-screen bg-[#06090F] text-slate-100 font-sans selection:bg-slate-700 selection:text-white relative overflow-x-hidden">
+      {/* 0. INTRO BOOTLOADER GLITCH SCREEN (5.5s WITH SKIP) */}
       {showGlitchIntro && (
         <div
           className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#06090F] transition-opacity duration-700 ease-out cursor-pointer ${
@@ -92,7 +105,7 @@ export const LandingPage: React.FC = () => {
           aria-label="System Initializing"
         >
           {/* Canvas glitch background */}
-          <div className="absolute inset-0 z-0 opacity-60">
+          <div className="absolute inset-0 z-0 opacity-50">
             <LetterGlitch
               glitchColors={['#06b6d4', '#0891b2', '#0284c7', '#38bdf8', '#10b981']}
               glitchSpeed={45}
@@ -105,32 +118,32 @@ export const LandingPage: React.FC = () => {
 
           {/* Central Terminal HUD */}
           <div
-            className="relative z-10 max-w-lg w-full mx-4 p-6 sm:p-8 rounded-xl bg-[#070C16]/90 border border-cyan-500/40 shadow-[0_0_60px_rgba(6,182,212,0.25)] backdrop-blur-md font-mono text-center cursor-default"
+            className="relative z-10 max-w-lg w-full mx-4 p-6 sm:p-8 rounded-xl bg-[#070C16] border border-slate-700 shadow-2xl backdrop-blur-md font-mono text-center cursor-default"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                <Shield className="w-5 h-5 text-cyan-400 animate-pulse" />
+              <div className="w-10 h-10 rounded bg-slate-900 border border-slate-700 flex items-center justify-center shadow-sm">
+                <Shield className="w-5 h-5 text-slate-200" />
               </div>
             </div>
 
-            <div className="text-base sm:text-lg font-bold tracking-widest text-slate-100 uppercase">
-              MAIL<span className="text-cyan-400">TRACE</span> FORENSIC OS
+            <div className="text-base sm:text-lg font-bold tracking-widest text-white uppercase">
+              MAILTRACE FORENSIC OS
             </div>
-            <div className="text-[10px] text-cyan-400/80 tracking-widest uppercase mt-1">
-              v2.0 // TELEMETRY INITIALIZATION
+            <div className="text-[10px] text-slate-400 tracking-widest uppercase mt-1">
+              v2.0 // CRYPTOGRAPHIC CONSENSUS ENGINE
             </div>
 
-            {/* Animated progress bar */}
-            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden my-5 border border-slate-700/60">
+            {/* Solid technical progress bar (no rainbow gradient) */}
+            <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden my-5 border border-slate-800">
               <div
-                className="h-full bg-gradient-to-r from-cyan-500 to-teal-400 transition-all duration-1000 ease-out"
+                className="h-full bg-cyan-400 transition-all duration-1000 ease-out"
                 style={{ width: `${((bootStep + 1) / bootMessages.length) * 100}%` }}
               />
             </div>
 
             {/* Live boot message */}
-            <div className="text-xs text-cyan-300 font-mono tracking-wide h-6 flex items-center justify-center">
+            <div className="text-xs text-slate-300 font-mono tracking-wide h-6 flex items-center justify-center">
               <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping mr-2 shrink-0" />
               <span>{bootMessages[bootStep]}</span>
             </div>
@@ -138,52 +151,53 @@ export const LandingPage: React.FC = () => {
             <button
               onClick={handleSkipIntro}
               type="button"
-              className="mt-6 inline-flex items-center gap-1.5 px-3 py-1 rounded border border-slate-700 hover:border-cyan-500/40 bg-slate-900/80 text-[10px] text-slate-400 hover:text-cyan-300 transition-colors"
+              className="mt-6 inline-flex items-center gap-1.5 px-3 py-1 rounded border border-slate-700 hover:border-slate-500 bg-slate-900 text-[10px] text-slate-400 hover:text-white transition-colors"
             >
               <span>[ ESC / CLICK TO INITIALIZE NOW ]</span>
             </button>
           </div>
         </div>
       )}
-      {/* 1. TOP FLOATING NAVIGATION */}
-      <header className="sticky top-0 z-50 bg-[#070C16]/90 backdrop-blur-md border-b border-slate-800/60">
+
+      {/* 1. TOP NAVIGATION */}
+      <header className="sticky top-0 z-50 bg-[#070C16]/95 backdrop-blur-md border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="flex items-center justify-center w-8 h-8 rounded bg-cyan-500/10 border border-cyan-500/30 group-hover:border-cyan-400 transition-colors shadow-soc-subtle">
-              <Shield className="w-4 h-4 text-cyan-400 group-hover:scale-105 transition-transform" />
+            <div className="flex items-center justify-center w-8 h-8 rounded bg-slate-900 border border-slate-700 group-hover:border-slate-500 transition-colors">
+              <Shield className="w-4 h-4 text-slate-200 group-hover:scale-105 transition-transform" />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold tracking-wider text-slate-100 font-mono">
-                MAIL<span className="text-cyan-400">TRACE</span>
+              <span className="text-sm font-bold tracking-wider text-white font-mono">
+                MAIL<span className="text-slate-400">TRACE</span>
               </span>
-              <span className="px-1.5 py-0.2 text-[8px] font-mono uppercase font-bold tracking-widest bg-slate-800/80 text-cyan-300 border border-slate-700/60 rounded">
+              <span className="px-1.5 py-0.2 text-[8px] font-mono uppercase font-bold tracking-widest bg-slate-900 text-slate-400 border border-slate-800 rounded">
                 v2.0
               </span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-xs font-mono text-slate-400">
-            <a href="#features" className="hover:text-cyan-300 transition-colors">Forensic Signals</a>
-            <a href="#pipeline" className="hover:text-cyan-300 transition-colors">How It Works</a>
-            <a href="#sensor" className="hover:text-cyan-300 transition-colors">Live Sensor</a>
-            <a href="#explainability" className="hover:text-cyan-300 transition-colors">Explainable AI</a>
-            <a href="#security" className="hover:text-cyan-300 transition-colors">Security</a>
+            <a href="#features" className="hover:text-white transition-colors">Forensic Signals</a>
+            <a href="#pipeline" className="hover:text-white transition-colors">How It Works</a>
+            <a href="#sensor" className="hover:text-white transition-colors">Live Sensor</a>
+            <a href="#explainability" className="hover:text-white transition-colors">Explainable AI</a>
+            <a href="#security" className="hover:text-white transition-colors">Security</a>
           </nav>
 
           <div className="flex items-center gap-3">
             <Link to="/sign-in">
               <SpecularButton
                 size="sm"
-                radius={6}
-                tint="#06b6d4"
-                tintOpacity={0.08}
-                blur={4}
+                radius={4}
+                tint="#ffffff"
+                tintOpacity={0.06}
+                blur={2}
                 textColor="#cbd5e1"
-                lineColor="#38bdf8"
-                baseColor="#0891b2"
-                intensity={1.1}
-                shineSize={12}
-                shineFade={30}
+                lineColor="#64748b"
+                baseColor="#1e293b"
+                intensity={1.0}
+                shineSize={10}
+                shineFade={25}
                 thickness={1}
                 speed={0.35}
                 followMouse={true}
@@ -195,7 +209,7 @@ export const LandingPage: React.FC = () => {
             </Link>
             <Link
               to="/sign-up"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 font-mono text-xs font-semibold transition-all shadow-soc-subtle"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-500 text-white font-mono text-xs font-semibold transition-all"
             >
               <span>Get Started</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -204,44 +218,52 @@ export const LandingPage: React.FC = () => {
         </div>
       </header>
 
-      {/* 2. HERO SECTION */}
-      <section className="relative pt-20 pb-24 overflow-hidden">
-        {/* Ambient AeroShards WebGPU Sculpture Background */}
-        <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+      {/* 2. CYBEE CYBER SECURITY HERO SECTION (BLOCKCHAIN TEXTURE ARCHITECTURE) */}
+      <section className="relative pt-12 pb-24 overflow-hidden border-b border-slate-800">
+        {/* A. AUTHENTIC ISOMETRIC BLOCKCHAIN BLOCK TEXTURE (NO GRADIENT BLOBS) */}
+        <BlockchainTexture opacity={0.25} />
+
+        {/* B. Ambient AeroShards WebGPU Sculpture Background (Monochrome Chrome Shards) */}
+        <div className="absolute inset-0 z-0 opacity-25 pointer-events-none">
           <AeroShards
             backgroundColor="#06090F"
-            shardColor="#06b6d4"
-            accentColor="#38bdf8"
+            shardColor="#475569"
+            accentColor="#94a3b8"
             placement="full"
             flow="stream"
             material="chrome"
             detail="balanced"
             effect="none"
-            speed={0.65}
-            spin={0.7}
-            scale={1.15}
+            speed={0.45}
+            spin={0.5}
+            scale={1.1}
             spread={0.8}
             depth={0.9}
-            density={1.2}
+            density={1.0}
             shardSize={1.0}
-            glow={1.2}
-            bloom={0.4}
-            grain={0.03}
+            glow={0.5}
+            bloom={0.2}
+            grain={0.04}
             interaction="repel"
-            interactionRadius={1.4}
-            interactionStrength={0.45}
-            rippleIntensity={1}
+            interactionRadius={1.2}
+            interactionStrength={0.35}
+            rippleIntensity={0.8}
             holdToGather={true}
           />
         </div>
 
-        {/* Ambient background glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-1/3 left-1/3 w-[400px] h-[300px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
+        {/* C. Technical Hairline Coordinate Grid (No colorful blur) */}
+        <div className="absolute inset-0 pointer-events-none opacity-20">
+          <div className="absolute left-[15%] top-0 bottom-0 w-px bg-slate-700" />
+          <div className="absolute right-[15%] top-0 bottom-0 w-px bg-slate-700" />
+          <div className="absolute top-[28%] left-0 right-0 h-px bg-slate-700" />
+          <div className="absolute bottom-[18%] left-0 right-0 h-px bg-slate-700" />
+        </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-cyan-300 text-xs font-mono mb-6 shadow-soc-subtle">
+          {/* Top Eyebrow Status with SplitFlapText */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="inline-flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-[#090e17] border border-slate-700 text-slate-300 text-xs font-mono mb-4 shadow-sm backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
               <SplitFlapText
                 words={[
@@ -251,9 +273,9 @@ export const LandingPage: React.FC = () => {
                   'EXPLAINABLE FORENSICS'
                 ]}
                 fontSize={12}
-                tileColor="#0a101f"
-                textColor="#38bdf8"
-                tileRadius={4}
+                tileColor="#0e1524"
+                textColor="#f1f5f9"
+                tileRadius={3}
                 gap={3}
                 padTo={22}
                 cycleDelay={3000}
@@ -261,68 +283,149 @@ export const LandingPage: React.FC = () => {
                 flipDuration={0.08}
               />
             </div>
+            <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase mb-2">
+              MAILTRACE FORENSIC OS // IMMUTABLE LEDGER VERIFICATION
+            </div>
+          </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-mono tracking-tight text-white leading-tight">
-              Trace the Origin.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500">
-                Expose the Fraud.
-              </span>
-            </h1>
+          {/* D. CYBEE SPLIT HEADLINE WITH 3D BLOCKCHAIN VAULT PADLOCK (MATHEMATICALLY CENTERED FROM 768px+) */}
+          <div className="relative my-6 sm:my-10 w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center justify-items-center gap-4 md:gap-0">
+            {/* Left Headline Half: CYBER (Takes 1fr, aligned to the right towards center) */}
+            <div className="w-full text-center md:text-right md:pr-8 lg:pr-10 flex flex-col items-center md:items-end justify-center">
+              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black font-mono tracking-tighter text-white uppercase drop-shadow-[0_10px_25px_rgba(0,0,0,0.9)]">
+                CYBER
+              </h1>
+              <div className="hidden md:block text-[9px] lg:text-[11px] font-mono text-slate-400 tracking-widest uppercase mt-1">
+                ADVANCED FORENSIC SIGNAL RECONSTRUCTION
+              </div>
+            </div>
 
-            <p className="mt-6 text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto font-sans">
+            {/* Central Cybee Blockchain Lock Emblem (Locked to exact 50% horizontal center) */}
+            <div className="flex flex-col items-center justify-center py-2 md:py-0">
+              <CybeeLockHero
+                ctaText="EXPLORE SENSOR"
+                onCtaClick={scrollToSensor}
+              />
+            </div>
+
+            {/* Right Headline Half: DEFENSE (Takes 1fr, aligned to the left towards center) */}
+            <div className="w-full text-center md:text-left md:pl-8 lg:pl-10 flex flex-col items-center md:items-start justify-center">
+              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black font-mono tracking-tighter text-white uppercase drop-shadow-[0_10px_25px_rgba(0,0,0,0.9)]">
+                DEFENSE
+              </h1>
+              <div className="hidden md:block text-[9px] lg:text-[11px] font-mono text-slate-400 tracking-widest uppercase mt-1">
+                RFC 5322 & OPTICAL QUISHING ATTRIBUTION
+              </div>
+            </div>
+          </div>
+
+          {/* Value Proposition Description (Centered) */}
+          <div className="text-center max-w-2xl mx-auto mt-6 flex flex-col items-center justify-center px-4">
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-sans text-center">
               Stop relying on black-box spam scores. MailTrace fuses RFC header path reconstruction, optical QR quishing detection, deep NLP urgency analysis, and infrastructure graph correlation into explainable forensic intelligence.
             </p>
 
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 font-mono text-xs">
-              <Link to="/sign-up" className="w-full sm:w-auto">
+            {/* Action Buttons (Perfect Center Alignment & Symmetrically Balanced 210px Widths) */}
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 font-mono text-xs w-full max-w-lg mx-auto">
+              <Link to="/sign-up" className="w-full sm:w-[210px] inline-flex items-center justify-center">
                 <SpecularButton
                   size="md"
-                  radius={8}
-                  tint="#06b6d4"
-                  tintOpacity={0.15}
-                  blur={8}
+                  radius={6}
+                  tint="#ffffff"
+                  tintOpacity={0.12}
+                  blur={4}
                   textColor="#ffffff"
-                  lineColor="#38bdf8"
-                  baseColor="#0891b2"
-                  intensity={1.3}
+                  lineColor="#94a3b8"
+                  baseColor="#1e293b"
+                  intensity={1.2}
                   shineSize={14}
-                  shineFade={35}
-                  thickness={1.5}
+                  shineFade={30}
+                  thickness={1}
                   speed={0.4}
                   followMouse={true}
                   proximity={200}
-                  className="w-full sm:w-auto font-mono text-xs font-bold tracking-wide uppercase shadow-lg shadow-cyan-500/25"
+                  className="w-full sm:w-[210px] h-[46px] font-mono text-xs font-bold tracking-wide uppercase shadow-lg shadow-black/50 inline-flex items-center justify-center"
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center justify-center gap-2">
                     Access Forensic Station
-                    <ArrowRight className="w-4 h-4 text-cyan-300" />
+                    <ArrowRight className="w-4 h-4 text-slate-300" />
                   </span>
                 </SpecularButton>
               </Link>
               <a
                 href="#pipeline"
-                className="w-full sm:w-auto px-6 py-3 rounded bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-slate-300 flex items-center justify-center gap-2 transition-colors"
+                className="w-full sm:w-[210px] h-[46px] inline-flex items-center justify-center gap-2 rounded-[6px] bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-500 text-slate-200 hover:text-white transition-colors font-mono text-xs font-semibold uppercase tracking-wider shadow-sm"
               >
                 <span>Explore Architecture</span>
-                <ChevronRight className="w-4 h-4 text-cyan-400" />
+                <ChevronRight className="w-4 h-4 text-slate-400" />
               </a>
             </div>
 
-            <div className="mt-8 flex items-center justify-center gap-6 text-[11px] font-mono text-slate-400">
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Read-Only Gmail OAuth</span>
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 100% Explainable Scoring</span>
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> AES-256 Encrypted</span>
+            {/* Security Trust Badges (Centered) */}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-[11px] font-mono text-slate-400 w-full text-center">
+              <span className="flex items-center justify-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-slate-300" /> Read-Only Gmail OAuth</span>
+              <span className="flex items-center justify-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-slate-300" /> 100% Explainable Scoring</span>
+              <span className="flex items-center justify-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-slate-300" /> AES-256 Encrypted</span>
             </div>
           </div>
 
-          {/* Hero Forensic Telemetry Showcase */}
-          <div className="mt-16 max-w-5xl mx-auto">
-            <div className="rounded-xl bg-[#090E17]/90 border border-slate-800 shadow-2xl p-4 sm:p-6 backdrop-blur-md">
-              <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800/80 text-xs font-mono">
+          {/* E. SIGNATURE 3-COLUMN TELEMETRY BAR (CLEAN TACTICAL MONOCHROME) */}
+          <div className="mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6 font-mono text-xs">
+            {/* 3-Column Metrics Counters */}
+            <div className="grid grid-cols-3 gap-6 sm:gap-12 text-left">
+              <div>
+                <div className="text-2xl sm:text-3xl font-bold font-mono text-white tracking-tight flex items-center">
+                  99.9<span className="text-slate-400 text-lg">%</span>
+                </div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">
+                  Detection Accuracy
+                </div>
+              </div>
+
+              <div>
+                <div className="text-2xl sm:text-3xl font-bold font-mono text-white tracking-tight flex items-center">
+                  500<span className="text-slate-400 text-lg">K+</span>
+                </div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">
+                  Relays Attribute-Traced
+                </div>
+              </div>
+
+              <div>
+                <div className="text-2xl sm:text-3xl font-bold font-mono text-white tracking-tight flex items-center">
+                  24<span className="text-slate-400 text-lg">/7</span>
+                </div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">
+                  Autonomous SOC Sensor
+                </div>
+              </div>
+            </div>
+
+            {/* Live Status Beacon & Block Coordinates */}
+            <div className="flex items-center gap-3 px-4 py-2 rounded bg-slate-900 border border-slate-800">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500" />
+              </span>
+              <div>
+                <div className="text-[11px] font-bold text-white tracking-wider">
+                  CONSENSUS ARMED // BLOCK #8492 VERIFIED
+                </div>
+                <div className="text-[9px] text-slate-500 tracking-tighter font-mono">
+                  NODE_ID: 0x4F8B91A2 // MERKLE ROOT: 0x7E3A9C [ACTIVE]
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* F. Hero Forensic Telemetry Showcase */}
+          <div className="mt-12 max-w-5xl mx-auto">
+            <div className="rounded-xl bg-[#090E17] border border-slate-800 shadow-2xl p-4 sm:p-6 backdrop-blur-md">
+              <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800 text-xs font-mono">
                 <div className="flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-cyan-400" />
-                  <span className="text-slate-200 font-bold">LIVE FORENSIC INCIDENT TRIAGE</span>
-                  <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 text-[10px]">
+                  <Terminal className="w-4 h-4 text-slate-300" />
+                  <span className="text-white font-bold">LIVE FORENSIC INCIDENT TRIAGE</span>
+                  <span className="px-1.5 py-0.5 rounded bg-red-950/60 text-red-300 border border-red-800/80 text-[10px]">
                     FRAUD SCORE 88 / 100 — PHISHING & BEC
                   </span>
                 </div>
@@ -333,7 +436,7 @@ export const LandingPage: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
                 {/* Panel 1 */}
-                <div className="p-3 rounded bg-slate-950/60 border border-slate-800/60">
+                <div className="p-3 rounded bg-slate-950/80 border border-slate-800">
                   <div className="text-slate-400 text-[10px] uppercase font-semibold mb-2">RFC Header Authentication</div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
@@ -352,7 +455,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {/* Panel 2 */}
-                <div className="p-3 rounded bg-slate-950/60 border border-slate-800/60">
+                <div className="p-3 rounded bg-slate-950/80 border border-slate-800">
                   <div className="text-slate-400 text-[10px] uppercase font-semibold mb-2">Optical & Content Vectors</div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
@@ -361,7 +464,7 @@ export const LandingPage: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-slate-400">Redirect Resolved:</span>
-                      <span className="text-cyan-300">auth-login-sec.xyz</span>
+                      <span className="text-slate-200">auth-login-sec.xyz</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-slate-400">NLP Urgency:</span>
@@ -371,7 +474,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {/* Panel 3 */}
-                <div className="p-3 rounded bg-slate-950/60 border border-slate-800/60">
+                <div className="p-3 rounded bg-slate-950/80 border border-slate-800">
                   <div className="text-slate-400 text-[10px] uppercase font-semibold mb-2">Infrastructure & Origin</div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
@@ -395,10 +498,11 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 3. PROBLEM STATEMENT: THE THREAT LANDSCAPE */}
-      <section className="py-20 bg-[#080D18] border-y border-slate-800/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-[#080D18] border-y border-slate-800 relative">
+        <BlockchainTexture opacity={0.12} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-3">Threat Landscape Reality</h2>
+            <h2 className="text-xs font-mono uppercase tracking-widest text-slate-400 mb-3">Threat Landscape Reality</h2>
             <ScrollReveal
               baseOpacity={0.12}
               enableBlur={true}
@@ -415,33 +519,33 @@ export const LandingPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-5 rounded-lg bg-slate-900/50 border border-slate-800">
-              <div className="text-3xl font-bold font-mono text-cyan-400 mb-2">3.4B+</div>
-              <h4 className="text-xs font-bold font-mono text-slate-200 uppercase mb-1">Phishing Emails / Day</h4>
+            <div className="p-5 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 transition-colors">
+              <div className="text-3xl font-bold font-mono text-white mb-2">3.4B+</div>
+              <h4 className="text-xs font-bold font-mono text-slate-300 uppercase mb-1">Phishing Emails / Day</h4>
               <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
                 Over 3 billion phishing emails are dispatched daily across global infrastructure, overwhelming static filters.
               </p>
             </div>
 
-            <div className="p-5 rounded-lg bg-slate-900/50 border border-slate-800">
+            <div className="p-5 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 transition-colors">
               <div className="text-3xl font-bold font-mono text-amber-400 mb-2">91%</div>
-              <h4 className="text-xs font-bold font-mono text-slate-200 uppercase mb-1">Targeted Cyberattacks</h4>
+              <h4 className="text-xs font-bold font-mono text-slate-300 uppercase mb-1">Targeted Cyberattacks</h4>
               <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
                 Nine out of ten advanced persistent threats and ransomware deployments begin with a deceptive email lure.
               </p>
             </div>
 
-            <div className="p-5 rounded-lg bg-slate-900/50 border border-slate-800">
+            <div className="p-5 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 transition-colors">
               <div className="text-3xl font-bold font-mono text-red-400 mb-2">51%</div>
-              <h4 className="text-xs font-bold font-mono text-slate-200 uppercase mb-1">Rise in Quishing Attacks</h4>
+              <h4 className="text-xs font-bold font-mono text-slate-300 uppercase mb-1">Rise in Quishing Attacks</h4>
               <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
                 Attackers embed credential links inside image-only QR codes and screenshots to completely blind text-only spam analyzers.
               </p>
             </div>
 
-            <div className="p-5 rounded-lg bg-slate-900/50 border border-slate-800">
-              <div className="text-3xl font-bold font-mono text-cyan-300 mb-2">0 Explanations</div>
-              <h4 className="text-xs font-bold font-mono text-slate-200 uppercase mb-1">Black-Box Dilemma</h4>
+            <div className="p-5 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 transition-colors">
+              <div className="text-3xl font-bold font-mono text-slate-200 mb-2">0 Explanations</div>
+              <h4 className="text-xs font-bold font-mono text-slate-300 uppercase mb-1">Black-Box Dilemma</h4>
               <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
                 Legacy gateway filters provide zero evidence or audit trails, leaving analysts incapable of defending verdicts.
               </p>
@@ -451,74 +555,82 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 4. CORE CAPABILITIES / FEATURES GRID */}
-      <section id="features" className="py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-24 relative">
+        <BlockchainTexture opacity={0.15} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-2">Forensic Capabilities</h2>
-            <p className="text-2xl sm:text-3xl font-bold font-mono text-white">
+            <h2 className="text-xs font-mono uppercase tracking-widest text-slate-400 mb-2">Forensic Capabilities</h2>
+            <ScrollReveal
+              baseOpacity={0.15}
+              enableBlur={true}
+              baseRotation={2}
+              blurStrength={5}
+              containerClassName="my-2"
+              textClassName="text-2xl sm:text-3xl lg:text-4xl font-bold font-mono text-white tracking-tight leading-snug"
+            >
               Six Specialized Forensic Signal Engines
-            </p>
+            </ScrollReveal>
             <p className="mt-3 text-xs text-slate-400 font-sans">
               Every analyzed email undergoes multi-layer forensic decomposition before scoring.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="p-6 rounded-lg bg-[#090E17] border border-slate-800 hover:border-cyan-500/40 transition-colors group">
-              <div className="p-2.5 rounded bg-cyan-500/10 text-cyan-400 w-fit mb-4 group-hover:scale-105 transition-transform">
+            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors group">
+              <div className="p-2.5 rounded bg-slate-800 text-slate-200 w-fit mb-4 group-hover:scale-105 transition-transform">
                 <Server className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-bold font-mono text-slate-100 mb-2">Header & Relay Hop Forensics</h3>
+              <h3 className="text-sm font-bold font-mono text-white mb-2">Header & Relay Hop Forensics</h3>
               <p className="text-xs text-slate-400 leading-relaxed font-sans">
                 Reconstructs the full Received chain server by server. Validates SPF, DKIM, and DMARC alignment, detects clock skew anomalies, and exposes reply-to diversion attacks.
               </p>
             </div>
 
-            <div className="p-6 rounded-lg bg-[#090E17] border border-slate-800 hover:border-cyan-500/40 transition-colors group">
-              <div className="p-2.5 rounded bg-cyan-500/10 text-cyan-400 w-fit mb-4 group-hover:scale-105 transition-transform">
+            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors group">
+              <div className="p-2.5 rounded bg-slate-800 text-slate-200 w-fit mb-4 group-hover:scale-105 transition-transform">
                 <Cpu className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-bold font-mono text-slate-100 mb-2">Multi-Signal NLP Classifier</h3>
+              <h3 className="text-sm font-bold font-mono text-white mb-2">Multi-Signal NLP Classifier</h3>
               <p className="text-xs text-slate-400 leading-relaxed font-sans">
                 Trained scikit-learn models evaluate urgency signals, financial diversion phrases, credential harvesting cues, and Bayesian comment poisoning evasion techniques.
               </p>
             </div>
 
-            <div className="p-6 rounded-lg bg-[#090E17] border border-slate-800 hover:border-cyan-500/40 transition-colors group">
-              <div className="p-2.5 rounded bg-cyan-500/10 text-cyan-400 w-fit mb-4 group-hover:scale-105 transition-transform">
+            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors group">
+              <div className="p-2.5 rounded bg-slate-800 text-slate-200 w-fit mb-4 group-hover:scale-105 transition-transform">
                 <QrCode className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-bold font-mono text-slate-100 mb-2">Optical QR & Quishing Detection</h3>
+              <h3 className="text-sm font-bold font-mono text-white mb-2">Optical QR & Quishing Detection</h3>
               <p className="text-xs text-slate-400 leading-relaxed font-sans">
                 Scans attachments and embedded inline images with pyzbar. Decodes QR payloads, traverses HTTP redirect chains safely, and extracts lure text via Tesseract OCR.
               </p>
             </div>
 
-            <div className="p-6 rounded-lg bg-[#090E17] border border-slate-800 hover:border-cyan-500/40 transition-colors group">
-              <div className="p-2.5 rounded bg-cyan-500/10 text-cyan-400 w-fit mb-4 group-hover:scale-105 transition-transform">
+            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors group">
+              <div className="p-2.5 rounded bg-slate-800 text-slate-200 w-fit mb-4 group-hover:scale-105 transition-transform">
                 <Globe2 className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-bold font-mono text-slate-100 mb-2">Geolocation & Origin Attribution</h3>
+              <h3 className="text-sm font-bold font-mono text-white mb-2">Geolocation & Origin Attribution</h3>
               <p className="text-xs text-slate-400 leading-relaxed font-sans">
                 Inspects originating client IP addresses with MaxMind GeoLite2 databases. Flags VPN/Tor exit nodes, datacenter relays, and newly registered malicious domains.
               </p>
             </div>
 
-            <div className="p-6 rounded-lg bg-[#090E17] border border-slate-800 hover:border-cyan-500/40 transition-colors group">
-              <div className="p-2.5 rounded bg-cyan-500/10 text-cyan-400 w-fit mb-4 group-hover:scale-105 transition-transform">
+            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors group">
+              <div className="p-2.5 rounded bg-slate-800 text-slate-200 w-fit mb-4 group-hover:scale-105 transition-transform">
                 <Network className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-bold font-mono text-slate-100 mb-2">Campaign Graph Correlation</h3>
+              <h3 className="text-sm font-bold font-mono text-white mb-2">Campaign Graph Correlation</h3>
               <p className="text-xs text-slate-400 leading-relaxed font-sans">
                 Interactive d3-force network graph clusters disparate cases sharing threat infrastructure (IP ranges, domain families, body hashes, or attack signatures).
               </p>
             </div>
 
-            <div className="p-6 rounded-lg bg-[#090E17] border border-slate-800 hover:border-cyan-500/40 transition-colors group">
-              <div className="p-2.5 rounded bg-cyan-500/10 text-cyan-400 w-fit mb-4 group-hover:scale-105 transition-transform">
+            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors group">
+              <div className="p-2.5 rounded bg-slate-800 text-slate-200 w-fit mb-4 group-hover:scale-105 transition-transform">
                 <Radio className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-bold font-mono text-slate-100 mb-2">Autonomous Live Mailbox Sensor</h3>
+              <h3 className="text-sm font-bold font-mono text-white mb-2">Autonomous Live Mailbox Sensor</h3>
               <p className="text-xs text-slate-400 leading-relaxed font-sans">
                 Continuously polls connected Gmail accounts using read-only scopes. Delivers zero-delay threat alerts directly to the SOC console via Server-Sent Events (SSE).
               </p>
@@ -528,22 +640,30 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 5. FORENSIC PIPELINE — HOW IT WORKS */}
-      <section id="pipeline" className="py-20 bg-[#070C16] border-y border-slate-800/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="pipeline" className="py-20 bg-[#070C16] border-y border-slate-800 relative">
+        <BlockchainTexture opacity={0.12} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-2">Pipeline Architecture</h2>
-            <p className="text-2xl sm:text-3xl font-bold font-mono text-white">
+            <h2 className="text-xs font-mono uppercase tracking-widest text-slate-400 mb-2">Pipeline Architecture</h2>
+            <ScrollReveal
+              baseOpacity={0.15}
+              enableBlur={true}
+              baseRotation={2}
+              blurStrength={5}
+              containerClassName="my-2"
+              textClassName="text-2xl sm:text-3xl lg:text-4xl font-bold font-mono text-white tracking-tight leading-snug"
+            >
               End-to-End Forensic Execution Flow
-            </p>
+            </ScrollReveal>
             <p className="mt-3 text-xs text-slate-400 font-sans">
               From raw RFC 5322 bytes to court-admissible forensic audit evidence.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3 font-mono text-xs">
-            <div className="p-4 rounded-lg bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+            <div className="p-4 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 transition-colors flex flex-col justify-between">
               <div>
-                <span className="text-cyan-400 font-bold text-sm">01. INGESTION</span>
+                <span className="text-white font-bold text-sm">01. INGESTION</span>
                 <p className="text-slate-300 font-medium mt-2">MIME Parsing & Hashing</p>
                 <p className="text-[11px] text-slate-400 font-sans mt-1">
                   SHA-256 evidence hashing, EML payload extraction, comment stripping.
@@ -552,9 +672,9 @@ export const LandingPage: React.FC = () => {
               <div className="mt-4 text-[10px] text-slate-500">BytesParser / aiofiles</div>
             </div>
 
-            <div className="p-4 rounded-lg bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+            <div className="p-4 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 transition-colors flex flex-col justify-between">
               <div>
-                <span className="text-cyan-400 font-bold text-sm">02. HEADERS</span>
+                <span className="text-white font-bold text-sm">02. HEADERS</span>
                 <p className="text-slate-300 font-medium mt-2">Relay Path & Auth</p>
                 <p className="text-[11px] text-slate-400 font-sans mt-1">
                   SPF verification, DKIM validation, DMARC alignment, timestamp sequence audit.
@@ -563,9 +683,9 @@ export const LandingPage: React.FC = () => {
               <div className="mt-4 text-[10px] text-slate-500">RFC 5321 / RFC 7489</div>
             </div>
 
-            <div className="p-4 rounded-lg bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+            <div className="p-4 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 transition-colors flex flex-col justify-between">
               <div>
-                <span className="text-cyan-400 font-bold text-sm">03. CONTENT</span>
+                <span className="text-white font-bold text-sm">03. CONTENT</span>
                 <p className="text-slate-300 font-medium mt-2">NLP & Optical OCR</p>
                 <p className="text-[11px] text-slate-400 font-sans mt-1">
                   pyzbar QR decoding, Tesseract OCR screenshot extraction, scikit-learn NLP.
@@ -574,9 +694,9 @@ export const LandingPage: React.FC = () => {
               <div className="mt-4 text-[10px] text-slate-500">Scikit-learn / OpenCV</div>
             </div>
 
-            <div className="p-4 rounded-lg bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+            <div className="p-4 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 transition-colors flex flex-col justify-between">
               <div>
-                <span className="text-cyan-400 font-bold text-sm">04. ORIGIN</span>
+                <span className="text-white font-bold text-sm">04. ORIGIN</span>
                 <p className="text-slate-300 font-medium mt-2">Geo & Domain Intel</p>
                 <p className="text-[11px] text-slate-400 font-sans mt-1">
                   MaxMind GeoLite2 lookup, ASN classification, domain registration age analysis.
@@ -585,9 +705,9 @@ export const LandingPage: React.FC = () => {
               <div className="mt-4 text-[10px] text-slate-500">GeoLite2 / AbuseIPDB</div>
             </div>
 
-            <div className="p-4 rounded-lg bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+            <div className="p-4 rounded bg-slate-900 border border-slate-800 hover:border-slate-600 transition-colors flex flex-col justify-between">
               <div>
-                <span className="text-cyan-400 font-bold text-sm">05. FUSION</span>
+                <span className="text-white font-bold text-sm">05. FUSION</span>
                 <p className="text-slate-300 font-medium mt-2">Score & Attribution</p>
                 <p className="text-[11px] text-slate-400 font-sans mt-1">
                   Weighted signal fusion (0–100), campaign graph linking, PDF report export.
@@ -600,32 +720,40 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 6. REAL-TIME GMAIL SENSOR */}
-      <section id="sensor" className="py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="sensor" className="py-24 relative">
+        <BlockchainTexture opacity={0.14} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono mb-4">
-                <Radio className="w-3.5 h-3.5 animate-ping-slow text-cyan-400" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300 text-xs font-mono mb-4">
+                <Radio className="w-3.5 h-3.5 text-slate-300" />
                 <span>REAL-TIME SENSOR INTEGRATION</span>
               </div>
-              <h2 className="text-3xl font-bold font-mono text-white leading-tight">
-                Connect Once.<br />Monitor Continuously.
-              </h2>
+              <ScrollReveal
+                baseOpacity={0.15}
+                enableBlur={true}
+                baseRotation={2}
+                blurStrength={5}
+                containerClassName="my-2"
+                textClassName="text-3xl sm:text-4xl font-bold font-mono text-white leading-tight max-w-md"
+              >
+                Connect Once. Monitor Continuously.
+              </ScrollReveal>
               <p className="mt-4 text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
                 MailTrace connects directly to institutional Google Workspace and Gmail inboxes using strictly read-only authorization. Incoming emails are streamed into the forensic pipeline with zero user disruption.
               </p>
 
               <div className="mt-6 space-y-3 font-mono text-xs">
                 <div className="flex items-center gap-3 p-3 rounded bg-[#090E17] border border-slate-800">
-                  <Lock className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span className="text-slate-300">Strictly <span className="text-cyan-300">gmail.readonly</span> — cannot alter or send mail</span>
+                  <Lock className="w-4 h-4 text-slate-300 shrink-0" />
+                  <span className="text-slate-300">Strictly <span className="text-white font-semibold">gmail.readonly</span> — cannot alter or send mail</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded bg-[#090E17] border border-slate-800">
-                  <Zap className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <Zap className="w-4 h-4 text-slate-300 shrink-0" />
                   <span className="text-slate-300">Background APScheduler sync with History API</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded bg-[#090E17] border border-slate-800">
-                  <Activity className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <Activity className="w-4 h-4 text-slate-300 shrink-0" />
                   <span className="text-slate-300">Zero-latency Server-Sent Events (SSE) notification stream</span>
                 </div>
               </div>
@@ -633,7 +761,7 @@ export const LandingPage: React.FC = () => {
               <div className="mt-8">
                 <Link
                   to="/sign-up"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold uppercase tracking-wider transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-500 text-white font-mono text-xs font-bold uppercase tracking-wider transition-all"
                 >
                   <span>Connect Mailbox Now</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -643,39 +771,39 @@ export const LandingPage: React.FC = () => {
 
             {/* Sensor visual panel */}
             <div className="rounded-xl bg-[#090E17] border border-slate-800 p-5 shadow-2xl font-mono text-xs">
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800/80">
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
                 <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-cyan-400" />
-                  <span className="text-slate-200 font-bold">LIVE MAILBOX THREAT FEED</span>
+                  <Mail className="w-4 h-4 text-slate-300" />
+                  <span className="text-white font-bold">LIVE MAILBOX THREAT FEED</span>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px]">
+                <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px]">
                   CONNECTED
                 </span>
               </div>
 
               <div className="space-y-2">
-                <div className="p-2.5 rounded bg-slate-950/70 border border-red-500/30 flex items-center justify-between">
+                <div className="p-2.5 rounded bg-slate-950/80 border border-red-900/60 flex items-center justify-between">
                   <div>
                     <div className="text-red-400 font-bold">URGENT: Payroll Account Re-verification</div>
                     <div className="text-[10px] text-slate-400">sender: hr-update@payroll-adp-secure.com</div>
                   </div>
-                  <span className="px-2 py-1 rounded bg-red-500/20 text-red-400 font-bold text-xs">92/100</span>
+                  <span className="px-2 py-1 rounded bg-red-950 text-red-300 font-bold text-xs border border-red-800/80">92/100</span>
                 </div>
 
-                <div className="p-2.5 rounded bg-slate-950/70 border border-amber-500/30 flex items-center justify-between">
+                <div className="p-2.5 rounded bg-slate-950/80 border border-amber-900/60 flex items-center justify-between">
                   <div>
                     <div className="text-amber-300 font-bold">Invoice #8849 Attached for Review</div>
                     <div className="text-[10px] text-slate-400">sender: billing@supplier-vendor-portal.net</div>
                   </div>
-                  <span className="px-2 py-1 rounded bg-amber-500/20 text-amber-400 font-bold text-xs">68/100</span>
+                  <span className="px-2 py-1 rounded bg-amber-950 text-amber-300 font-bold text-xs border border-amber-800/80">68/100</span>
                 </div>
 
-                <div className="p-2.5 rounded bg-slate-950/70 border border-emerald-500/30 flex items-center justify-between">
+                <div className="p-2.5 rounded bg-slate-950/80 border border-slate-800 flex items-center justify-between">
                   <div>
-                    <div className="text-emerald-400 font-bold">Quarterly Engineering Sync Summary</div>
+                    <div className="text-slate-300 font-bold">Quarterly Engineering Sync Summary</div>
                     <div className="text-[10px] text-slate-400">sender: alex.rivera@organization.com</div>
                   </div>
-                  <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 font-bold text-xs">12/100</span>
+                  <span className="px-2 py-1 rounded bg-slate-900 text-slate-300 font-bold text-xs border border-slate-800">12/100</span>
                 </div>
               </div>
             </div>
@@ -684,26 +812,34 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 7. EXPLAINABLE DETECTION CASE STUDY */}
-      <section id="explainability" className="py-20 bg-[#080D18] border-y border-slate-800/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="explainability" className="py-20 bg-[#080D18] border-y border-slate-800 relative">
+        <BlockchainTexture opacity={0.12} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-2">Explainability Principle</h2>
-            <p className="text-2xl sm:text-3xl font-bold font-mono text-white">
+            <h2 className="text-xs font-mono uppercase tracking-widest text-slate-400 mb-2">Explainability Principle</h2>
+            <ScrollReveal
+              baseOpacity={0.15}
+              enableBlur={true}
+              baseRotation={2}
+              blurStrength={5}
+              containerClassName="my-2"
+              textClassName="text-2xl sm:text-3xl lg:text-4xl font-bold font-mono text-white tracking-tight leading-snug"
+            >
               Every Score Has a Verifiable Story
-            </p>
+            </ScrollReveal>
             <p className="mt-3 text-xs text-slate-400 font-sans">
               No black boxes. Every classification provides an auditable signal breakdown with exact weights.
             </p>
           </div>
 
           <div className="max-w-3xl mx-auto rounded-xl bg-[#090E17] border border-slate-800 p-6 font-mono text-xs">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800/80">
-              <span className="text-slate-200 font-bold">Signal Contribution Ledger</span>
-              <span className="text-cyan-400 font-bold">Cumulative Fraud Score: 87 / 100</span>
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+              <span className="text-white font-bold">Signal Contribution Ledger</span>
+              <span className="text-slate-300 font-bold">Cumulative Fraud Score: 87 / 100</span>
             </div>
 
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between p-2 rounded bg-slate-950/60 border border-slate-800/80">
+              <div className="flex items-center justify-between p-2 rounded bg-slate-950/80 border border-slate-800">
                 <div className="flex items-center gap-2">
                   <span className="text-red-400 font-bold">+35</span>
                   <span className="text-slate-300">SPF Failure with Sender Domain Impersonation</span>
@@ -711,7 +847,7 @@ export const LandingPage: React.FC = () => {
                 <span className="text-[10px] text-slate-500">Header Engine</span>
               </div>
 
-              <div className="flex items-center justify-between p-2 rounded bg-slate-950/60 border border-slate-800/80">
+              <div className="flex items-center justify-between p-2 rounded bg-slate-950/80 border border-slate-800">
                 <div className="flex items-center gap-2">
                   <span className="text-red-400 font-bold">+25</span>
                   <span className="text-slate-300">QR Code Embedded Lure Resolved to Credential Form</span>
@@ -719,7 +855,7 @@ export const LandingPage: React.FC = () => {
                 <span className="text-[10px] text-slate-500">Quishing Engine</span>
               </div>
 
-              <div className="flex items-center justify-between p-2 rounded bg-slate-950/60 border border-slate-800/80">
+              <div className="flex items-center justify-between p-2 rounded bg-slate-950/80 border border-slate-800">
                 <div className="flex items-center gap-2">
                   <span className="text-amber-400 font-bold">+15</span>
                   <span className="text-slate-300">Domain Registered 48 Hours Ago on High-Risk Registrar</span>
@@ -727,7 +863,7 @@ export const LandingPage: React.FC = () => {
                 <span className="text-[10px] text-slate-500">Domain Intel</span>
               </div>
 
-              <div className="flex items-center justify-between p-2 rounded bg-slate-950/60 border border-slate-800/80">
+              <div className="flex items-center justify-between p-2 rounded bg-slate-950/80 border border-slate-800">
                 <div className="flex items-center gap-2">
                   <span className="text-amber-400 font-bold">+12</span>
                   <span className="text-slate-300">NLP Urgency Tone: Financial Authority Impersonation</span>
@@ -736,43 +872,51 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400 font-sans leading-relaxed">
-              <strong className="text-cyan-300 font-mono">Verdict:</strong> High confidence credential-harvesting phishing campaign utilizing visual QR code obfuscation and relay spoofing.
+            <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400 font-sans leading-relaxed">
+              <strong className="text-white font-mono">Verdict:</strong> High confidence credential-harvesting phishing campaign utilizing visual QR code obfuscation and relay spoofing.
             </div>
           </div>
         </div>
       </section>
 
       {/* 8. PRIVACY & SECURITY INTEGRITY */}
-      <section id="security" className="py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="security" className="py-24 relative">
+        <BlockchainTexture opacity={0.12} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-2">Security Architecture</h2>
-            <p className="text-2xl sm:text-3xl font-bold font-mono text-white">
+            <h2 className="text-xs font-mono uppercase tracking-widest text-slate-400 mb-2">Security Architecture</h2>
+            <ScrollReveal
+              baseOpacity={0.15}
+              enableBlur={true}
+              baseRotation={2}
+              blurStrength={5}
+              containerClassName="my-2"
+              textClassName="text-2xl sm:text-3xl lg:text-4xl font-bold font-mono text-white tracking-tight leading-snug"
+            >
               Institutional-Grade Privacy Controls
-            </p>
+            </ScrollReveal>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
-            <div className="p-6 rounded-lg bg-[#090E17] border border-slate-800">
-              <Lock className="w-5 h-5 text-cyan-400 mb-3" />
-              <h4 className="text-sm font-bold text-slate-100 mb-2">Encrypted at Rest</h4>
+            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors">
+              <Lock className="w-5 h-5 text-slate-300 mb-3" />
+              <h4 className="text-sm font-bold text-white mb-2">Encrypted at Rest</h4>
               <p className="text-slate-400 font-sans text-xs leading-relaxed">
                 OAuth refresh tokens are encrypted using Fernet (AES-128-CBC + HMAC-SHA256). Sensitive credentials are never printed in application logs.
               </p>
             </div>
 
-            <div className="p-6 rounded-lg bg-[#090E17] border border-slate-800">
-              <Sliders className="w-5 h-5 text-cyan-400 mb-3" />
-              <h4 className="text-sm font-bold text-slate-100 mb-2">Configurable Retention</h4>
+            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors">
+              <Sliders className="w-5 h-5 text-slate-300 mb-3" />
+              <h4 className="text-sm font-bold text-white mb-2">Configurable Retention</h4>
               <p className="text-slate-400 font-sans text-xs leading-relaxed">
                 Automated data lifecycle enforcement purges raw messages and headers based on institutional retention policies (30, 60, or 90 days).
               </p>
             </div>
 
-            <div className="p-6 rounded-lg bg-[#090E17] border border-slate-800">
-              <FileSearch className="w-5 h-5 text-cyan-400 mb-3" />
-              <h4 className="text-sm font-bold text-slate-100 mb-2">Tamper-Evident Audit</h4>
+            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors">
+              <FileSearch className="w-5 h-5 text-slate-300 mb-3" />
+              <h4 className="text-sm font-bold text-white mb-2">Tamper-Evident Audit</h4>
               <p className="text-slate-400 font-sans text-xs leading-relaxed">
                 Every analyst access, case creation, PDF export, and purge event is logged to an immutable SQLite/PostgreSQL audit ledger.
               </p>
@@ -789,12 +933,20 @@ export const LandingPage: React.FC = () => {
         />
       </section>
 
-      {/* 9. FINAL CTA & FOOTER */}
-      <section className="py-20 bg-gradient-to-b from-[#070C16] to-[#05080E] border-t border-slate-800/60">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold font-mono text-white">
+      {/* 9. FINAL CTA & FOOTER (SOLID DARK - NO COLORFUL GRADIENTS) */}
+      <section className="py-20 bg-[#070C16] border-t border-slate-800 relative">
+        <BlockchainTexture opacity={0.16} />
+        <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
+          <ScrollReveal
+            baseOpacity={0.15}
+            enableBlur={true}
+            baseRotation={2}
+            blurStrength={5}
+            containerClassName="my-2"
+            textClassName="text-3xl sm:text-4xl font-bold font-mono text-white tracking-tight"
+          >
             Ready to Protect Your Infrastructure?
-          </h2>
+          </ScrollReveal>
           <p className="mt-4 text-xs sm:text-sm text-slate-300 max-w-xl mx-auto font-sans leading-relaxed">
             Deploy MailTrace to unmask deceptive senders, inspect optical lures, and attribute adversarial infrastructure.
           </p>
@@ -803,42 +955,42 @@ export const LandingPage: React.FC = () => {
             <Link to="/sign-up" className="w-full sm:w-auto">
               <SpecularButton
                 size="lg"
-                radius={10}
-                tint="#06b6d4"
-                tintOpacity={0.2}
-                blur={10}
+                radius={6}
+                tint="#ffffff"
+                tintOpacity={0.15}
+                blur={4}
                 textColor="#ffffff"
-                lineColor="#38bdf8"
-                baseColor="#0891b2"
-                intensity={1.3}
+                lineColor="#94a3b8"
+                baseColor="#1e293b"
+                intensity={1.2}
                 shineSize={16}
-                shineFade={40}
-                thickness={1.5}
+                shineFade={35}
+                thickness={1}
                 speed={0.4}
                 followMouse={true}
                 proximity={250}
-                className="w-full sm:w-auto font-mono text-xs font-bold uppercase tracking-wider shadow-xl shadow-cyan-500/25"
+                className="w-full sm:w-auto font-mono text-xs font-bold uppercase tracking-wider shadow-xl shadow-black/60"
               >
                 <span className="flex items-center gap-2">
                   Create Free Account
-                  <ArrowRight className="w-4 h-4 text-cyan-300" />
+                  <ArrowRight className="w-4 h-4 text-slate-300" />
                 </span>
               </SpecularButton>
             </Link>
             <Link to="/sign-in" className="w-full sm:w-auto">
               <SpecularButton
                 size="lg"
-                radius={10}
-                tint="#06b6d4"
+                radius={6}
+                tint="#ffffff"
                 tintOpacity={0.06}
-                blur={6}
+                blur={3}
                 textColor="#cbd5e1"
-                lineColor="#38bdf8"
-                baseColor="#334155"
-                intensity={1.1}
+                lineColor="#64748b"
+                baseColor="#0f172a"
+                intensity={1.0}
                 shineSize={14}
-                shineFade={35}
-                thickness={1.2}
+                shineFade={30}
+                thickness={1}
                 speed={0.35}
                 followMouse={true}
                 proximity={200}
@@ -851,10 +1003,10 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      <footer className="py-6 border-t border-slate-800/40 bg-[#05080E] text-center font-mono text-[11px] text-slate-500">
+      <footer className="py-6 border-t border-slate-800 bg-[#05080E] text-center font-mono text-[11px] text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div>
-            MAIL<span className="text-cyan-400">TRACE</span> Forensic Station • v2.0
+            MAIL<span className="text-slate-300">TRACE</span> Forensic Station • v2.0
           </div>
           <div>
             NIST SP 800-86 Compliant Forensic Pipeline

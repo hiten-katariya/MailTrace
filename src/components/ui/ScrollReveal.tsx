@@ -17,6 +17,7 @@ export interface ScrollRevealProps {
   textClassName?: string;
   rotationEnd?: string;
   wordAnimationEnd?: string;
+  as?: 'div' | 'h2' | 'h3' | 'p' | 'span';
 }
 
 export const ScrollReveal: React.FC<ScrollRevealProps> = ({
@@ -28,10 +29,11 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
   blurStrength = 4,
   containerClassName = '',
   textClassName = '',
-  rotationEnd = 'bottom bottom',
-  wordAnimationEnd = 'bottom bottom'
+  rotationEnd = 'bottom 75%',
+  wordAnimationEnd = 'bottom 65%',
+  as = 'div'
 }) => {
-  const containerRef = useRef<HTMLHeadingElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
 
   const splitText = useMemo(() => {
     if (typeof children !== 'string') {
@@ -116,10 +118,11 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
     };
   }, [scrollContainerRef, enableBlur, baseRotation, baseOpacity, rotationEnd, wordAnimationEnd, blurStrength]);
 
+  const Tag = as;
   return (
-    <h2 ref={containerRef} className={`scroll-reveal ${containerClassName}`}>
-      <p className={`scroll-reveal-text ${textClassName}`}>{splitText}</p>
-    </h2>
+    <Tag ref={containerRef as any} className={`scroll-reveal ${containerClassName}`}>
+      <div className={`scroll-reveal-text ${textClassName}`}>{splitText}</div>
+    </Tag>
   );
 };
 
