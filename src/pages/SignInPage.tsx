@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import SpecularButton from '../components/ui/SpecularButton';
 
 export const SignInPage: React.FC = () => {
   const { login, loginWithGoogle, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -148,23 +149,38 @@ export const SignInPage: React.FC = () => {
           </div>
         </div>
 
-        <button
+        <SpecularButton
           type="submit"
+          size="md"
+          radius={8}
+          tint="#06b6d4"
+          tintOpacity={0.15}
+          blur={6}
+          textColor="#38bdf8"
+          lineColor="#38bdf8"
+          baseColor="#0891b2"
+          intensity={1.2}
+          shineSize={14}
+          shineFade={35}
+          thickness={1.5}
+          speed={0.4}
+          followMouse={true}
+          proximity={200}
           disabled={isSubmitting || isGoogleSubmitting}
-          className="w-full mt-2 py-2.5 px-4 rounded bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-soc-subtle disabled:opacity-50"
+          className="w-full mt-2 font-mono text-xs font-bold uppercase tracking-wider shadow-soc-subtle"
         >
           {isSubmitting ? (
-            <>
+            <span className="flex items-center gap-2">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span>Authenticating...</span>
-            </>
+            </span>
           ) : (
-            <>
+            <span className="flex items-center gap-2">
               <span>Sign In</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </>
+              <ArrowRight className="w-3.5 h-3.5 text-cyan-300" />
+            </span>
           )}
-        </button>
+        </SpecularButton>
       </form>
 
       {/* Footer Navigation */}

@@ -74,3 +74,67 @@
 .leaflet-container a {
   color: #28C7E8 !important;
 }
+
+/* ==========================================================================
+   ScrollAnimation (you-can-scroll) Variables & Keyframes
+   ========================================================================== */
+:root {
+  --start: 0;
+  --end: 360;
+  --lightness: 65%;
+  --base-chroma: 0.3;
+  --font-size-min: 14;
+  --font-size-max: 20;
+  --font-ratio-min: 1.1;
+  --font-ratio-max: 1.33;
+  --font-width-min: 375;
+  --font-width-max: 1500;
+  --fluid-type: clamp(2rem, 5vw, 4rem);
+}
+
+@keyframes change {
+  to {
+    --hue: var(--end);
+  }
+}
+
+@keyframes chroma-on {
+  to {
+    --chroma: 0.3;
+  }
+}
+
+@keyframes chroma-off {
+  to {
+    --chroma: 0;
+  }
+}
+
+@keyframes brighten {
+  0% {
+    opacity: var(--start-opacity, 0.2);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(var(--brightness, 1.2));
+  }
+  100% {
+    opacity: var(--end-opacity, 0.2);
+  }
+}
+
+/* you-can-scroll layout styles (SOC Integrated) */
+.you-can-scroll-root {
+  position: relative;
+  color: #f1f5f9;
+}
+
+.you-can-scroll-list-item {
+  transition: opacity 0.25s ease, transform 0.25s ease, color 0.25s ease;
+}
+
+.you-can-scroll-list-item.active {
+  opacity: 1 !important;
+  transform: translateX(8px);
+}
+

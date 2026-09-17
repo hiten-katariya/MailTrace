@@ -1,5 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import AeroShards from '../components/ui/AeroShards';
+import SplitFlapText from '../components/ui/SplitFlapText';
+import ScrollReveal from '../components/ui/ScrollReveal';
+import LetterGlitch from '../components/ui/LetterGlitch';
+import SpecularButton from '../components/ui/SpecularButton';
+import ScrollAnimation from '../components/ui/you-can-scroll';
 import {
   Shield,
   ArrowRight,
@@ -23,8 +29,122 @@ import {
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
+  const [showGlitchIntro, setShowGlitchIntro] = useState(true);
+  const [isGlitchFading, setIsGlitchFading] = useState(false);
+  const [bootStep, setBootStep] = useState(0);
+
+  const bootMessages = [
+    'INITIALIZING FORENSIC TELEMETRY CORES...',
+    'MOUNTING RFC 822 HEADER GRAPH ANALYZER...',
+    'DECRYPTING OPTICAL QUISHING HEURISTICS...',
+    'SYNCHRONIZING REAL-TIME GMAIL SENSOR...',
+    'FORENSIC OS ARMED // SYSTEM READY.'
+  ];
+
+  useEffect(() => {
+    // Step forward through boot milestones across the extended sequence
+    const stepInterval = setInterval(() => {
+      setBootStep(prev => (prev < bootMessages.length - 1 ? prev + 1 : prev));
+    }, 1050);
+
+    // Trigger smooth fade-out at 5500ms (increased by 3 seconds)
+    const fadeTimer = setTimeout(() => {
+      setIsGlitchFading(true);
+    }, 5500);
+
+    // Completely unmount LetterGlitch and stop canvas loop at 6100ms (increased by 3 seconds)
+    const stopTimer = setTimeout(() => {
+      setShowGlitchIntro(false);
+    }, 6100);
+
+    // Keyboard shortcut to skip intro
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        setIsGlitchFading(true);
+        setTimeout(() => setShowGlitchIntro(false), 500);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearInterval(stepInterval);
+      clearTimeout(fadeTimer);
+      clearTimeout(stopTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const handleSkipIntro = () => {
+    setIsGlitchFading(true);
+    setTimeout(() => setShowGlitchIntro(false), 500);
+  };
+
   return (
     <div className="min-h-screen bg-[#06090F] text-slate-100 font-sans selection:bg-cyan-500/20 selection:text-cyan-300">
+      {/* 0. INTRO BOOTLOADER GLITCH SCREEN (RUNS ON SITE OPEN, THEN STOPS & UNMOUNTS) */}
+      {showGlitchIntro && (
+        <div
+          className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#06090F] transition-opacity duration-700 ease-out cursor-pointer ${
+            isGlitchFading ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+          onClick={handleSkipIntro}
+          role="dialog"
+          aria-label="System Initializing"
+        >
+          {/* Canvas glitch background */}
+          <div className="absolute inset-0 z-0 opacity-60">
+            <LetterGlitch
+              glitchColors={['#06b6d4', '#0891b2', '#0284c7', '#38bdf8', '#10b981']}
+              glitchSpeed={45}
+              centerVignette={true}
+              outerVignette={true}
+              smooth={true}
+              backgroundColor="#06090F"
+            />
+          </div>
+
+          {/* Central Terminal HUD */}
+          <div
+            className="relative z-10 max-w-lg w-full mx-4 p-6 sm:p-8 rounded-xl bg-[#070C16]/90 border border-cyan-500/40 shadow-[0_0_60px_rgba(6,182,212,0.25)] backdrop-blur-md font-mono text-center cursor-default"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                <Shield className="w-5 h-5 text-cyan-400 animate-pulse" />
+              </div>
+            </div>
+
+            <div className="text-base sm:text-lg font-bold tracking-widest text-slate-100 uppercase">
+              MAIL<span className="text-cyan-400">TRACE</span> FORENSIC OS
+            </div>
+            <div className="text-[10px] text-cyan-400/80 tracking-widest uppercase mt-1">
+              v2.0 // TELEMETRY INITIALIZATION
+            </div>
+
+            {/* Animated progress bar */}
+            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden my-5 border border-slate-700/60">
+              <div
+                className="h-full bg-gradient-to-r from-cyan-500 to-teal-400 transition-all duration-1000 ease-out"
+                style={{ width: `${((bootStep + 1) / bootMessages.length) * 100}%` }}
+              />
+            </div>
+
+            {/* Live boot message */}
+            <div className="text-xs text-cyan-300 font-mono tracking-wide h-6 flex items-center justify-center">
+              <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping mr-2 shrink-0" />
+              <span>{bootMessages[bootStep]}</span>
+            </div>
+
+            <button
+              onClick={handleSkipIntro}
+              type="button"
+              className="mt-6 inline-flex items-center gap-1.5 px-3 py-1 rounded border border-slate-700 hover:border-cyan-500/40 bg-slate-900/80 text-[10px] text-slate-400 hover:text-cyan-300 transition-colors"
+            >
+              <span>[ ESC / CLICK TO INITIALIZE NOW ]</span>
+            </button>
+          </div>
+        </div>
+      )}
       {/* 1. TOP FLOATING NAVIGATION */}
       <header className="sticky top-0 z-50 bg-[#070C16]/90 backdrop-blur-md border-b border-slate-800/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -51,11 +171,27 @@ export const LandingPage: React.FC = () => {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link
-              to="/sign-in"
-              className="px-3.5 py-1.5 rounded text-xs font-mono text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
-            >
-              Sign In
+            <Link to="/sign-in">
+              <SpecularButton
+                size="sm"
+                radius={6}
+                tint="#06b6d4"
+                tintOpacity={0.08}
+                blur={4}
+                textColor="#cbd5e1"
+                lineColor="#38bdf8"
+                baseColor="#0891b2"
+                intensity={1.1}
+                shineSize={12}
+                shineFade={30}
+                thickness={1}
+                speed={0.35}
+                followMouse={true}
+                proximity={150}
+                className="font-mono text-xs font-medium"
+              >
+                Sign In
+              </SpecularButton>
             </Link>
             <Link
               to="/sign-up"
@@ -70,15 +206,60 @@ export const LandingPage: React.FC = () => {
 
       {/* 2. HERO SECTION */}
       <section className="relative pt-20 pb-24 overflow-hidden">
+        {/* Ambient AeroShards WebGPU Sculpture Background */}
+        <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+          <AeroShards
+            backgroundColor="#06090F"
+            shardColor="#06b6d4"
+            accentColor="#38bdf8"
+            placement="full"
+            flow="stream"
+            material="chrome"
+            detail="balanced"
+            effect="none"
+            speed={0.65}
+            spin={0.7}
+            scale={1.15}
+            spread={0.8}
+            depth={0.9}
+            density={1.2}
+            shardSize={1.0}
+            glow={1.2}
+            bloom={0.4}
+            grain={0.03}
+            interaction="repel"
+            interactionRadius={1.4}
+            interactionStrength={0.45}
+            rippleIntensity={1}
+            holdToGather={true}
+          />
+        </div>
+
         {/* Ambient background glow */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute top-1/3 left-1/3 w-[400px] h-[300px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono mb-6">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              <span>NEXT-GENERATION EMAIL FORENSICS & ATTRIBUTION PLATFORM</span>
+            <div className="inline-flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-cyan-300 text-xs font-mono mb-6 shadow-soc-subtle">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+              <SplitFlapText
+                words={[
+                  'ZERO-DAY PHISH BLOCKED',
+                  'RFC RELAY ATTRIBUTED',
+                  'QUISHING DETECTED',
+                  'EXPLAINABLE FORENSICS'
+                ]}
+                fontSize={12}
+                tileColor="#0a101f"
+                textColor="#38bdf8"
+                tileRadius={4}
+                gap={3}
+                padTo={22}
+                cycleDelay={3000}
+                flipsPerChar={6}
+                flipDuration={0.08}
+              />
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-mono tracking-tight text-white leading-tight">
@@ -93,12 +274,30 @@ export const LandingPage: React.FC = () => {
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 font-mono text-xs">
-              <Link
-                to="/sign-up"
-                className="w-full sm:w-auto px-6 py-3 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold tracking-wide uppercase flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all"
-              >
-                <span>Access Forensic Station</span>
-                <ArrowRight className="w-4 h-4" />
+              <Link to="/sign-up" className="w-full sm:w-auto">
+                <SpecularButton
+                  size="md"
+                  radius={8}
+                  tint="#06b6d4"
+                  tintOpacity={0.15}
+                  blur={8}
+                  textColor="#ffffff"
+                  lineColor="#38bdf8"
+                  baseColor="#0891b2"
+                  intensity={1.3}
+                  shineSize={14}
+                  shineFade={35}
+                  thickness={1.5}
+                  speed={0.4}
+                  followMouse={true}
+                  proximity={200}
+                  className="w-full sm:w-auto font-mono text-xs font-bold tracking-wide uppercase shadow-lg shadow-cyan-500/25"
+                >
+                  <span className="flex items-center gap-2">
+                    Access Forensic Station
+                    <ArrowRight className="w-4 h-4 text-cyan-300" />
+                  </span>
+                </SpecularButton>
               </Link>
               <a
                 href="#pipeline"
@@ -198,12 +397,19 @@ export const LandingPage: React.FC = () => {
       {/* 3. PROBLEM STATEMENT: THE THREAT LANDSCAPE */}
       <section className="py-20 bg-[#080D18] border-y border-slate-800/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-2">Threat Landscape Reality</h2>
-            <p className="text-2xl sm:text-3xl font-bold font-mono text-white">
-              Why Traditional Security Controls Fail
-            </p>
-            <p className="mt-3 text-xs text-slate-400 font-sans leading-relaxed">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <h2 className="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-3">Threat Landscape Reality</h2>
+            <ScrollReveal
+              baseOpacity={0.12}
+              enableBlur={true}
+              baseRotation={2}
+              blurStrength={6}
+              containerClassName="my-4"
+              textClassName="text-2xl sm:text-3xl lg:text-4xl font-mono font-bold text-white tracking-tight leading-snug"
+            >
+              Why Traditional Security Controls Fail: Attackers don't hack systems. They log in with stolen credentials, spoofed identities, and deceptive homoglyphs.
+            </ScrollReveal>
+            <p className="mt-4 text-xs text-slate-400 font-sans leading-relaxed max-w-2xl mx-auto">
               Standard email filters check static blacklists and keywords. Adversaries have evolved beyond simple spam:
             </p>
           </div>
@@ -575,6 +781,14 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* 8.5. INTERACTIVE FORENSIC CAPABILITIES STREAM */}
+      <section id="capabilities-stream" className="relative">
+        <ScrollAnimation
+          title="you can"
+          subtitle="trace."
+        />
+      </section>
+
       {/* 9. FINAL CTA & FOOTER */}
       <section className="py-20 bg-gradient-to-b from-[#070C16] to-[#05080E] border-t border-slate-800/60">
         <div className="max-w-4xl mx-auto px-4 text-center">
@@ -586,18 +800,52 @@ export const LandingPage: React.FC = () => {
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 font-mono text-xs">
-            <Link
-              to="/sign-up"
-              className="w-full sm:w-auto px-7 py-3 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all"
-            >
-              <span>Create Free Account</span>
-              <ArrowRight className="w-4 h-4" />
+            <Link to="/sign-up" className="w-full sm:w-auto">
+              <SpecularButton
+                size="lg"
+                radius={10}
+                tint="#06b6d4"
+                tintOpacity={0.2}
+                blur={10}
+                textColor="#ffffff"
+                lineColor="#38bdf8"
+                baseColor="#0891b2"
+                intensity={1.3}
+                shineSize={16}
+                shineFade={40}
+                thickness={1.5}
+                speed={0.4}
+                followMouse={true}
+                proximity={250}
+                className="w-full sm:w-auto font-mono text-xs font-bold uppercase tracking-wider shadow-xl shadow-cyan-500/25"
+              >
+                <span className="flex items-center gap-2">
+                  Create Free Account
+                  <ArrowRight className="w-4 h-4 text-cyan-300" />
+                </span>
+              </SpecularButton>
             </Link>
-            <Link
-              to="/sign-in"
-              className="w-full sm:w-auto px-6 py-3 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center transition-colors"
-            >
-              <span>Operator Sign In</span>
+            <Link to="/sign-in" className="w-full sm:w-auto">
+              <SpecularButton
+                size="lg"
+                radius={10}
+                tint="#06b6d4"
+                tintOpacity={0.06}
+                blur={6}
+                textColor="#cbd5e1"
+                lineColor="#38bdf8"
+                baseColor="#334155"
+                intensity={1.1}
+                shineSize={14}
+                shineFade={35}
+                thickness={1.2}
+                speed={0.35}
+                followMouse={true}
+                proximity={200}
+                className="w-full sm:w-auto font-mono text-xs font-medium uppercase tracking-wider"
+              >
+                <span>Operator Sign In</span>
+              </SpecularButton>
             </Link>
           </div>
         </div>
