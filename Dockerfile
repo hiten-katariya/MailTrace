@@ -23,8 +23,13 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy project code
 COPY . /app
 
-# Expose port
+# Ensure both 'backend' and 'Backend' resolve in case-sensitive Linux
+RUN ln -s /app/Backend /app/backend
+
+ENV PYTHONPATH="/app:/app/Backend:/app/backend"
+
+# Expose default port
 EXPOSE 8000
 
-# Run uvicorn
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run via run.py for dynamic Render $PORT and module resolution
+CMD ["python", "run.py"]

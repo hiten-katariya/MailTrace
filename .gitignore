@@ -4,6 +4,9 @@
 *Backend/Data
 *Backend/.env
 *Backend/Storage
+__pycache__/
+*.pyc
+
 
 
 

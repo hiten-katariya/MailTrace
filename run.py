@@ -21,5 +21,7 @@ except Exception:
 
 if __name__ == "__main__":
     import uvicorn
-    print("[*] Starting MailTrace Forensic Station Backend on http://localhost:8000...")
-    uvicorn.run("backend.app.main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    is_dev = os.environ.get("ENVIRONMENT", "production").lower() == "development"
+    print(f"[*] Starting MailTrace Forensic Station Backend on port {port} (dev={is_dev})...")
+    uvicorn.run("backend.app.main:app", host="0.0.0.0", port=port, reload=is_dev)
