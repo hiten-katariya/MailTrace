@@ -137,24 +137,34 @@ export const CaseHeader: React.FC<CaseHeaderProps> = ({
 
       {/* 3. Plain-English Explainable Verdict Summary Banner */}
       {isAnalyzing ? (
-        <div className="p-3 rounded bg-soc-inset border-l-2 border-l-cyan-400 border border-slate-800/60 flex items-start gap-2.5 animate-pulse">
+        <div className="p-3.5 rounded bg-soc-inset border border-slate-800/80 flex items-start gap-3 animate-pulse">
           <RefreshCw className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5 animate-spin" />
           <div>
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300 block mb-0.5">
-              Forensic Evaluation In Progress
-            </span>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300">
+                Forensic Evaluation In Progress
+              </span>
+              <span className="px-1.5 py-0.2 rounded bg-slate-800 text-[9px] font-mono text-slate-400 border border-slate-700">
+                ACTIVE
+              </span>
+            </div>
             <p className="text-xs text-slate-300 leading-relaxed font-sans">
               Processing envelope authentication, extracting language cues, and querying threat databases. Findings will appear automatically momentarily...
             </p>
           </div>
         </div>
       ) : (
-        <div className="p-3 rounded bg-soc-inset border-l-2 border-l-cyan-400 border border-slate-800/60 flex items-start gap-2.5">
+        <div className="p-3.5 rounded bg-soc-inset border border-slate-800/80 flex items-start gap-3">
           <AlertOctagon className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
           <div>
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300 block mb-0.5">
-              Plain-English Forensic Verdict & Explainability Summary
-            </span>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-200">
+                Explainable Forensic Verdict Summary
+              </span>
+              <span className="px-1.5 py-0.2 rounded bg-slate-800/90 text-[9px] font-mono text-cyan-300 border border-slate-750">
+                NIST SP 800-86
+              </span>
+            </div>
             <p className="text-xs text-slate-200 leading-relaxed font-sans">
               {caseDetail.verdict_summary}
             </p>

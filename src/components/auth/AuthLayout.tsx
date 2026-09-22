@@ -11,23 +11,19 @@ interface AuthLayoutProps {
 export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitle }) => {
   return (
     <div className="min-h-screen bg-[#06090F] flex relative overflow-hidden font-sans">
-      {/* Background ambient lighting */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
-
       {/* LEFT PANEL: Enterprise Forensic Visual (Desktop) */}
-      <div className="hidden lg:flex lg:w-5/12 bg-[#090E17]/80 border-r border-slate-800/60 p-12 flex-col justify-between relative z-10">
+      <div className="hidden lg:flex lg:w-5/12 bg-[#090E17] border-r border-slate-800 p-12 flex-col justify-between relative z-10">
         <div>
           {/* Brand */}
           <Link to="/" className="inline-flex items-center gap-2.5 group">
-            <div className="flex items-center justify-center w-8 h-8 rounded bg-cyan-500/10 border border-cyan-500/30 group-hover:border-cyan-400 transition-colors shadow-soc-subtle">
-              <Shield className="w-4 h-4 text-cyan-400 group-hover:scale-105 transition-transform" />
+            <div className="flex items-center justify-center w-8 h-8 rounded bg-slate-900 border border-slate-700 group-hover:border-slate-500 transition-colors shadow-soc-subtle">
+              <Shield className="w-4 h-4 text-slate-200 group-hover:scale-105 transition-transform" />
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-base font-bold tracking-wider text-slate-100 font-mono">
-                MAIL<span className="text-cyan-400">TRACE</span>
+                MAIL<span className="text-slate-300">TRACE</span>
               </span>
-              <span className="px-1.5 py-0.5 text-[8px] font-mono uppercase font-bold tracking-widest bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 rounded">
+              <span className="px-1.5 py-0.5 text-[8px] font-mono uppercase font-bold tracking-widest bg-slate-900 text-slate-300 border border-slate-800 rounded">
                 SOC v2.0
               </span>
             </div>
@@ -37,7 +33,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
           <div className="mt-16">
             <h2 className="text-2xl font-bold text-slate-100 font-mono leading-tight tracking-tight">
               Trace the origin.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+              <span className="text-white font-mono font-bold">
                 Expose the fraud.
               </span>
             </h2>
@@ -125,7 +121,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
             </p>
           </div>
 
-          <div className="bg-[#090E17]/90 border border-slate-800/80 rounded-lg shadow-2xl p-6 sm:p-7 backdrop-blur-sm">
+          <div className="bg-[#090E17] border border-slate-800 rounded-[6px] shadow-2xl p-6 sm:p-7">
             {children}
           </div>
         </div>

@@ -89,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const displayName = activeAnalystName || user?.name || user?.username || 'Security Analyst';
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0A0F18]/95 backdrop-blur-md border-b border-slate-800/40">
+    <header className="sticky top-0 z-50 bg-[#0A0F18] border-b border-slate-800/80">
       {/* 1. Compact Security Operations Status Strip */}
       <div className="flex items-center justify-between px-4 py-1 bg-[#070B12] border-b border-slate-800/30 text-[10px] font-mono">
         <div className="flex items-center gap-3">

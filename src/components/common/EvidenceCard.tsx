@@ -24,7 +24,7 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({
       {/* Header bar */}
       <div className="flex items-center justify-between px-3.5 py-2.5 bg-soc-raised/40 border-b border-slate-800/60">
         <div className="flex items-center gap-2">
-          <div className="w-1 h-3 bg-cyber-cyan rounded-full" />
+          <div className="w-1.5 h-1.5 bg-slate-400 border border-slate-500/40 rounded-[1px]" />
           <div>
             <h3 className="text-xs font-mono font-bold text-slate-100 uppercase tracking-wider">{title}</h3>
             {subtitle && <p className="text-[10px] text-soc-text-dim mt-0.2">{subtitle}</p>}

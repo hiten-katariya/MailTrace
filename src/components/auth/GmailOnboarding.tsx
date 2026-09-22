@@ -27,11 +27,9 @@ export const GmailOnboarding: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#06090F] flex items-center justify-center p-4 relative font-sans">
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="max-w-lg w-full bg-[#090E17]/95 border border-slate-800/90 rounded-xl shadow-2xl p-6 sm:p-8 relative z-10">
+      <div className="max-w-lg w-full bg-[#090E17] border border-slate-800 rounded-[6px] shadow-2xl p-6 sm:p-8 relative z-10">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 mb-3 shadow-soc-subtle">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-[4px] bg-slate-900 border border-slate-700 text-slate-200 mb-3 shadow-soc-subtle">
             <Mail className="w-6 h-6" />
           </div>
           <h2 className="text-xl font-bold font-mono text-slate-100">

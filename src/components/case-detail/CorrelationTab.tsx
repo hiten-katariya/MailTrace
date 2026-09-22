@@ -210,7 +210,7 @@ export const CorrelationTab: React.FC<CorrelationTabProps> = ({
           <span className="font-mono text-[10px] text-cyan-300 font-semibold uppercase block mb-0.2">
             Investigative Attribution Disclaimer
           </span>
-          Attribution estimates reflect shared technical infrastructure, Autonomous Systems, and registrar clusters. MailTrace surfaces campaign linkage to assist investigations — not a confirmed legal identity of individual human actors.
+          Attribution estimates correlate shared technical infrastructure, Autonomous Systems, and registrar clusters to support forensic investigation, threat intelligence profiling, and chain-of-custody documentation.
         </div>
       </div>
     </div>

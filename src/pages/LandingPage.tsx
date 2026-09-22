@@ -118,11 +118,11 @@ export const LandingPage: React.FC = () => {
 
           {/* Central Terminal HUD */}
           <div
-            className="relative z-10 max-w-lg w-full mx-4 p-6 sm:p-8 rounded-xl bg-[#070C16] border border-slate-700 shadow-2xl backdrop-blur-md font-mono text-center cursor-default"
+            className="relative z-10 max-w-lg w-full mx-4 p-6 sm:p-8 rounded-[6px] bg-[#070C16] border border-slate-700 shadow-2xl font-mono text-center cursor-default"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded bg-slate-900 border border-slate-700 flex items-center justify-center shadow-sm">
+              <div className="w-10 h-10 rounded-[4px] bg-slate-900 border border-slate-700 flex items-center justify-center shadow-sm">
                 <Shield className="w-5 h-5 text-slate-200" />
               </div>
             </div>
@@ -137,21 +137,21 @@ export const LandingPage: React.FC = () => {
             {/* Solid technical progress bar (no rainbow gradient) */}
             <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden my-5 border border-slate-800">
               <div
-                className="h-full bg-cyan-400 transition-all duration-1000 ease-out"
+                className="h-full bg-sky-400 transition-all duration-1000 ease-out"
                 style={{ width: `${((bootStep + 1) / bootMessages.length) * 100}%` }}
               />
             </div>
 
             {/* Live boot message */}
             <div className="text-xs text-slate-300 font-mono tracking-wide h-6 flex items-center justify-center">
-              <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping mr-2 shrink-0" />
+              <span className="inline-block w-2 h-2 rounded-full bg-sky-400 mr-2 shrink-0" />
               <span>{bootMessages[bootStep]}</span>
             </div>
 
             <button
               onClick={handleSkipIntro}
               type="button"
-              className="mt-6 inline-flex items-center gap-1.5 px-3 py-1 rounded border border-slate-700 hover:border-slate-500 bg-slate-900 text-[10px] text-slate-400 hover:text-white transition-colors"
+              className="mt-6 inline-flex items-center gap-1.5 px-3 py-1 rounded-[4px] border border-slate-700 hover:border-slate-500 bg-slate-900 text-[10px] text-slate-400 hover:text-white transition-colors"
             >
               <span>[ ESC / CLICK TO INITIALIZE NOW ]</span>
             </button>
@@ -160,7 +160,7 @@ export const LandingPage: React.FC = () => {
       )}
 
       {/* 1. TOP NAVIGATION */}
-      <header className="sticky top-0 z-50 bg-[#070C16]/95 backdrop-blur-md border-b border-slate-800">
+      <header className="sticky top-0 z-50 bg-[#070C16] border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="flex items-center justify-center w-8 h-8 rounded bg-slate-900 border border-slate-700 group-hover:border-slate-500 transition-colors">
@@ -322,7 +322,7 @@ export const LandingPage: React.FC = () => {
           {/* Value Proposition Description (Centered) */}
           <div className="text-center max-w-2xl mx-auto mt-6 flex flex-col items-center justify-center px-4">
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-sans text-center">
-              Stop relying on black-box spam scores. MailTrace fuses RFC header path reconstruction, optical QR quishing detection, deep NLP urgency analysis, and infrastructure graph correlation into explainable forensic intelligence.
+              Deterministic email forensics engine reconstructing RFC transmission relay hops, resolving optical quishing vectors, and correlating adversarial campaign infrastructure into auditable evidence.
             </p>
 
             {/* Action Buttons (Perfect Center Alignment & Symmetrically Balanced 210px Widths) */}
@@ -402,11 +402,8 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Live Status Beacon & Block Coordinates */}
-            <div className="flex items-center gap-3 px-4 py-2 rounded bg-slate-900 border border-slate-800">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500" />
-              </span>
+            <div className="flex items-center gap-3 px-4 py-2 rounded-[4px] bg-slate-900 border border-slate-800">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-400" />
               <div>
                 <div className="text-[11px] font-bold text-white tracking-wider">
                   CONSENSUS ARMED // BLOCK #8492 VERIFIED
@@ -420,7 +417,7 @@ export const LandingPage: React.FC = () => {
 
           {/* F. Hero Forensic Telemetry Showcase */}
           <div className="mt-12 max-w-5xl mx-auto">
-            <div className="rounded-xl bg-[#090E17] border border-slate-800 shadow-2xl p-4 sm:p-6 backdrop-blur-md">
+            <div className="rounded-[6px] bg-[#090E17] border border-slate-800 shadow-2xl p-4 sm:p-6">
               <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800 text-xs font-mono">
                 <div className="flex items-center gap-2">
                   <Terminal className="w-4 h-4 text-slate-300" />
@@ -511,7 +508,7 @@ export const LandingPage: React.FC = () => {
               containerClassName="my-4"
               textClassName="text-2xl sm:text-3xl lg:text-4xl font-mono font-bold text-white tracking-tight leading-snug"
             >
-              Why Traditional Security Controls Fail: Attackers don't hack systems. They log in with stolen credentials, spoofed identities, and deceptive homoglyphs.
+              Adversaries evade perimeter filters by authenticating through compromised identity portals, forged upstream relay hops, and optical lure vectors.
             </ScrollReveal>
             <p className="mt-4 text-xs text-slate-400 font-sans leading-relaxed max-w-2xl mx-auto">
               Standard email filters check static blacklists and keywords. Adversaries have evolved beyond simple spam:
@@ -770,7 +767,7 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Sensor visual panel */}
-            <div className="rounded-xl bg-[#090E17] border border-slate-800 p-5 shadow-2xl font-mono text-xs">
+            <div className="rounded-[6px] bg-[#090E17] border border-slate-800 p-5 shadow-2xl font-mono text-xs">
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-slate-300" />
@@ -828,11 +825,11 @@ export const LandingPage: React.FC = () => {
               Every Score Has a Verifiable Story
             </ScrollReveal>
             <p className="mt-3 text-xs text-slate-400 font-sans">
-              No black boxes. Every classification provides an auditable signal breakdown with exact weights.
+              Deterministic signal decomposition: every fraud classification publishes an auditable ledger with exact signal weights and verification telemetry.
             </p>
           </div>
 
-          <div className="max-w-3xl mx-auto rounded-xl bg-[#090E17] border border-slate-800 p-6 font-mono text-xs">
+          <div className="max-w-3xl mx-auto rounded-[6px] bg-[#090E17] border border-slate-800 p-6 font-mono text-xs">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
               <span className="text-white font-bold">Signal Contribution Ledger</span>
               <span className="text-slate-300 font-bold">Cumulative Fraud Score: 87 / 100</span>
@@ -897,29 +894,102 @@ export const LandingPage: React.FC = () => {
             </ScrollReveal>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
-            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors">
-              <Lock className="w-5 h-5 text-slate-300 mb-3" />
-              <h4 className="text-sm font-bold text-white mb-2">Encrypted at Rest</h4>
-              <p className="text-slate-400 font-sans text-xs leading-relaxed">
-                OAuth refresh tokens are encrypted using Fernet (AES-128-CBC + HMAC-SHA256). Sensitive credentials are never printed in application logs.
-              </p>
+          {/* Institutional Security Specification Matrix (Segmented Console) */}
+          <div className="rounded-[6px] bg-[#090E17] border border-slate-800 shadow-2xl overflow-hidden font-mono text-xs">
+            {/* Console Spec Header Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-slate-800 bg-slate-950/70">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[11px] font-bold text-slate-200 tracking-wider">
+                  SECURITY & PRIVACY SPECIFICATION MATRIX
+                </span>
+                <span className="px-1.5 py-0.2 rounded bg-slate-800 text-[9px] text-slate-400 border border-slate-700">
+                  NIST SP 800-86
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                <span>ENCRYPTION: <strong className="text-slate-200">AES-256-CBC</strong></span>
+                <span className="text-slate-700">|</span>
+                <span>AUDIT: <strong className="text-emerald-400">IMMUTABLE_LOG</strong></span>
+              </div>
             </div>
 
-            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors">
-              <Sliders className="w-5 h-5 text-slate-300 mb-3" />
-              <h4 className="text-sm font-bold text-white mb-2">Configurable Retention</h4>
-              <p className="text-slate-400 font-sans text-xs leading-relaxed">
-                Automated data lifecycle enforcement purges raw messages and headers based on institutional retention policies (30, 60, or 90 days).
-              </p>
+            {/* 3-Segment Architecture Ledger */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-slate-800">
+              {/* Segment 1 */}
+              <div className="p-6 flex flex-col justify-between hover:bg-slate-900/30 transition-colors">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="p-2 rounded-[4px] bg-slate-900 border border-slate-700 text-slate-200">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-slate-300 border border-slate-700">
+                      FERNET / AES-128
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold text-white mb-2">Cryptographic Key Isolation</h4>
+                  <p className="text-slate-400 font-sans text-xs leading-relaxed">
+                    OAuth refresh tokens and credentials are encrypted using Fernet envelopes (AES-128-CBC + HMAC-SHA256). Sensitive tokens are never committed to disk unencrypted or printed in stdout telemetry.
+                  </p>
+                </div>
+                <div className="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500">
+                  <span>KEY SPEC</span>
+                  <span className="text-slate-300 font-mono">128-bit IV // URL-Safe Key</span>
+                </div>
+              </div>
+
+              {/* Segment 2 */}
+              <div className="p-6 flex flex-col justify-between hover:bg-slate-900/30 transition-colors">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="p-2 rounded-[4px] bg-slate-900 border border-slate-700 text-slate-200">
+                      <Sliders className="w-4 h-4" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-slate-300 border border-slate-700">
+                      LIFECYCLE ENFORCED
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold text-white mb-2">Configurable Data Lifecycle</h4>
+                  <p className="text-slate-400 font-sans text-xs leading-relaxed">
+                    Automated data retention schedules enforce deterministic purging of raw MIME bodies, attachment buffers, and decoded OCR lures based on institutional policy (30, 60, or 90 days).
+                  </p>
+                </div>
+                <div className="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500">
+                  <span>SCHEDULE</span>
+                  <span className="text-slate-300 font-mono">Automated Cron Purge</span>
+                </div>
+              </div>
+
+              {/* Segment 3 */}
+              <div className="p-6 flex flex-col justify-between hover:bg-slate-900/30 transition-colors">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="p-2 rounded-[4px] bg-slate-900 border border-slate-700 text-slate-200">
+                      <FileSearch className="w-4 h-4" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-slate-300 border border-slate-700">
+                      CHAIN-OF-CUSTODY
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold text-white mb-2">Tamper-Evident Audit Ledger</h4>
+                  <p className="text-slate-400 font-sans text-xs leading-relaxed">
+                    Every analyst case opening, triage judgment, PDF dossier export, and purge event is logged to an immutable SQLite/PostgreSQL audit trail with cryptographically linked evidence hashes.
+                  </p>
+                </div>
+                <div className="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500">
+                  <span>AUDIT SCHEMA</span>
+                  <span className="text-slate-300 font-mono">Append-Only // SHA-256</span>
+                </div>
+              </div>
             </div>
 
-            <div className="p-6 rounded bg-[#090E17] border border-slate-800 hover:border-slate-600 transition-colors">
-              <FileSearch className="w-5 h-5 text-slate-300 mb-3" />
-              <h4 className="text-sm font-bold text-white mb-2">Tamper-Evident Audit</h4>
-              <p className="text-slate-400 font-sans text-xs leading-relaxed">
-                Every analyst access, case creation, PDF export, and purge event is logged to an immutable SQLite/PostgreSQL audit ledger.
-              </p>
+            {/* Console Spec Footer Bar */}
+            <div className="px-5 py-2.5 bg-slate-950/80 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                <span className="text-slate-400">All institutional safeguards active and verifiable in runtime ledger</span>
+              </div>
+              <span className="text-slate-500 font-mono">ZERO UNENCRYPTED TOKEN PERSISTENCE</span>
             </div>
           </div>
         </div>

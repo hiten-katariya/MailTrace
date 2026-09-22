@@ -41,13 +41,9 @@ export const CybeeLockHero: React.FC<CybeeLockHeroProps> = ({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 1. REACTIVE AMBIENT HALO (EXPANDS ON HOVER) */}
+      {/* 1. REFINED TECHNICAL GROUNDING SHADOW */}
       <div
-        className={`absolute -inset-10 rounded-full blur-3xl pointer-events-none transition-all duration-500 ${
-          isHovered
-            ? 'bg-cyan-500/15 opacity-100 scale-110'
-            : 'bg-slate-900/40 opacity-50 scale-95'
-        }`}
+        className="absolute -inset-4 rounded-full bg-slate-950/40 pointer-events-none"
       />
 
       {/* 2. TECHNICAL HUD WIREFRAME BLOCKCHAIN CROSSHAIRS */}
@@ -97,8 +93,8 @@ export const CybeeLockHero: React.FC<CybeeLockHeroProps> = ({
         <div
           className={`absolute top-3 left-4 pointer-events-none animate-cybee-twinkle-1 transition-colors duration-300 ${
             isHovered
-              ? 'text-cyan-300 drop-shadow-[0_0_8px_rgba(56,189,248,0.9)]'
-              : 'text-slate-300/80 drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]'
+              ? 'text-sky-300 drop-shadow-[0_0_4px_rgba(56,189,248,0.4)]'
+              : 'text-slate-300/80 drop-shadow-[0_0_2px_rgba(255,255,255,0.2)]'
           }`}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -110,8 +106,8 @@ export const CybeeLockHero: React.FC<CybeeLockHeroProps> = ({
         <div
           className={`absolute bottom-6 left-8 pointer-events-none animate-cybee-twinkle-2 transition-colors duration-300 ${
             isHovered
-              ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.7)]'
-              : 'text-slate-400/70 drop-shadow-[0_0_4px_rgba(255,255,255,0.3)]'
+              ? 'text-sky-400 drop-shadow-[0_0_4px_rgba(56,189,248,0.35)]'
+              : 'text-slate-400/70 drop-shadow-[0_0_2px_rgba(255,255,255,0.2)]'
           }`}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -175,13 +171,13 @@ export const CybeeLockHero: React.FC<CybeeLockHeroProps> = ({
               ry="52"
               transform="rotate(-18 140 140)"
               stroke={isHovered ? '#38bdf8' : 'rgba(148, 163, 184, 0.35)'}
-              strokeWidth={isHovered ? '1.8' : '1.2'}
+              strokeWidth={isHovered ? '1.5' : '1.2'}
               strokeDasharray="4 6"
               className="transition-all duration-300"
               style={{
                 filter: isHovered
-                  ? 'drop-shadow(0 0 6px #38bdf8) drop-shadow(0 0 14px rgba(6,182,212,0.8))'
-                  : 'drop-shadow(0 0 2px rgba(56,189,248,0.2))',
+                  ? 'drop-shadow(0 0 3px rgba(56,189,248,0.4))'
+                  : 'none',
               }}
             />
 
@@ -193,11 +189,11 @@ export const CybeeLockHero: React.FC<CybeeLockHeroProps> = ({
               ry="52"
               transform="rotate(-18 140 140)"
               stroke="url(#laserBeamGrad)"
-              strokeWidth={isHovered ? '2.5' : '2'}
+              strokeWidth={isHovered ? '2.2' : '1.8'}
               strokeDasharray="65 240"
               className="animate-laser-surge"
               style={{
-                filter: 'drop-shadow(0 0 5px #38bdf8) drop-shadow(0 0 10px #06b6d4)',
+                filter: 'drop-shadow(0 0 3px rgba(56,189,248,0.4))',
               }}
             />
 
@@ -210,43 +206,40 @@ export const CybeeLockHero: React.FC<CybeeLockHeroProps> = ({
                 <circle
                   cx="265"
                   cy="140"
-                  r="4"
+                  r="3.5"
                   fill="#ffffff"
-                  filter="url(#reactiveGlowFilter)"
                   className="animate-ping"
                 />
                 <circle
                   cx="265"
                   cy="140"
-                  r="2.5"
+                  r="2"
                   fill="#38bdf8"
                 />
               </g>
             )}
           </svg>
 
-          {/* E. Orbiting Cryptographic Block Node Badge with Intense Luminous Flare */}
+          {/* E. Orbiting Cryptographic Block Node Badge */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="animate-cybee-orbit relative w-0 h-0">
-              {/* Luminous Moving Flare over the Orbit Path */}
               <div
-                className={`absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 p-1 px-2 rounded bg-[#090e17] border transition-all duration-300 backdrop-blur-md ${
+                className={`absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 p-1 px-2 rounded-[4px] bg-[#090e17] border transition-all duration-300 ${
                   isHovered
-                    ? 'border-cyan-400 shadow-[0_0_20px_#38bdf8,0_0_35px_rgba(6,182,212,0.8)] scale-110'
-                    : 'border-slate-600 shadow-[0_0_12px_rgba(56,189,248,0.4)] scale-100'
+                    ? 'border-sky-400/80 shadow-soc-card scale-105'
+                    : 'border-slate-700 shadow-sm scale-100'
                 }`}
               >
                 <Shield
                   className={`w-3.5 h-3.5 transition-colors duration-300 ${
-                    isHovered ? 'text-cyan-300' : 'text-slate-200'
+                    isHovered ? 'text-sky-300' : 'text-slate-300'
                   }`}
                 />
                 <span className="text-[8px] font-mono text-slate-200 font-bold tracking-tight">
                   BLK #8492
                 </span>
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_6px_#38bdf8]" />
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-400" />
                 </span>
               </div>
             </div>
@@ -414,13 +407,13 @@ export const CybeeLockHero: React.FC<CybeeLockHeroProps> = ({
         <button
           onClick={onCtaClick}
           type="button"
-          className="group relative inline-flex items-center justify-center gap-2 px-5 py-2 rounded bg-[#090e17] hover:bg-[#0f172a] border border-slate-700 hover:border-cyan-500/60 text-slate-200 hover:text-white font-mono text-xs tracking-wider shadow-sm transition-all duration-300"
+          className="group relative inline-flex items-center justify-center gap-2 px-5 py-2 rounded-[6px] bg-[#090e17] hover:bg-[#0f172a] border border-slate-700 hover:border-slate-500 text-slate-200 hover:text-white font-mono text-xs tracking-wider shadow-sm transition-all duration-300"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
           <span className="text-slate-200 group-hover:text-white font-semibold uppercase">
             {ctaText}
           </span>
-          <span className="text-[10px] text-cyan-400 font-mono group-hover:translate-x-0.5 transition-transform">
+          <span className="text-[10px] text-slate-400 group-hover:text-slate-200 font-mono group-hover:translate-x-0.5 transition-transform">
             [+]
           </span>
         </button>

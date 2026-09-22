@@ -40,8 +40,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-soc-panel border border-slate-800/80 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 overflow-y-auto">
+      <div className="bg-soc-panel border border-slate-800 rounded-[6px] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Top Control Header */}
         <div className="flex items-center justify-between px-5 py-3 bg-soc-raised border-b border-slate-800/60 print:hidden">
           <div className="flex items-center gap-2">

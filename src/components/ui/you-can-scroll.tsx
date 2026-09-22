@@ -228,9 +228,9 @@ export default function ScrollAnimation({
           ref={hudRef}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          className={`rounded-xl bg-[#090E17]/95 border transition-all duration-300 shadow-2xl backdrop-blur-md overflow-hidden ${
+          className={`rounded-[6px] bg-[#090E17] border transition-all duration-300 shadow-2xl overflow-hidden ${
             isHovered
-              ? "border-cyan-500/60 shadow-[0_0_35px_rgba(6,182,212,0.18)]"
+              ? "border-slate-700 shadow-soc-card"
               : "border-slate-800"
           }`}
         >
@@ -250,11 +250,11 @@ export default function ScrollAnimation({
               <div
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-mono transition-colors ${
                   isHovered
-                    ? "bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 animate-pulse"
+                    ? "bg-slate-800 border border-slate-700 text-slate-200"
                     : "bg-slate-900 border border-slate-800 text-slate-400"
                 }`}
               >
-                <RotateCw className={`w-3 h-3 ${isHovered ? "text-cyan-400 animate-spin" : "text-slate-500"}`} />
+                <RotateCw className={`w-3 h-3 ${isHovered ? "text-slate-300 animate-spin" : "text-slate-500"}`} />
                 <span>
                   {isHovered
                     ? "SCROLL LOCKED TO BOX (LOOPING)"
@@ -266,39 +266,39 @@ export default function ScrollAnimation({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={prevItem}
-                  className="p-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/40 text-slate-400 hover:text-cyan-300 transition-colors"
-                  title="Previous capability (Loop)"
+                  onClick={() =>
+                    setActiveIndex(
+                      (prev) => (prev - 1 + capabilities.length) % capabilities.length
+                    )
+                  }
+                  className="p-1 rounded bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+                  title="Previous capability"
                 >
                   <ChevronUp className="w-3.5 h-3.5" />
                 </button>
                 <button
                   type="button"
-                  onClick={nextItem}
-                  className="p-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/40 text-slate-400 hover:text-cyan-300 transition-colors"
-                  title="Next capability (Loop)"
+                  onClick={() =>
+                    setActiveIndex((prev) => (prev + 1) % capabilities.length)
+                  }
+                  className="p-1 rounded bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+                  title="Next capability"
                 >
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
               </div>
-
-              <div className="text-[11px] text-cyan-400 font-mono font-bold">
-                {activeIndex + 1} / {capabilities.length}
-              </div>
             </div>
           </div>
 
-          {/* Body: Split Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 sm:p-8 items-center">
-            {/* Left Column: Fixed "you can" + Scrolling Verb List */}
+          {/* Body: Two columns */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 sm:p-8">
+            {/* Left Column: Action Verb Selector */}
             <div className="lg:col-span-6 space-y-4">
-              <div className="flex items-baseline gap-3">
-                <span className="text-slate-400 font-mono text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
-                  {title}
-                </span>
-                <span className="text-cyan-400/80 font-mono text-xs uppercase tracking-widest flex items-center gap-1">
-                  <MousePointer className="w-3 h-3" />
-                  <span>WHEEL SCROLL LOOPS</span>
+              <div className="flex items-center justify-between text-xs font-mono text-slate-400 border-b border-slate-800/80 pb-2">
+                <span>SIGNAL ENGINE PIPELINE</span>
+                <span>
+                  {String(activeIndex + 1).padStart(2, "0")} /{" "}
+                  {String(capabilities.length).padStart(2, "0")}
                 </span>
               </div>
 
@@ -309,9 +309,9 @@ export default function ScrollAnimation({
                   return (
                     <div
                       key={idx}
-                      className={`flex items-center justify-between px-4 py-2.5 rounded-lg cursor-pointer transition-all duration-200 ${
+                      className={`flex items-center justify-between px-4 py-2.5 rounded-[4px] cursor-pointer transition-all duration-200 ${
                         isActive
-                          ? "bg-gradient-to-r from-cyan-500/20 to-blue-500/10 border border-cyan-400/60 text-cyan-200 shadow-[0_0_20px_rgba(6,182,212,0.2)] translate-x-2"
+                          ? "bg-slate-800/90 border border-slate-600 text-white translate-x-1"
                           : "hover:bg-slate-800/40 text-slate-500 hover:text-slate-300 border border-transparent opacity-40 hover:opacity-80"
                       }`}
                       onClick={() => setActiveIndex(idx)}
@@ -320,15 +320,13 @@ export default function ScrollAnimation({
                         <span
                           className={`w-2 h-2 rounded-full transition-all ${
                             isActive
-                              ? "bg-cyan-400 shadow-[0_0_8px_#22d3ee] scale-125 animate-pulse"
+                              ? "bg-sky-400 scale-110"
                               : "bg-slate-700"
                           }`}
                         />
                         <span
                           className={`font-mono text-xl sm:text-2xl font-bold tracking-tight ${
-                            isActive
-                              ? "text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-blue-300"
-                              : ""
+                            isActive ? "text-white" : ""
                           }`}
                         >
                           {item.verb}
@@ -336,7 +334,7 @@ export default function ScrollAnimation({
                       </div>
                       <span
                         className={`text-[10px] font-mono uppercase tracking-wider ${
-                          isActive ? "text-cyan-400 font-semibold" : "text-slate-600"
+                          isActive ? "text-slate-300 font-semibold" : "text-slate-600"
                         }`}
                       >
                         {item.tag}
@@ -349,16 +347,14 @@ export default function ScrollAnimation({
 
             {/* Right Column: Live Telemetry Inspector */}
             <div className="lg:col-span-6">
-              <div className="rounded-lg bg-slate-950/80 border border-cyan-500/30 p-6 font-mono relative overflow-hidden shadow-inner">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-bl-full pointer-events-none" />
-
-                <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800/80">
+              <div className="rounded-[6px] bg-slate-950 border border-slate-800 p-6 font-mono relative overflow-hidden shadow-inner">
+                <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-soc-subtle">
+                    <div className="w-9 h-9 rounded-[4px] bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-200 shadow-soc-subtle">
                       <IconComponent className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-[10px] text-cyan-400/80 uppercase font-semibold">
+                      <div className="text-[10px] text-slate-400 uppercase font-semibold">
                         {activeCap.tag}
                       </div>
                       <div className="text-sm font-bold text-slate-100">
@@ -375,12 +371,12 @@ export default function ScrollAnimation({
                   {activeCap.description}
                 </p>
 
-                <div className="mt-6 pt-4 border-t border-slate-800/80 grid grid-cols-2 gap-3 text-[10px]">
-                  <div className="p-2.5 rounded bg-[#070C16] border border-slate-800/60">
+                <div className="mt-6 pt-4 border-t border-slate-800 grid grid-cols-2 gap-3 text-[10px]">
+                  <div className="p-2.5 rounded bg-[#070C16] border border-slate-800">
                     <span className="text-slate-400 block mb-0.5">Execution Mode</span>
-                    <span className="text-cyan-300 font-bold">Autonomous SOC Engine</span>
+                    <span className="text-slate-200 font-bold">Autonomous SOC Engine</span>
                   </div>
-                  <div className="p-2.5 rounded bg-[#070C16] border border-slate-800/60">
+                  <div className="p-2.5 rounded bg-[#070C16] border border-slate-800">
                     <span className="text-slate-400 block mb-0.5">Telemetry Status</span>
                     <span className="text-emerald-400 font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-400" /> VERIFIED ARMED
