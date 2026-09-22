@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mailtrace_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mailtrace_secure_password_2026
+      POSTGRES_DB: mailtrace
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mailtrace_api
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:mailtrace_secure_password_2026@postgres:5432/mailtrace
+      - SYNC_DATABASE_URL=postgresql://postgres:mailtrace_secure_password_2026@postgres:5432/mailtrace
+      - SECRET_KEY=mailtrace_production_super_secret_jwt_key_change_me
+      - FRONTEND_URL=http://localhost:5173
+      - CORS_ORIGINS=["http://localhost:5173", "http://localhost:3000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Backend/storage:/app/Backend/storage
+      - ./Backend/Data:/app/Backend/Data
+
+volumes:
+  postgres_data:
