@@ -94,6 +94,8 @@ async def init_db():
     except Exception as e:
         print(f"[-] PostgreSQL connection error: {e}")
         print("[!] Falling back automatically to local SQLite database: sqlite+aiosqlite:///backend/data/mailtrace.db")
+        os.makedirs(os.path.join("Backend", "Data"), exist_ok=True)
+        os.makedirs(os.path.join("backend", "data"), exist_ok=True)
         fallback_url = "sqlite+aiosqlite:///backend/data/mailtrace.db"
         async_engine = create_async_engine(fallback_url, echo=False, future=True)
         AsyncSessionLocal = async_sessionmaker(
